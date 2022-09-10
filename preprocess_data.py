@@ -1,4 +1,3 @@
-from unittest import result
 import pandas as pd
 from scipy import stats
 import torch
@@ -15,7 +14,7 @@ def createDataset(filename: str):
     num_questions = stats.mode(simple_df["UserId"]).count[0] # Q
 
     #C=num_constructs S=num_students Q=num_questions
-    result = torch.tensor([]) # [1] -> [2, S, Q]
+    result = torch.tensor([]) # [1] -> [S, 2, Q]
     for name, group in simple_df.groupby('UserId'):
         # Extract info for each user
         constructs = group["ConstructId"].values.tolist() # [C]
