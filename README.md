@@ -6,4 +6,4 @@
 
 ```aritra_start.py``` - Reference code written by Aritra for causal discovery 
 
-```predict_graph.py``` - Code to be edited by us
+```predict_graph.py``` - Our code
