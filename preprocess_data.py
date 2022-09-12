@@ -59,15 +59,18 @@ def main():
     student_data, tot_construct_list = createDataset('data/sample_data_lessons_small.csv') # [S, 2, Q] Faster and better for debugging
     print("num_of_constructs: ", len(tot_construct_list))
 
-    torch.save(student_data, 'tmp_student_tensor.pt')
-    with open("tmp_construct_list.json", "w") as fp:
+    num_students, _, num_questions = student_data.shape
+    transform_student_data = torch.transpose(student_data, 0, 2) # [S, 2, Q] --> [Q, 2, S]
+
+    torch.save(transform_student_data, 'serialized_torch/sample_student_data_tensor.pt')
+    with open("serialized_torch/tmp_construct_list.json", "w") as fp:
         json.dump(tot_construct_list, fp)
 
     # student_data = createDataset('data/Task_3_dataset/checkins_lessons_checkouts_training.csv') # [S, 2, Q]
-    features = student_data[:, 0, :] # [S, Q]
-    # print("features: ", features)
-    labels = student_data[:, 1, :] # [S, Q]
-    # print("labels: ", labels)
+    features = transform_student_data[:, 0, :] # [Q, S]
+    print("features: ", features)
+    labels = transform_student_data[:, 1, :] # [Q, S]
+    print("labels: ", labels)
 
 if __name__ == "__main__":
     # loaded_file = torch.load('serialized_torch/student_data_tensor.pt') # This is also an option
