@@ -1,11 +1,10 @@
 import math
-
+import json
 import pudb
 import torch
 import torch.nn as nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -65,6 +64,7 @@ class PermutationMatrix(nn.Module):
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
+        # ((P x L) x P^T)^T
         output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
         ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True)
         new_matrix = torch.zeros_like(matrix)
@@ -91,8 +91,7 @@ class PermutationMatrix(nn.Module):
             )
             print("Ideal Permutation Matrix\n", new_matrix.data)
             print(
-                "Ideal Lower Triangular\
-                    matrix\n",
+                "Ideal Lower Triangular Matrix\n",
                 torch.matmul(torch.matmul(new_matrix, self.lower), new_matrix.t()),
             )
             print("Causal Order\n", causal_order)
@@ -118,9 +117,14 @@ class PermutedGru(nn.Module):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
+        # lower = self.permuted_matrix(verbose=True)
         lower = self.permuted_matrix(verbose=True)
         outputs = []
+        print("Forwarding PermutedGru")
+        print("input_: ", input_)
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
+            print("x: ", x.shape) #[2, 5]
+            print("lower: ", lower)
             hidden = self.cell(x, lower, hidden)
             outputs.append(hidden.clone())
 
@@ -146,8 +150,41 @@ class PermutedDKT(nn.Module):
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
         T, B = concept_input.shape
+        print("PermutedDKT")
+        print("Number of students: ", T)
+        print("Number of questions: ", B)
+        print("Number of concepts:", self.n_concepts)
+        print("Concept input: ", concept_input)
         input = torch.zeros(T, B, self.n_concepts)
+        print("Before input\n: ", input)
+        # Unsqueeze concept_input & lables
+        # [T,B] -> [T,B,1], Put 1 at index 2
+        # Scatter input
+        # scatter_(dim, index, src)
+
+        # # Concpet input
+        # [[3, 3], 
+        #  [0, 2],
+        #  [3, 0],
+        #  [3, 4]]
+        # # Labels
+        # [[-1, -1],
+        #  [-1,  1],
+        #  [ 1,  1],
+        #  [ 1,  1]]
+        # # Input
+        # [[[ 0.,  0.,  0., -1.,  0.],
+        #  [ 0.,  0.,  0., -1.,  0.]],
+        # [[-1.,  0.,  0.,  0.,  0.],
+        #  [ 0.,  0.,  1.,  0.,  0.]],
+        # [[ 0.,  0.,  0.,  1.,  0.],
+        #  [ 1.,  0.,  0.,  0.,  0.]],
+        # [[ 0.,  0.,  0.,  1.,  0.],
+        #  [ 0.,  0.,  0.,  0.,  1.]]]
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
+        print("After input\n: ", input)
+        # Clamp the values less than min(0) are replace by the min(0)
+        # Why transitioned to -1 and 1 in the first place?
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
 
@@ -163,11 +200,30 @@ class PermutedDKT(nn.Module):
 
 
 def main():
-    dkt = PermutedDKT(n_concepts=5)
-    concept_input = torch.randint(0, 5, (4, 2))
-    labels = torch.randint(0, 2, (4, 2)) * 2 - 1
+    # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
+    dataset_tensor = torch.load('tmp_student_tensor.pt')
+    with open("tmp_construct_list.json", 'rb') as fp:
+        tot_construct_list = json.load(fp)
+    num_of_students, _, num_of_questions = dataset_tensor.shape
+
+    dkt = PermutedDKT(n_concepts=len(tot_construct_list))
+    # concept_input = dataset_tensor[:, 0, :]
+    # labels = dataset_tensor[:, 1, :]
+    concept_input = torch.tensor(dataset_tensor[:, 0, :], dtype=torch.int64)
+    labels = torch.tensor(dataset_tensor[:, 1, :], dtype=torch.int64)
+    print(concept_input)
+    print(labels)
     loss, acc = dkt(concept_input, labels)
-    print(loss, acc)
-    
+
+    # # ###
+    # # # Previous Implementation
+    # # ###
+    # dkt = PermutedDKT(n_concepts=5)
+    # concept_input = torch.randint(0, 5, (4, 2))
+    # labels = torch.randint(0, 2, (4, 2)) * 2 - 1
+    # print(concept_input)
+    # print(labels)
+    # loss, acc = dkt(concept_input, labels)
+    # print(loss, acc)
 if __name__ == "__main__":
     main()
