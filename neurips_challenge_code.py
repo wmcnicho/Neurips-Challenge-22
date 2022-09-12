@@ -1,77 +1,29 @@
+from hashlib import new
 import math
-
-import pudb
+# import pudb
 import torch
 import torch.nn as nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-class PermutedGruCell(nn.Module):
-    def __init__(self, hidden_size, bias):
-        super().__init__()
-        """
-        For each element in the input sequence, each layer computes the following
-        function:
-        Gru Math
-        \begin{array}{ll}
-            r_t = \sigma(W_{ir} x_t + b_{ir} + W_{hr} h_{(t-1)} + b_{hr}) \\
-            z_t = \sigma(W_{iz} x_t + b_{iz} + W_{hz} h_{(t-1)} + b_{hz}) \\
-            n_t = \tanh(W_{in} x_t + b_{in} +  (W_{hn}(r_t*  h_{(t-1)})+ b_{hn})) \\
-            h_t = (1 - z_t) * n_t + z_t * h_{(t-1)}
-        \end{array}
-        """
-        self.hidden_size = hidden_size
-        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        for w in self.parameters():
-            nn.init.kaiming_uniform_(w, a=math.sqrt(5))
-
-    def forward(self, x, lower, hidden=None):
-        # x is B, input_size
-        if hidden is None:
-            hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
-        W_ir = self.W_ir * lower
-        W_hr = self.W_hr * lower
-        W_iz = self.W_iz * lower
-        W_hz = self.W_hz * lower
-        W_in = self.W_in * lower
-        W_hn = self.W_hn * lower
-        sigmoid = nn.Sigmoid()
-        tanh = nn.Tanh()
-        r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
-        z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
-        n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
-        hy = hidden * z_t + (1.0 - z_t) * n_t
-        return hy
-
-
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature=100, unroll=20):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
-        self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+        self.matrix = nn.Parameter(torch.empty(input_size, input_size), requires_grad=True) # permutation matrix
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-        self.lower = torch.tril(torch.ones(input_size, input_size))
-
+        self.lower = torch.tril(torch.ones(input_size, input_size))  # lower triangular matrix
     def forward(self, verbose=False):
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
         output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
-        ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True)
-        new_matrix = torch.zeros_like(matrix)
+        ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True) # index of max value in each row of the matrix
+        new_matrix = torch.zeros_like(matrix) 
         new_matrix.scatter_(
             1, ideal_matrix_order, torch.ones_like(ideal_matrix_order).float()
-        )
+        ) # ideal p matrix
         causal_order = [(idx, int(d[0])) for idx, d in enumerate(ideal_matrix_order)]
         causal_order.sort(key=lambda x: x[1])
         causal_order = [d[0] for d in causal_order]
@@ -100,6 +52,50 @@ class PermutationMatrix(nn.Module):
 
         return output_lower
 
+class PermutedGruCell(nn.Module):
+    def __init__(self, hidden_size, bias):
+        super().__init__()
+        """
+        For each element in the input sequence, each layer computes the following
+        function:
+        Gru Math
+        \begin{array}{ll}
+            r_t = \sigma(W_{ir} x_t + b_{ir} + W_{hr} h_{(t-1)} + b_{hr}) \\
+            z_t = \sigma(W_{iz} x_t + b_{iz} + W_{hz} h_{(t-1)} + b_{hz}) \\
+            n_t = \tanh(W_{in} x_t + b_{in} +  (W_{hn}(r_t *  h_{(t-1)})+ b_{hn})) \\
+            h_t = (1 - z_t) * n_t + z_t * h_{(t-1)}
+        \end{array}
+        """
+        self.hidden_size = hidden_size
+        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        for w in self.parameters():
+            nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+
+    def forward(self, x, lower, hidden=None):
+        # x is B, input_size
+        if hidden is None:
+            hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+        W_ir = self.W_ir * lower
+        W_hr = self.W_hr * lower
+        W_iz = self.W_iz * lower
+        W_hz = self.W_hz * lower
+        W_in = self.W_in * lower
+        W_hn = self.W_hn * lower
+        sigmoid = nn.Sigmoid()
+        tanh = nn.Tanh()
+        r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
+        z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
+        n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
+        hy = hidden * z_t + (1.0 - z_t) * n_t
+        return hy
 
 class PermutedGru(nn.Module):
     def __init__(
@@ -119,7 +115,7 @@ class PermutedGru(nn.Module):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
-        lower = self.permuted_matrix(verbose=True)
+        lower = self.permuted_matrix(verbose=False)
         outputs = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
@@ -146,30 +142,39 @@ class PermutedDKT(nn.Module):
         # Input shape is T, B
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
-        T, B = concept_input.shape
+        T, B = concept_input.shape # T is the number of timesteps and B is the batch_size
         input = torch.zeros(T, B, self.n_concepts)
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
-        labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
-
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
+        print("output", output)
         pred = (output > 0.0).float()
-        acc = torch.mean((pred == labels).float())
-        cc_loss = nn.BCEWithLogitsLoss()
-        loss = cc_loss(output, labels.float())
-        return loss, acc
+        # print(pred)
+        return pred
 
 
 def main():
     dkt = PermutedDKT(n_concepts=5)
+    learning_rate = 0.001
     concept_input = torch.randint(0, 5, (4, 2))
     labels = torch.randint(0, 2, (4, 2)) * 2 - 1
-    loss, acc = dkt(concept_input, labels)
-    print(loss, acc)
-
+    print("concept:", concept_input)
+    print("labels:", labels)
+    optimizer = torch.optim.SGD(dkt.parameters(), lr = learning_rate)
+    cc_loss = nn.BCEWithLogitsLoss()
+    
+    for i in range(1):
+        pred = dkt(concept_input, labels)
+        loss = cc_loss(pred, torch.clamp(labels, min=0).float())
+        acc = torch.mean((pred == torch.clamp(labels, min=0)).float())
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print("loss:", loss)
+        print("acc", acc)
 
 if __name__ == "__main__":
     main()
