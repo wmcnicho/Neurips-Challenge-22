@@ -1,6 +1,5 @@
 import math
 import json
-import pudb
 import torch
 import torch.nn as nn
 
@@ -151,8 +150,8 @@ class PermutedDKT(nn.Module):
         # label is T,B 0/1
         T, B = concept_input.shape
         print("PermutedDKT")
-        print("Number of students: ", T)
-        print("Number of questions: ", B)
+        print("Number of questions: ", T)
+        print("Number of students: ", B)
         print("Number of concepts:", self.n_concepts)
         print("Concept input: ", concept_input)
         input = torch.zeros(T, B, self.n_concepts)
@@ -198,18 +197,34 @@ class PermutedDKT(nn.Module):
         loss = cc_loss(output, labels.float())
         return loss, acc
 
+def get_mapped_concept_input(initial_concept_input, tot_construct_list):
+    map = {k:i for i, k in enumerate(tot_construct_list)}
+    if 0 not in map.keys():
+        map[0] = len(map)
+    else:
+        print('Warning: 0 cannot be used ')
+    new_matrix = []
+    for row in initial_concept_input:
+        row_values = []
+        for value in row:
+            row_values.append(map[int(value.item())])
+        new_matrix.append(row_values)
+    return new_matrix
+
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('tmp_student_tensor.pt')
-    with open("tmp_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
+    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     num_of_students, _, num_of_questions = dataset_tensor.shape
 
-    dkt = PermutedDKT(n_concepts=len(tot_construct_list))
+    dkt = PermutedDKT(n_concepts=len(tot_construct_list)+1)
     # concept_input = dataset_tensor[:, 0, :]
     # labels = dataset_tensor[:, 1, :]
-    concept_input = torch.tensor(dataset_tensor[:, 0, :], dtype=torch.int64)
+    initial_concept_input = dataset_tensor[:, 0, :]
+    map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
+    concept_input = torch.tensor(map_concept_input, dtype=torch.int64)
     labels = torch.tensor(dataset_tensor[:, 1, :], dtype=torch.int64)
     print(concept_input)
     print(labels)
