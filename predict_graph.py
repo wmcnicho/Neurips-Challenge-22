@@ -166,6 +166,7 @@ class PermutedDKT(nn.Module):
         pred = (output > 0.0).float()
         acc = torch.mean((pred == labels).float())
         cc_loss = nn.BCEWithLogitsLoss()
+        print("output: ", output)
         loss = cc_loss(output, labels.float())
         return loss, acc
 
@@ -270,17 +271,30 @@ def main():
     print("Number of constructs: ", training_set.n_constructs)
     dkt = PermutedDKT(n_constructs=training_set.n_constructs)
     training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
-    learning_rate = 0.001
+    learning_rate = 0.05
     optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
-    for epoch in range(1): # loop over the dataset multiple times
+    n_epochs = 20
+    for epoch in range(n_epochs): # loop over the dataset multiple times
+        train_loss=[]
+        train_accuracy=[]
         for i, data in enumerate(training_loader, 0):
+            print("Batch #: ", i)
             constructs = data['Construct']
             labels = data['Label']
+            # print("constructs: ", constructs)
+            # print("labels: ", labels)
             optimizer.zero_grad()
             loss, acc = dkt(torch.stack(constructs), torch.stack(labels))
+            train_accuracy.append(acc)
+            train_loss.append(loss.item())
             loss.backward()
             optimizer.step()
+            print("--------"*10)
             print("loss: ", loss.data, "\nacc: ", acc.data)
+        if (epoch + 1) % 5 == 0:
+            print("========"*10)
+            print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+            print("========"*10)
 
     # dkt = PermutedDKT(n_constructs=5)
     # construct_input = torch.randint(0, 5, (4, 2))
