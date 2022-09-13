@@ -10,7 +10,7 @@ class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature=100, unroll=20):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
-        self.matrix = nn.Parameter(torch.empty(input_size, input_size), requires_grad=True) # permutation matrix
+        self.matrix = nn.Parameter(torch.empty(input_size, input_size)) # permutation matrix
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
         self.lower = torch.tril(torch.ones(input_size, input_size))  # lower triangular matrix
     def forward(self, verbose=False):
@@ -49,8 +49,7 @@ class PermutationMatrix(nn.Module):
                 torch.matmul(torch.matmul(new_matrix, self.lower), new_matrix.t()),
             )
             print("Causal Order\n", causal_order)
-
-        return output_lower
+        return output_lower, causal_order
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -67,12 +66,12 @@ class PermutedGruCell(nn.Module):
         \end{array}
         """
         self.hidden_size = hidden_size
-        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
-        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
-        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
-        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
-        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
-        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size), requires_grad=True)
+        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -115,7 +114,7 @@ class PermutedGru(nn.Module):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
-        lower = self.permuted_matrix(verbose=False)
+        lower, causal_order = self.permuted_matrix(verbose=False)
         outputs = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
@@ -128,7 +127,7 @@ class PermutedGru(nn.Module):
         for idx, l in enumerate(lengths):
             last_states.append(hidden_states[l - 1, idx, :])
         last_states = torch.stack(last_states)
-        return hidden_states, last_states
+        return hidden_states, last_states, causal_order
 
 
 class PermutedDKT(nn.Module):
@@ -145,15 +144,12 @@ class PermutedDKT(nn.Module):
         T, B = concept_input.shape # T is the number of timesteps and B is the batch_size
         input = torch.zeros(T, B, self.n_concepts)
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
-        hidden_states, _ = self.gru(input)
+        hidden_states, _, causal_order = self.gru(input)
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
-        output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
-        print("output", output)
-        pred = (output > 0.0).float()
-        # print(pred)
-        return pred
+        pred = torch.sigmoid(self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3))
+        pred = torch.gather(pred, 2, concept_input.unsqueeze(2)).squeeze(2)
+        return pred, causal_order
 
 
 def main():
@@ -161,20 +157,22 @@ def main():
     learning_rate = 0.001
     concept_input = torch.randint(0, 5, (4, 2))
     labels = torch.randint(0, 2, (4, 2)) * 2 - 1
-    print("concept:", concept_input)
-    print("labels:", labels)
-    optimizer = torch.optim.SGD(dkt.parameters(), lr = learning_rate)
-    cc_loss = nn.BCEWithLogitsLoss()
-    
+    # print("concept:", concept_input)
+    # print("labels:", labels)
+    optimizer = torch.optim.AdamW(dkt.parameters(), lr = learning_rate)
+    BCE_loss = nn.BCELoss()
     for i in range(1):
-        pred = dkt(concept_input, labels)
-        loss = cc_loss(pred, torch.clamp(labels, min=0).float())
-        acc = torch.mean((pred == torch.clamp(labels, min=0)).float())
+        optimizer.zero_grad()
+        pred, causal_order = dkt(concept_input, labels)
+        loss = BCE_loss(pred, torch.clamp(labels, min=0).float())
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
+        y_hat = (pred >= 0.5).float()
+        acc = torch.mean((y_hat == torch.clamp(labels, min=0)).float())
         print("loss:", loss)
-        print("acc", acc)
+        print("acc:", acc)
+    print(causal_order)
+
 
 if __name__ == "__main__":
     main()
