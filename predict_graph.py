@@ -126,7 +126,7 @@ class PermutedGru(nn.Module):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
-        lower = self.permuted_matrix(verbose=True)
+        lower = self.permuted_matrix(verbose=False) # Verbose Flag
         outputs = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
@@ -178,6 +178,7 @@ class TrainingDataset(Dataset):
         self.labels = labels
         # Put number of construct here?
         self.n_constructs = len(tot_construct_set)
+        self.unique_construct_list = list(tot_construct_set)
     def __len__(self):
         return len(self.labels)
     def __getitem__(self, idx):
@@ -197,6 +198,7 @@ def createDataset(filename: str):
     tot_construct_set = set()
     tot_construct_list = list()
     tot_label_list = list()
+    
     for user, user_info in simple_df.groupby('UserId'):
 
         constructs = user_info["ConstructId"].values.tolist() # [C]
@@ -213,6 +215,12 @@ def createDataset(filename: str):
         tot_construct_list.append(constructs)
         tot_label_list.append(labels)
 
+        # serialized_constructs = list(map(lambda construct: self.unique_construct_list.index(construct), constructs))
+        # tot_serialized_construct_list.append(serialized_constructs)
+
+    # Need to add 0 as for construct not learned by the student
+    tot_construct_set.add(0)
+
     ######################
     ### How to store TD?
     ######################
@@ -220,7 +228,20 @@ def createDataset(filename: str):
     # 1) [Q, S] as in transposed format
     # TD = TrainingDataset(list(map(list, zip(*tot_construct_list))), list(map(list, zip(*tot_label_list))), tot_construct_set)
     # 2) [S, Q]
-    TD = TrainingDataset(tot_construct_list, tot_label_list, tot_construct_set)
+    # TD = TrainingDataset(tot_construct_list, tot_label_list, tot_construct_set)
+
+
+    ########################
+    ### For One-Hot encoding
+    #########################
+    tot_serialized_construct_list = list()
+    unique_construct_list = list(tot_construct_set)
+    # print(unique_construct_list)
+    for constructs in tot_construct_list:
+        # print("constructs: ", constructs)
+        serialized_constructs = list(map(lambda x: unique_construct_list.index(x), constructs))
+        tot_serialized_construct_list.append(serialized_constructs)
+    TD = TrainingDataset(tot_serialized_construct_list, tot_label_list, tot_construct_set)
 
     # construct_label_df = pd.DataFrame({'Construct' : tot_construct_list, 'Label' : tot_label_list})
     # TD = TrainingDataset(construct_label_df['Construct'], construct_label_df['Label'], tot_construct_set)
@@ -242,22 +263,24 @@ def createDataset(filename: str):
     return TD
 
 def main():
-    training_set = createDataset('data/sample_data_lessons_small.csv')
+    # training_set = createDataset('data/sample_data_lessons_small.csv')
+    # training_set = createDataset('data/Task_3_dataset/checkins_lessons_checkouts_training.csv')
+    training_set = createDataset('data/Task_3_dataset/tmp_training.csv')
+
     print("Number of constructs: ", training_set.n_constructs)
     dkt = PermutedDKT(n_constructs=training_set.n_constructs)
-    training_loader = DataLoader(training_set, batch_size=1, shuffle=False)
+    training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
     learning_rate = 0.001
     optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
     for epoch in range(1): # loop over the dataset multiple times
         for i, data in enumerate(training_loader, 0):
-            print("HI\n")
-            print(i, data)
             constructs = data['Construct']
             labels = data['Label']
-            # optimizer.zero_grad()
+            optimizer.zero_grad()
             loss, acc = dkt(torch.stack(constructs), torch.stack(labels))
-            # loss.backward()
-            # optimizer.step()
+            loss.backward()
+            optimizer.step()
+            print("loss: ", loss.data, "\nacc: ", acc.data)
 
     # dkt = PermutedDKT(n_constructs=5)
     # construct_input = torch.randint(0, 5, (4, 2))
