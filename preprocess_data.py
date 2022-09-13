@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import torch
 import json
@@ -27,7 +28,9 @@ def createDataset(filename: str):
     
     tot_construct_set = set()
     result = torch.tensor([]) # [1] -> [S, 2, Q]
-    for user, user_info in simple_df.groupby('UserId'):
+    for ctr, (user, user_info) in enumerate(simple_df.groupby('UserId')):
+        if ctr % 100 == 0:
+            print(ctr)
         # print("User: ", user, "\t", "User Info: ", user_info)
         
         # List of ConstructId and IsCorrect
@@ -38,8 +41,8 @@ def createDataset(filename: str):
         tot_construct_set.update(constructs)
 
         # Pad for ConstructId that has not been dealt with a user
-        _num_of_constructs = len(constructs)
-        pad_needed = num_of_questions - _num_of_constructs # [P = Q - C]
+        num_of_constructs = len(constructs)
+        pad_needed = num_of_questions - num_of_constructs # [P = Q - C]
         constructs += [0] * pad_needed # [Q]
         correct += [0] * pad_needed # [Q]
 
@@ -56,21 +59,30 @@ def createDataset(filename: str):
     return result, tot_construct_list # [S, 2, Q]
     
 def main():
-    student_data, tot_construct_list = createDataset('data/sample_data_lessons_small.csv') # [S, 2, Q] Faster and better for debugging
+    use_main = 1 # 1 for using main data, anything else for using sample data
+    if use_main:
+        data_path = 'data/Task_3_dataset/checkins_lessons_checkouts_training.csv'
+        prefix_path = 'student_data'
+    else:
+        data_path = 'data/sample_data_lessons_small.csv'
+        prefix_path = 'sample_student_data'
+    student_data, tot_construct_list = createDataset(data_path) # [S, 2, Q] Faster and better for debugging
     print("num_of_constructs: ", len(tot_construct_list))
 
-    num_students, _, num_questions = student_data.shape
     transform_student_data = torch.transpose(student_data, 0, 2) # [S, 2, Q] --> [Q, 2, S]
 
-    torch.save(transform_student_data, 'serialized_torch/sample_student_data_tensor.pt')
-    with open("serialized_torch/tmp_construct_list.json", "w") as fp:
+    torch.save(transform_student_data, os.path.join('serialized_torch', prefix_path+'_tensor.pt'))
+    with open(os.path.join('serialized_torch', prefix_path+'_construct_list.json'), "w") as fp:
         json.dump(tot_construct_list, fp)
 
     # student_data = createDataset('data/Task_3_dataset/checkins_lessons_checkouts_training.csv') # [S, 2, Q]
     features = transform_student_data[:, 0, :] # [Q, S]
-    print("features: ", features)
     labels = transform_student_data[:, 1, :] # [Q, S]
-    print("labels: ", labels)
+    # print("labels: ", labels)
+    # print("features: ", features)
+    print('Features shape:', features.shape)
+    print('Labels shape', labels.shape)
+
 
 if __name__ == "__main__":
     # loaded_file = torch.load('serialized_torch/student_data_tensor.pt') # This is also an option
