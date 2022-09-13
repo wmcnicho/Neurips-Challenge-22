@@ -78,6 +78,7 @@ class PermutedGruCell(nn.Module):
     def reset_parameters(self):
         for w in self.parameters():
             nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+            # print(w.requires_grad)
 
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
@@ -137,7 +138,8 @@ class PermutedDKT(nn.Module):
         self.gru = PermutedGru(n_concepts, batch_first=False)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(1, 1)
-
+        # for param in self.output_layer.parameters():
+        #     print(param.requires_grad)
     def forward(self, concept_input, labels):
         # Input shape is T, B
         # Input[i,j]=k at time i, for student j, concept k is attended
@@ -150,31 +152,87 @@ class PermutedDKT(nn.Module):
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
-        print("output", output)
+        # print("output", output)
         pred = (output > 0.0).float()
         # print(pred)
         return pred
 
 
+# def main():
+#     dkt = PermutedDKT(n_concepts=5)
+#     learning_rate = 0.001
+#     XX = 10
+#     # concept_input = torch.randint(0, 5, (4, 2))
+#     # labels = torch.randint(0, 2, (4, 2)) * 2 - 1
+
+#     concept_input_list = torch.randint(0, 5, (XX, 4, 2))
+#     labels_list = torch.randint(0, 2, (XX, 4, 2)) * 2 - 1
+
+#     # print("concept:", concept_input)
+#     # print("labels:", labels)
+#     optimizer = torch.optim.SGD(dkt.parameters(), lr=learning_rate)
+#     cc_loss = nn.BCEWithLogitsLoss()
+    
+#     for i in range(XX):
+#         print("Training ", i, "th")
+#         y_pred = dkt(concept_input_list[i], labels_list[i])
+#         optimizer.zero_grad()
+#         y = torch.clamp(labels_list[i], min=0).float()
+#         loss = cc_loss(y_pred, y)
+#         acc = torch.mean((y_pred == y).float())
+#         loss.requires_grad = True
+#         loss.backward()
+#         optimizer.step()
+#         print("loss:", loss)
+#         print("acc", acc)
+#         print("\n")
+
 def main():
     dkt = PermutedDKT(n_concepts=5)
+
+    T = 4 # number of questions
+    B = 2 # number of students
+
+    concept_input = torch.randint(0, 5, (T, B))
+    labels = torch.randint(0, 2, (T, B)) * 2 - 1
+
+    print("Input: \n")
+    print(concept_input)
+    # XX = 10
+    # concept_input_list = torch.randint(0, 5, (XX, 4, 2))
+    # labels_list = torch.randint(0, 2, (XX, 4, 2)) * 2 - 1
+
+    # Define hyperparameters
+    # n_epochs = 100
+    # lr=0.01
     learning_rate = 0.001
-    concept_input = torch.randint(0, 5, (4, 2))
-    labels = torch.randint(0, 2, (4, 2)) * 2 - 1
-    print("concept:", concept_input)
-    print("labels:", labels)
-    optimizer = torch.optim.SGD(dkt.parameters(), lr = learning_rate)
-    cc_loss = nn.BCEWithLogitsLoss()
-    
-    for i in range(1):
-        pred = dkt(concept_input, labels)
-        loss = cc_loss(pred, torch.clamp(labels, min=0).float())
-        acc = torch.mean((pred == torch.clamp(labels, min=0)).float())
+
+    # Define Loss, Optimizer
+    loss_fn = nn.BCEWithLogitsLoss()
+    optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
+
+    dkt.train()
+
+    niter = 1
+
+    running_loss = 0.0
+    for _ in range(0, niter):
+        # zero the parameter gradients
+        optimizer.zero_grad()
+        # forward + backward + optimize
+        y_pred = dkt(concept_input, labels)
+        loss = loss_fn(y_pred, torch.clamp(labels, min=0).float())
+        loss.requires_grad = True
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
-        print("loss:", loss)
-        print("acc", acc)
+        # print statistics
+        print("-" * 10)
+        running_loss += loss.item()
+        for name, val in dkt.named_parameters():
+            # print("name: ", name, "\nval: ", val.data)
+            if name == "gru.permuted_matrix.matrix":
+                print("Permutation Matrix P: \n", val.data)
+
 
 if __name__ == "__main__":
     main()

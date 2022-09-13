@@ -1,12 +1,18 @@
+import pandas as pd
+import torch
+from torch.utils.data import Dataset, DataLoader
+from scipy import stats
+
 import math
-​
 import pudb
 import torch
 import torch.nn as nn
-​
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-​
-​
+
+###########################
+### Aritra Implementation
+###########################
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
         super().__init__()
@@ -29,11 +35,12 @@ class PermutedGruCell(nn.Module):
         self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.reset_parameters()
-​
+
+
     def reset_parameters(self):
         for w in self.parameters():
             nn.init.kaiming_uniform_(w, a=math.sqrt(5))
-​
+
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
         if hidden is None:
@@ -51,8 +58,8 @@ class PermutedGruCell(nn.Module):
         n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
         hy = hidden * z_t + (1.0 - z_t) * n_t
         return hy
-​
-​
+
+
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature=100, unroll=20):
         super().__init__()
@@ -60,7 +67,7 @@ class PermutationMatrix(nn.Module):
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
         self.lower = torch.tril(torch.ones(input_size, input_size))
-​
+
     def forward(self, verbose=False):
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         for _ in range(self.unroll):
@@ -97,10 +104,10 @@ class PermutationMatrix(nn.Module):
                 torch.matmul(torch.matmul(new_matrix, self.lower), new_matrix.t()),
             )
             print("Causal Order\n", causal_order)
-​
+
         return output_lower
-​
-​
+
+
 class PermutedGru(nn.Module):
     def __init__(
         self,
@@ -114,7 +121,7 @@ class PermutedGru(nn.Module):
         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
         self.permuted_matrix = PermutationMatrix(hidden_size)
-​
+
     def forward(self, input_, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
@@ -124,7 +131,7 @@ class PermutedGru(nn.Module):
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
             outputs.append(hidden.clone())
-​
+
         hidden_states = torch.stack(outputs)  # T, B, H
         last_states = []
         if lengths is None:
@@ -133,43 +140,131 @@ class PermutedGru(nn.Module):
             last_states.append(hidden_states[l - 1, idx, :])
         last_states = torch.stack(last_states)
         return hidden_states, last_states
-​
-​
+
+
 class PermutedDKT(nn.Module):
-    def __init__(self, n_concepts):
+    def __init__(self, n_constructs):
         super().__init__()
-        self.gru = PermutedGru(n_concepts, batch_first=False)
-        self.n_concepts = n_concepts
+        self.gru = PermutedGru(n_constructs, batch_first=False)
+        self.n_constructs = n_constructs
         self.output_layer = nn.Linear(1, 1)
-​
-    def forward(self, concept_input, labels):
+
+    def forward(self, construct_input, labels):
         # Input shape is T, B
-        # Input[i,j]=k at time i, for student j, concept k is attended
+        # Input[i,j]=k at time i, for student j, construct k is attended
         # label is T,B 0/1
-        T, B = concept_input.shape
-        input = torch.zeros(T, B, self.n_concepts)
-        input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
+        T, B = construct_input.shape
+        input = torch.zeros(T, B, self.n_constructs)
+        input.scatter_(2, construct_input.unsqueeze(2), labels.unsqueeze(2).float())
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
-​
+
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
+        output = torch.gather(output, 2, construct_input.unsqueeze(2)).squeeze(2)
         pred = (output > 0.0).float()
         acc = torch.mean((pred == labels).float())
         cc_loss = nn.BCEWithLogitsLoss()
         loss = cc_loss(output, labels.float())
         return loss, acc
-​
-​
+
+###########################
+### Create TrainingDataset
+###########################
+class TrainingDataset(Dataset):
+    def __init__(self, constructs, labels, tot_construct_set):
+        self.constructs = constructs
+        self.labels = labels
+        # Put number of construct here?
+        self.n_constructs = len(tot_construct_set)
+    def __len__(self):
+        return len(self.labels)
+    def __getitem__(self, idx):
+        construct = self.constructs[idx]
+        label = self.labels[idx]
+        sample = {"Construct": construct, "Label": label}
+        return sample
+
+def createDataset(filename: str):
+    lessons_df = pd.read_csv(filename)
+    checkin_df = lessons_df[lessons_df['Type'] == 'Checkin']
+    simple_df = checkin_df.iloc[:, [2, 5, 9]] 
+    simple_df.loc[simple_df["IsCorrect"] == 0, "IsCorrect"] = -1 
+
+    num_of_questions = stats.mode(simple_df["UserId"]).count[0]
+
+    tot_construct_set = set()
+    tot_construct_list = list()
+    tot_label_list = list()
+    for user, user_info in simple_df.groupby('UserId'):
+
+        constructs = user_info["ConstructId"].values.tolist() # [C]
+        labels = user_info["IsCorrect"].values.tolist() # [C]
+
+        tot_construct_set.update(constructs)
+
+        num_of_constructs = len(constructs)
+        pad_needed = num_of_questions - num_of_constructs # [P = Q - C]
+
+        constructs += [0] * pad_needed # [Q]
+        labels += [0] * pad_needed # [Q]
+
+        tot_construct_list.append(constructs)
+        tot_label_list.append(labels)
+
+    ######################
+    ### How to store TD?
+    ######################
+    # Added tot_construct_set for initialization to store the number of total constructs.
+    # 1) [Q, S] as in transposed format
+    # TD = TrainingDataset(list(map(list, zip(*tot_construct_list))), list(map(list, zip(*tot_label_list))), tot_construct_set)
+    # 2) [S, Q]
+    TD = TrainingDataset(tot_construct_list, tot_label_list, tot_construct_set)
+
+    # construct_label_df = pd.DataFrame({'Construct' : tot_construct_list, 'Label' : tot_label_list})
+    # TD = TrainingDataset(construct_label_df['Construct'], construct_label_df['Label'], tot_construct_set)
+
+    # # Display text and label.
+    # print('\nFirst iteration of data set: ', next(iter(TD)), '\n')
+    # # Print how many items are in the data set
+    # print('Length of data set: ', len(TD), '\n')
+    # # Print entire data set
+    # print('Entire data set: ', list(DataLoader(TD)), '\n')
+
+    # DL = DataLoader(TD, batch_size=2, shuffle=False)
+    # for (idx, batch) in enumerate(DL):
+    #     # Print the 'text' data of the batch
+    #     print(idx, 'Construct ', batch['Construct'])
+    #     # Print the 'class' data of batch
+    #     print(idx, 'Label: ', batch['Label'], '\n')
+
+    return TD
+
 def main():
-    dkt = PermutedDKT(n_concepts=5)
-    concept_input = torch.randint(0, 5, (4, 2))
-    labels = torch.randint(0, 2, (4, 2)) * 2 - 1
-    loss, acc = dkt(concept_input, labels)
-    print(loss, acc)
-​
-​
+    training_set = createDataset('data/sample_data_lessons_small.csv')
+    print("Number of constructs: ", training_set.n_constructs)
+    dkt = PermutedDKT(n_constructs=training_set.n_constructs)
+    training_loader = DataLoader(training_set, batch_size=1, shuffle=False)
+    learning_rate = 0.001
+    optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
+    for epoch in range(1): # loop over the dataset multiple times
+        for i, data in enumerate(training_loader, 0):
+            print("HI\n")
+            print(i, data)
+            constructs = data['Construct']
+            labels = data['Label']
+            # optimizer.zero_grad()
+            loss, acc = dkt(torch.stack(constructs), torch.stack(labels))
+            # loss.backward()
+            # optimizer.step()
+
+    # dkt = PermutedDKT(n_constructs=5)
+    # construct_input = torch.randint(0, 5, (4, 2))
+    # labels = torch.randint(0, 2, (4, 2)) * 2 - 1
+    # loss, acc = dkt(construct_input, labels)
+    # print(loss, acc)
+
+
 if __name__ == "__main__":
     main()
