@@ -231,6 +231,7 @@ def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
 def train(epochs, model, train_dataloader, val_dataloader, optimizer):
     # Store the average loss after each epoch so we can plot them.
     loss_values = []
+    train_file = open('train_debug.txt', 'w')
 
     # For each epoch...
     for epoch_i in range(0, epochs):
@@ -241,9 +242,9 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer):
 
         # Perform one full pass over the training set.
 
-        print("")
-        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
-        print('Training...')
+        print("", file=train_file)
+        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs), file=train_file)
+        print('Training...', file=train_file)
 
         # Reset the total loss for this epoch.
         total_loss = 0
@@ -305,8 +306,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer):
         # Store the loss value for plotting the learning curve.
         loss_values.append(avg_train_loss)
 
-        print("")
-        print("  Average training loss: {0:.2f}".format(avg_train_loss))
+        print("", file=train_file)
+        print("  Average training loss: {0:.2f}".format(avg_train_loss), file=train_file)
 
 
 def main():
