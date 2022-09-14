@@ -8,6 +8,8 @@ import pudb
 import torch
 import torch.nn as nn
 
+torch.manual_seed(37)
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ###########################
@@ -46,6 +48,8 @@ class PermutedGruCell(nn.Module):
         if hidden is None:
             hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
         W_ir = self.W_ir * lower
+        # print("DEBUG W_ir: ")
+        # print(self.W_ir)
         W_hr = self.W_hr * lower
         W_iz = self.W_iz * lower
         W_hz = self.W_hz * lower
@@ -61,7 +65,7 @@ class PermutedGruCell(nn.Module):
 
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=20):
+    def __init__(self, input_size, temperature=10, unroll=20):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
@@ -69,7 +73,23 @@ class PermutationMatrix(nn.Module):
         self.lower = torch.tril(torch.ones(input_size, input_size))
 
     def forward(self, verbose=False):
-        matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
+        print("matrix debug: ")
+        # print(self.matrix)
+        print("isNan: ", torch.sum(torch.isnan(self.matrix)))
+        matrix_shape = self.matrix.shape[0]
+
+        max_row = torch.max(self.matrix, dim=1).values.reshape(matrix_shape, 1)
+        ones = torch.ones(matrix_shape).reshape(1, matrix_shape)
+
+        # for i, val in enumerate(self.matrix):
+        #     print("row: ", i, "\n", "val: ", val, "\n", "max_row: ", max_row)
+        #     self.matrix[i] = val - max_row[i]
+        # dummy_col = torch.ones(self.matrix.size(0))
+        # X = torch.matmul(max_row, dummy_col)
+        # print("XX: ", X.shape)
+        # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
+        matrix = torch.exp(self.temperature * (self.matrix - torch.matmul(max_row, ones)))
+        print(matrix)
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
@@ -156,18 +176,29 @@ class PermutedDKT(nn.Module):
         T, B = construct_input.shape
         input = torch.zeros(T, B, self.n_constructs)
         input.scatter_(2, construct_input.unsqueeze(2), labels.unsqueeze(2).float())
+        print("Non-zero element in input: ", torch.count_nonzero(input))
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
+        # print("init state: ", init_state)
+        # print("hidden state: ", hidden_states)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
-        output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
+        # output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
+        # print("Shifted hidden states: ", shifted_hidden_states)
+        output = torch.sigmoid(self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3))
+        # print("Output after sigmoid : ", output.data)
         output = torch.gather(output, 2, construct_input.unsqueeze(2)).squeeze(2)
-        pred = (output > 0.0).float()
-        acc = torch.mean((pred == labels).float())
-        cc_loss = nn.BCEWithLogitsLoss()
-        print("output: ", output)
-        loss = cc_loss(output, labels.float())
+        # print("Output after gather : ", output.data)
+        # pred = (output > 0.0).float()
+        pred = (output >= 0.5).float()
+        # acc = torch.mean((pred == labels).float())
+        acc = torch.mean((pred == torch.clamp(labels, min=0).float()).float())
+        # cc_loss = nn.BCEWithLogitsLoss()
+        cc_loss = nn.BCELoss()
+        
+        # loss = cc_loss(output, labels.float())
+        loss = cc_loss(output, torch.clamp(labels, min=0).float())
         return loss, acc
 
 ###########################
@@ -271,9 +302,9 @@ def main():
     print("Number of constructs: ", training_set.n_constructs)
     dkt = PermutedDKT(n_constructs=training_set.n_constructs)
     training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
-    learning_rate = 0.05
+    learning_rate = 0.5
     optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
-    n_epochs = 20
+    n_epochs = 50
     for epoch in range(n_epochs): # loop over the dataset multiple times
         train_loss=[]
         train_accuracy=[]
@@ -284,6 +315,8 @@ def main():
             # print("constructs: ", constructs)
             # print("labels: ", labels)
             optimizer.zero_grad()
+            print("constructs: ", torch.stack(constructs))
+            print("labels: ", torch.stack(labels))
             loss, acc = dkt(torch.stack(constructs), torch.stack(labels))
             train_accuracy.append(acc)
             train_loss.append(loss.item())
