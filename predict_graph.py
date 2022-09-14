@@ -1,7 +1,19 @@
 import math
 import json
+import random
+import numpy as np
 import torch
 import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
+from torch.optim import AdamW
+
+# setting the seed
+seed_val = 37
+random.seed(seed_val)
+np.random.seed(seed_val)
+torch.manual_seed(seed_val)
+torch.cuda.manual_seed_all(seed_val)
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -195,6 +207,107 @@ def get_mapped_concept_input(initial_concept_input, tot_construct_list):
         new_matrix.append(row_values)
     return new_matrix
 
+def get_data_loader(batch_size, concept_input, labels):
+	data = TensorDataset(concept_input, labels)
+	sampler = SequentialSampler(data) # change to randomsampler later
+	dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
+	return dataloader
+
+def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
+    if name == "Adam":
+        optimizer = AdamW(model.parameters(),
+                    lr = 2e-5, # args.learning_rate - default is 5e-5, our notebook had 2e-5
+                    eps = 1e-8 # args.adam_epsilon  - default is 1e-8.
+                )
+        total_steps = train_dataloader_len * epochs
+
+        # # Create the learning rate scheduler.
+        # scheduler = get_linear_schedule_with_warmup(optimizer, 
+        #                                             num_warmup_steps = 0, # Default value in run_glue.py
+        #                                             num_training_steps = total_steps)
+    # return optimizer, scheduler
+    return optimizer
+
+def train(epochs, model, train_dataloader, val_dataloader, optimizer):
+    # Store the average loss after each epoch so we can plot them.
+    loss_values = []
+
+    # For each epoch...
+    for epoch_i in range(0, epochs):
+
+        # ========================================
+        #               Training
+        # ========================================
+
+        # Perform one full pass over the training set.
+
+        print("")
+        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+        print('Training...')
+
+        # Reset the total loss for this epoch.
+        total_loss = 0
+
+        # Put the model into training mode. Don't be mislead--the call to 
+        # `train` just changes the *mode*, it doesn't *perform* the training.
+        # `dropout` and `batchnorm` layers behave differently during training
+        # vs. test (source: https://stackoverflow.com/questions/51433378/what-does-model-train-do-in-pytorch)
+        model.train()
+
+        # For each batch of training data...
+        for step, batch in enumerate(train_dataloader):
+            # Unpack this training batch from our dataloader. 
+            #
+            # As we unpack the batch, we'll also copy each tensor to the GPU using the 
+            # `to` method.
+            #
+            # `batch` contains three pytorch tensors:
+            #   [0]: input ids 
+            #   [1]: attention masks
+            #   [2]: labels 
+            b_input_ids = batch[0].to(device)
+            b_labels = batch[1].to(device)
+
+            # Always clear any previously calculated gradients before performing a
+            # backward pass. PyTorch doesn't do this automatically because 
+            # accumulating the gradients is "convenient while training RNNs". 
+            # (source: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch)
+            model.zero_grad()        
+
+            # Perform a forward pass (evaluate the model on this training batch).
+            # This will return the loss (rather than the model output) because we
+            # have provided the `labels`.
+            # The documentation for this `model` function is here: 
+            # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
+            loss, acc = model(b_input_ids, b_labels)
+
+            # Accumulate the training loss over all of the batches so that we can
+            # calculate the average loss at the end. `loss` is a Tensor containing a
+            # single value; the `.item()` function just returns the Python value 
+            # from the tensor.
+            total_loss += loss.item()
+
+            # Perform a backward pass to calculate the gradients.
+            loss.backward()
+
+            # Clip the norm of the gradients to 1.0.
+            # This is to help prevent the "exploding gradients" problem.
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+            # Update parameters and take a step using the computed gradient.
+            # The optimizer dictates the "update rule"--how the parameters are
+            # modified based on their gradients, the learning rate, etc.
+            optimizer.step()
+
+        # Calculate the average loss over the training data.
+        avg_train_loss = total_loss / len(train_dataloader)            
+
+        # Store the loss value for plotting the learning curve.
+        loss_values.append(avg_train_loss)
+
+        print("")
+        print("  Average training loss: {0:.2f}".format(avg_train_loss))
+
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
@@ -203,27 +316,30 @@ def main():
         tot_construct_list = json.load(fp)
     num_of_students, _, num_of_questions = dataset_tensor.shape
 
-    dkt = PermutedDKT(n_concepts=len(tot_construct_list)+1)
+    dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1)
     # concept_input = dataset_tensor[:, 0, :]
     # labels = dataset_tensor[:, 1, :]
     initial_concept_input = dataset_tensor[:, 0, :]
     map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
-    concept_input = torch.tensor(map_concept_input, dtype=torch.int64)
-    labels = torch.tensor(dataset_tensor[:, 1, :], dtype=torch.int64)
+    concept_input = torch.tensor(map_concept_input, dtype=torch.long)
+    labels = torch.tensor(dataset_tensor[:, 1, :], dtype=torch.long)
     print(concept_input)
     print(labels)
-    loss, acc = dkt(concept_input, labels)
-    print(loss, acc)
 
-    # # ###
-    # # # Previous Implementation
-    # # ###
-    # dkt = PermutedDKT(n_concepts=5)
-    # concept_input = torch.randint(0, 5, (4, 2))
-    # labels = torch.randint(0, 2, (4, 2)) * 2 - 1
-    # print(concept_input)
-    # print(labels)
-    # loss, acc = dkt(concept_input, labels)
+    # TODO: construct a tensor dataset
+    batch_size = 10
+    epochs = 5
+    dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_input, labels=labels)
+    print("Successfull in data prepration!")
+    # TODO: Getting optimzer and scheduler
+    optimizer = get_optimizer_scheduler("Adam", dkt_model, len(dataloader), epochs)
+    print("Successfully loaded the optimizer")
+
+    # Main Traning
+    model = train(epochs, dkt_model, dataloader, dataloader, optimizer) # add val_dataloader later
+
+    # loss, acc = dkt_model(concept_input, labels)
     # print(loss, acc)
+
 if __name__ == "__main__":
     main()
