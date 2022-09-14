@@ -34,6 +34,7 @@ class PermutedGruCell(nn.Module):
 
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
+        # Question: Why isn't self.W_ir being updated for every timestep?
         if hidden is None:
             hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
         W_ir = self.W_ir * lower
@@ -59,13 +60,14 @@ class PermutationMatrix(nn.Module):
         self.lower = torch.tril(torch.ones(input_size, input_size))
 
     def forward(self, verbose=False):
+        # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
         # ((P x L) x P^T)^T
         output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
-        ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True)
+        ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True) # gives the ideal order of the constructs
         new_matrix = torch.zeros_like(matrix)
         new_matrix.scatter_(
             1, ideal_matrix_order, torch.ones_like(ideal_matrix_order).float()
@@ -117,10 +119,11 @@ class PermutedGru(nn.Module):
         # lenghths is B,
         dim = 1 if self.batch_first else 0
         # lower = self.permuted_matrix(verbose=True)
-        lower = self.permuted_matrix(verbose=True)
+        lower = self.permuted_matrix(verbose=True) # (PLP')'
         outputs = []
         print("Forwarding PermutedGru")
         print("input_: ", input_)
+        # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             print("x: ", x.shape) #[2, 5]
             print("lower: ", lower)
@@ -132,8 +135,8 @@ class PermutedGru(nn.Module):
         if lengths is None:
             lengths = [len(input_)] * len(input_[0])
         for idx, l in enumerate(lengths):
-            last_states.append(hidden_states[l - 1, idx, :])
-        last_states = torch.stack(last_states)
+            last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
+        last_states = torch.stack(last_states) # [num_students, num_constructs]
         return hidden_states, last_states
 
 
@@ -161,25 +164,6 @@ class PermutedDKT(nn.Module):
         # Scatter input
         # scatter_(dim, index, src)
 
-        # # Concpet input
-        # [[3, 3], 
-        #  [0, 2],
-        #  [3, 0],
-        #  [3, 4]]
-        # # Labels
-        # [[-1, -1],
-        #  [-1,  1],
-        #  [ 1,  1],
-        #  [ 1,  1]]
-        # # Input
-        # [[[ 0.,  0.,  0., -1.,  0.],
-        #  [ 0.,  0.,  0., -1.,  0.]],
-        # [[-1.,  0.,  0.,  0.,  0.],
-        #  [ 0.,  0.,  1.,  0.,  0.]],
-        # [[ 0.,  0.,  0.,  1.,  0.],
-        #  [ 1.,  0.,  0.,  0.,  0.]],
-        # [[ 0.,  0.,  0.,  1.,  0.],
-        #  [ 0.,  0.,  0.,  0.,  1.]]]
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
         print("After input\n: ", input)
         # Clamp the values less than min(0) are replace by the min(0)
@@ -190,7 +174,7 @@ class PermutedDKT(nn.Module):
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
+        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
         pred = (output > 0.0).float()
         acc = torch.mean((pred == labels).float())
         cc_loss = nn.BCEWithLogitsLoss()
@@ -229,6 +213,7 @@ def main():
     print(concept_input)
     print(labels)
     loss, acc = dkt(concept_input, labels)
+    print(loss, acc)
 
     # # ###
     # # # Previous Implementation
