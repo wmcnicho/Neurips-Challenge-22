@@ -1,3 +1,4 @@
+import os
 import math
 import json
 import random
@@ -6,6 +7,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from torch.optim import AdamW
+from transformers import get_linear_schedule_with_warmup
 
 # setting the seed
 seed_val = 37
@@ -64,7 +66,7 @@ class PermutedGruCell(nn.Module):
         return hy
         
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=20):
+    def __init__(self, input_size, temperature=100, unroll=1000):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
@@ -73,6 +75,7 @@ class PermutationMatrix(nn.Module):
 
     def forward(self, verbose=False):
         # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
+        print(self.matrix)
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
@@ -131,14 +134,14 @@ class PermutedGru(nn.Module):
         # lenghths is B,
         dim = 1 if self.batch_first else 0
         # lower = self.permuted_matrix(verbose=True)
-        lower = self.permuted_matrix(verbose=True) # (PLP')'
+        lower = self.permuted_matrix(verbose=False) # (PLP')'
         outputs = []
-        print("Forwarding PermutedGru")
-        print("input_: ", input_)
+        # print("Forwarding PermutedGru")
+        # print("input_: ", input_)
         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-            print("x: ", x.shape) #[2, 5]
-            print("lower: ", lower)
+            # print("x: ", x.shape) #[2, 5]
+            # print("lower: ", lower)
             hidden = self.cell(x, lower, hidden)
             outputs.append(hidden.clone())
 
@@ -164,20 +167,20 @@ class PermutedDKT(nn.Module):
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
         T, B = concept_input.shape
-        print("PermutedDKT")
-        print("Number of questions: ", T)
-        print("Number of students: ", B)
-        print("Number of concepts:", self.n_concepts)
-        print("Concept input: ", concept_input)
+        # print("PermutedDKT")
+        # print("Number of questions: ", T)
+        # print("Number of students: ", B)
+        # print("Number of concepts:", self.n_concepts)
+        # print("Concept input: ", concept_input)
         input = torch.zeros(T, B, self.n_concepts)
-        print("Before input\n: ", input)
+        # print("Before input\n: ", input)
         # Unsqueeze concept_input & lables
         # [T,B] -> [T,B,1], Put 1 at index 2
         # Scatter input
         # scatter_(dim, index, src)
 
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
-        print("After input\n: ", input)
+        # print("After input\n: ", input)
         # Clamp the values less than min(0) are replace by the min(0)
         # Why transitioned to -1 and 1 in the first place?
         labels = torch.clamp(labels, min=0)
@@ -221,16 +224,17 @@ def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
                 )
         total_steps = train_dataloader_len * epochs
 
-        # # Create the learning rate scheduler.
-        # scheduler = get_linear_schedule_with_warmup(optimizer, 
-        #                                             num_warmup_steps = 0, # Default value in run_glue.py
-        #                                             num_training_steps = total_steps)
-    # return optimizer, scheduler
-    return optimizer
+        # Create the learning rate scheduler.
+        scheduler = get_linear_schedule_with_warmup(optimizer, 
+                                                    num_warmup_steps = 0, # Default value in run_glue.py
+                                                    num_training_steps = total_steps)
+    return optimizer, scheduler
 
-def train(epochs, model, train_dataloader, val_dataloader, optimizer):
+def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler):
     # Store the average loss after each epoch so we can plot them.
     loss_values = []
+    if os.path.exists('train_debug.txt'):
+        os.remove('train_debug.txt')
     train_file = open('train_debug.txt', 'w')
 
     # For each epoch...
@@ -242,9 +246,9 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer):
 
         # Perform one full pass over the training set.
 
-        print("", file=train_file)
-        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs), file=train_file)
-        print('Training...', file=train_file)
+        print("")
+        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+        print('Training...')
 
         # Reset the total loss for this epoch.
         total_loss = 0
@@ -257,6 +261,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer):
 
         # For each batch of training data...
         for step, batch in enumerate(train_dataloader):
+            print('Step:', step)
             # Unpack this training batch from our dataloader. 
             #
             # As we unpack the batch, we'll also copy each tensor to the GPU using the 
@@ -281,6 +286,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer):
             # The documentation for this `model` function is here: 
             # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
             loss, acc = model(b_input_ids, b_labels)
+            print('step loss:', loss)
 
             # Accumulate the training loss over all of the batches so that we can
             # calculate the average loss at the end. `loss` is a Tensor containing a
@@ -300,20 +306,23 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer):
             # modified based on their gradients, the learning rate, etc.
             optimizer.step()
 
+            # Update the learning rate.
+            scheduler.step()
+
         # Calculate the average loss over the training data.
         avg_train_loss = total_loss / len(train_dataloader)            
 
         # Store the loss value for plotting the learning curve.
         loss_values.append(avg_train_loss)
 
-        print("", file=train_file)
-        print("  Average training loss: {0:.2f}".format(avg_train_loss), file=train_file)
+        print("")
+        print("  Average training loss: {0:.2f}".format(avg_train_loss))
 
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
-    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/tmp_training_data_tensor.pt')
+    with open("serialized_torch/tmp_training_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     num_of_students, _, num_of_questions = dataset_tensor.shape
 
@@ -328,16 +337,16 @@ def main():
     print(labels)
 
     # TODO: construct a tensor dataset
-    batch_size = 10
+    batch_size = 64
     epochs = 5
     dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_input, labels=labels)
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
-    optimizer = get_optimizer_scheduler("Adam", dkt_model, len(dataloader), epochs)
+    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, len(dataloader), epochs)
     print("Successfully loaded the optimizer")
 
     # Main Traning
-    model = train(epochs, dkt_model, dataloader, dataloader, optimizer) # add val_dataloader later
+    model = train(epochs, dkt_model, dataloader, dataloader, optimizer, scheduler) # add val_dataloader later
 
     # loss, acc = dkt_model(concept_input, labels)
     # print(loss, acc)

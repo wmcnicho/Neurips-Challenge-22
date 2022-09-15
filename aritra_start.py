@@ -1,8 +1,9 @@
 import math
 
-import pudb
 import torch
 import torch.nn as nn
+
+torch.manual_seed(37)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -55,7 +56,7 @@ class PermutedGruCell(nn.Module):
 
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=20):
+    def __init__(self, input_size, temperature=100, unroll=1000):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
