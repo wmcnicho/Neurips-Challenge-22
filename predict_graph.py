@@ -18,6 +18,7 @@ torch.cuda.manual_seed_all(seed_val)
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print('Using device:', device)
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -34,12 +35,12 @@ class PermutedGruCell(nn.Module):
         \end{array}
         """
         self.hidden_size = hidden_size
-        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size))
-        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -69,9 +70,9 @@ class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature=100, unroll=1000):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
-        self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+        self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-        self.lower = torch.tril(torch.ones(input_size, input_size))
+        self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
 
     def forward(self, verbose=False):
         # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
@@ -172,7 +173,7 @@ class PermutedDKT(nn.Module):
         # print("Number of students: ", B)
         # print("Number of concepts:", self.n_concepts)
         # print("Concept input: ", concept_input)
-        input = torch.zeros(T, B, self.n_concepts)
+        input = torch.zeros(T, B, self.n_concepts, device=device)
         # print("Before input\n: ", input)
         # Unsqueeze concept_input & lables
         # [T,B] -> [T,B,1], Put 1 at index 2
@@ -187,7 +188,7 @@ class PermutedDKT(nn.Module):
         hidden_states, _ = self.gru(input)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
-        shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
+        shifted_hidden_states = (torch.cat([init_state, hidden_states], dim=0)[1:, :, :]).to(device)
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
         pred = (output > 0.0).float()
@@ -326,7 +327,7 @@ def main():
         tot_construct_list = json.load(fp)
     num_of_students, _, num_of_questions = dataset_tensor.shape
 
-    dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1)
+    dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
     # concept_input = dataset_tensor[:, 0, :]
     # labels = dataset_tensor[:, 1, :]
     initial_concept_input = dataset_tensor[:, 0, :]
@@ -337,7 +338,7 @@ def main():
     print(labels)
 
     # TODO: construct a tensor dataset
-    batch_size = 64
+    batch_size = 256
     epochs = 5
     dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_input, labels=labels)
     print("Successfull in data prepration!")
