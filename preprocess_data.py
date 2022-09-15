@@ -59,7 +59,7 @@ def createDataset(filename: str):
     return result, tot_construct_list # [S, 2, Q]
     
 def main():
-    use_main = 0 # 1 for using main data, anything else for using sample data
+    use_main = 1 # 1 for using main data, anything else for using sample data
     if use_main==1:
         data_path = 'data/Task_3_dataset/checkins_lessons_checkouts_training.csv'
         prefix_path = 'student_data'
