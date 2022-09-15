@@ -77,7 +77,17 @@ class PermutationMatrix(nn.Module):
     def forward(self, verbose=False):
         # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
         print(self.matrix)
-        matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
+        
+        matrix_shape = self.matrix.shape[0]
+
+        max_row = torch.max(self.matrix, dim=1).values.reshape(matrix_shape, 1)
+        ones = torch.ones(matrix_shape, device=device).reshape(1, matrix_shape)
+
+        matrix = torch.exp(self.temperature * (self.matrix - torch.matmul(max_row, ones)))
+        
+        # # NOTE. Aritra's implementation
+        # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
+        
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
@@ -220,7 +230,7 @@ def get_data_loader(batch_size, concept_input, labels):
 def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
     if name == "Adam":
         optimizer = AdamW(model.parameters(),
-                    lr = 2e-5, # args.learning_rate - default is 5e-5, our notebook had 2e-5
+                    lr = 5e-3, # args.learning_rate - default is 5e-5, our notebook had 2e-5
                     eps = 1e-8 # args.adam_epsilon  - default is 1e-8.
                 )
         total_steps = train_dataloader_len * epochs
@@ -237,6 +247,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
     if os.path.exists('train_debug.txt'):
         os.remove('train_debug.txt')
     train_file = open('train_debug.txt', 'w')
+    epochswise_losses = []
 
     # For each epoch...
     for epoch_i in range(0, epochs):
@@ -311,21 +322,25 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             scheduler.step()
 
         # Calculate the average loss over the training data.
-        avg_train_loss = total_loss / len(train_dataloader)            
+        avg_train_loss = total_loss / len(train_dataloader)
+        epochswise_losses.append(avg_train_loss)            
 
         # Store the loss value for plotting the learning curve.
         loss_values.append(avg_train_loss)
 
         print("")
         print("  Average training loss: {0:.2f}".format(avg_train_loss))
+    
+    return model, epochswise_losses
 
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/tmp_training_data_tensor.pt')
-    with open("serialized_torch/tmp_training_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
+    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
-    num_of_students, _, num_of_questions = dataset_tensor.shape
+    
+    num_of_questions, _, num_of_students = dataset_tensor.shape
 
     dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
     # concept_input = dataset_tensor[:, 0, :]
@@ -334,12 +349,15 @@ def main():
     map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
     concept_input = torch.tensor(map_concept_input, dtype=torch.long)
     labels = torch.tensor(dataset_tensor[:, 1, :], dtype=torch.long)
-    print(concept_input)
-    print(labels)
+    
+    print("PermutedDKT")
+    print("Number of questions: ", num_of_questions)
+    print("Number of students: ", num_of_students)
+    print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 256
-    epochs = 5
+    batch_size = 4
+    epochs = 50
     dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_input, labels=labels)
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
@@ -347,8 +365,10 @@ def main():
     print("Successfully loaded the optimizer")
 
     # Main Traning
-    model = train(epochs, dkt_model, dataloader, dataloader, optimizer, scheduler) # add val_dataloader later
+    model, epoch_loss = train(epochs, dkt_model, dataloader, dataloader, optimizer, scheduler) # add val_dataloader later
 
+    with open('train_epochwise_loss.json', 'w') as infile:
+        json.dump(epoch_loss, infile)
     # loss, acc = dkt_model(concept_input, labels)
     # print(loss, acc)
 
