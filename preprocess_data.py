@@ -59,13 +59,13 @@ def createDataset(filename: str):
     return result, tot_construct_list # [S, 2, Q]
     
 def main():
-    use_main = 1 # 1 for using main data, anything else for using sample data
+    use_main = 0 # 1 for using main data, anything else for using sample data
     if use_main:
         data_path = 'data/Task_3_dataset/checkins_lessons_checkouts_training.csv'
         prefix_path = 'student_data'
     else:
-        data_path = 'data/sample_data_lessons_small.csv'
-        prefix_path = 'sample_student_data'
+        data_path = 'data/Task_3_dataset/tmp_dataset/tmp_training.csv'
+        prefix_path = 'tmp_training_data'
     student_data, tot_construct_list = createDataset(data_path) # [S, 2, Q] Faster and better for debugging
     print("num_of_constructs: ", len(tot_construct_list))
 
