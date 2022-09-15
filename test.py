@@ -6,6 +6,8 @@ import torch.nn as nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+torch.manual_seed(37)
+
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
         super().__init__()
@@ -54,7 +56,7 @@ class PermutedGruCell(nn.Module):
 
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=20):
+    def __init__(self, input_size, temperature=10, unroll=1):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
@@ -62,7 +64,12 @@ class PermutationMatrix(nn.Module):
         self.lower = torch.tril(torch.ones(input_size, input_size))
 
     def forward(self, verbose=False):
+        matrix_shape = self.matrix.shape[0]
+        max_row = torch.max(self.matrix, dim=1).values.reshape(matrix_shape, 1)
+        ones = torch.ones(matrix_shape).reshape(1, matrix_shape)
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
+
+        # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)

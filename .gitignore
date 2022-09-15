@@ -1,2 +1,4 @@
 .DS_Store
 data/Task_3_dataset/*
+log
+test.py
