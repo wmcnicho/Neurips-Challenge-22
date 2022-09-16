@@ -172,9 +172,10 @@ class PermutedDKT(nn.Module):
         self.gru = PermutedGru(n_concepts, batch_first=False)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(1, 1)
+        self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
 
     def forward(self, concept_input, labels):
-        # Input shape is T, B
+        # Input shape is T (timestep - questions), B (batch size - num of students) 
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
         T, B = concept_input.shape
@@ -191,9 +192,16 @@ class PermutedDKT(nn.Module):
         # scatter_(dim, index, src)
 
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
-        # print("After input\n: ", input)
-        # Clamp the values less than min(0) are replace by the min(0)
-        # Why transitioned to -1 and 1 in the first place?
+
+        # TODO: Create a mask (0 when the input is 0)
+        mask = torch.ones(T, B, device=device)
+        zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
+        zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
+        for r, c in zip(zero_index_row, zero_index_col):
+            r_num, c_num = r.item(), c.item()
+            mask[r_num][c_num] = 0
+
+
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
 
@@ -203,9 +211,9 @@ class PermutedDKT(nn.Module):
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
         pred = (output > 0.0).float()
         acc = torch.mean((pred == labels).float())
-        cc_loss = nn.BCEWithLogitsLoss()
-        loss = cc_loss(output, labels.float())
-        return loss, acc
+        raw_loss = self.ce_loss(output, labels.float())
+        loss_masked = (raw_loss * mask).mean()
+        return loss_masked, acc
 
 def get_mapped_concept_input(initial_concept_input, tot_construct_list):
     map = {k:i for i, k in enumerate(tot_construct_list)}
@@ -222,10 +230,11 @@ def get_mapped_concept_input(initial_concept_input, tot_construct_list):
     return new_matrix
 
 def get_data_loader(batch_size, concept_input, labels):
-	data = TensorDataset(concept_input, labels)
-	sampler = SequentialSampler(data) # change to randomsampler later
-	dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
-	return dataloader
+    print('Using batch size:', batch_size)
+    data = TensorDataset(concept_input, labels)
+    sampler = SequentialSampler(data) # change to randomsampler later
+    dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
+    return dataloader
 
 def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
     if name == "Adam":
@@ -283,8 +292,9 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             #   [0]: input ids 
             #   [1]: attention masks
             #   [2]: labels 
-            b_input_ids = batch[0].to(device)
-            b_labels = batch[1].to(device)
+            # TODO: Re-transpose to make the dimension (Q, S)
+            b_input_ids = torch.transpose(batch[0], 0, 1).to(device)
+            b_labels = torch.transpose(batch[1], 0, 1).to(device)
 
             # Always clear any previously calculated gradients before performing a
             # backward pass. PyTorch doesn't do this automatically because 
@@ -348,7 +358,12 @@ def main():
     initial_concept_input = dataset_tensor[:, 0, :]
     map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
     concept_input = torch.tensor(map_concept_input, dtype=torch.long)
-    labels = torch.tensor(dataset_tensor[:, 1, :], dtype=torch.long)
+    
+    labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+    # TODO: Batch student-wise not question-wise (dim-1 must be student)
+    concept_inp_transpose = torch.transpose(concept_input, 0, 1)
+    labels_transpose = torch.transpose(labels, 0, 1)
+
     
     print("PermutedDKT")
     print("Number of questions: ", num_of_questions)
@@ -356,9 +371,10 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 4
-    epochs = 50
-    dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_input, labels=labels)
+    batch_size = 1
+    epochs = 5
+    dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_inp_transpose, labels=labels_transpose)
+    
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
     optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, len(dataloader), epochs)
