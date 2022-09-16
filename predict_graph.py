@@ -1,4 +1,5 @@
 import os
+import copy
 import math
 import json
 import random
@@ -252,12 +253,12 @@ def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
     return optimizer, scheduler
 
 def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler):
-    # Store the average loss after each epoch so we can plot them.
-    loss_values = []
     if os.path.exists('train_debug.txt'):
         os.remove('train_debug.txt')
     train_file = open('train_debug.txt', 'w')
-    epochswise_losses = []
+    epochswise_train_losses, epochwise_val_losses = [], []
+    prev_val_loss, early_stop_ctr, early_stop_threshold, early_stop_patience = 0, 0, 5, 0.0001
+    least_val_loss = math.inf
 
     # For each epoch...
     for epoch_i in range(0, epochs):
@@ -334,15 +335,42 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
         # Calculate the average loss over the training data.
         avg_train_loss = total_loss / len(train_dataloader)
-        epochswise_losses.append(avg_train_loss)            
-
-        # Store the loss value for plotting the learning curve.
-        loss_values.append(avg_train_loss)
+        epochswise_train_losses.append(avg_train_loss)            
 
         print("")
         print("  Average training loss: {0:.2f}".format(avg_train_loss))
+
+        ############### Validation ###############
+        tot_val_loss, tot_val_acc = 0, 0
+        for valstep, valbatch in enumerate(val_dataloader):
+            b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
+            b_labels_val = torch.transpose(valbatch[1], 0, 1).to(device)
+            
+            with torch.no_grad():
+                valloss, valacc = model(b_input_ids_val, b_labels_val)
+                tot_val_loss += valloss.item()
+                tot_val_acc += valacc
+        avg_val_loss = tot_val_loss / len(val_dataloader)
+        avg_acc = tot_val_acc/ len(val_dataloader)
+        print("  Average validation loss: {0:.2f}".format(avg_val_loss))
+        print("  Average vakidation accuracy: {0:.2f}".format(avg_acc))
+        epochwise_val_losses.append(avg_val_loss)
+        
+        if abs(avg_val_loss-prev_val_loss) < early_stop_patience:
+            if early_stop_ctr < early_stop_threshold:
+                early_stop_ctr += 1
+            else:
+                print('Early Stopping. No improvement in validation loss')
+                break 
+        
+        if avg_val_loss < least_val_loss:
+            model_copy = copy.deepcopy(model)
+            least_val_loss = avg_val_loss
+
+        prev_val_loss = avg_val_loss
     
-    return model, epochswise_losses
+    print('Least Validation loss:', least_val_loss)
+    return model_copy, epochswise_train_losses, epochwise_val_losses
 
 
 def main():
@@ -374,8 +402,8 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 32
-    epochs = 5
+    batch_size = 64
+    epochs = 500
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
     
@@ -385,10 +413,14 @@ def main():
     print("Successfully loaded the optimizer")
 
     # Main Traning
-    model, epoch_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
 
     with open('train_epochwise_loss.json', 'w') as infile:
-        json.dump(epoch_loss, infile)
+        json.dump(epoch_train_loss, infile)
+
+    with open('val_epochwise_loss.json', 'w') as infile:
+        json.dump(epoch_val_loss, infile)
+
     # loss, acc = dkt_model(concept_input, labels)
     # print(loss, acc)
 
