@@ -3,6 +3,7 @@ import math
 import json
 import random
 import numpy as np
+from sklearn.model_selection import train_test_split
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
@@ -346,8 +347,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/tmp_training_data_tensor.pt')
+    with open("serialized_torch/tmp_training_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -363,7 +364,9 @@ def main():
     # TODO: Batch student-wise not question-wise (dim-1 must be student)
     concept_inp_transpose = torch.transpose(concept_input, 0, 1)
     labels_transpose = torch.transpose(labels, 0, 1)
-
+    # TODO: Get train-validation set
+    train_input, valid_input, train_label, valid_label = train_test_split(concept_inp_transpose, labels_transpose, 
+                                                            train_size=0.8, random_state=seed_val)
     
     print("PermutedDKT")
     print("Number of questions: ", num_of_questions)
@@ -371,17 +374,18 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 1
+    batch_size = 32
     epochs = 5
-    dataloader = get_data_loader(batch_size=batch_size, concept_input=concept_inp_transpose, labels=labels_transpose)
+    train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
+    val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
     
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
-    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, len(dataloader), epochs)
+    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, len(train_dataloader), epochs)
     print("Successfully loaded the optimizer")
 
     # Main Traning
-    model, epoch_loss = train(epochs, dkt_model, dataloader, dataloader, optimizer, scheduler) # add val_dataloader later
+    model, epoch_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
 
     with open('train_epochwise_loss.json', 'w') as infile:
         json.dump(epoch_loss, infile)
