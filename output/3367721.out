@@ -1,0 +1,133 @@
+start
+https://app.neptune.ai/phdprojects/challenge/e/CHAL-1
+Epoch  0
+Median Row Sum: 1.0, Col Sum: 1.0 Row Max: 0.01 Col Max: 0.01
+Ideal Permutation Matrix
+ tensor([[0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.]], device='cuda:0')
+Is it a permutation matrix?
+x.ndim:  2
+x.shape[0] == x.shape[1]:  True
+(x.sum(axis=0) == 1.).all():  False
+(x.sum(axis=1) == 1.).all():  True
+((x == 1.) | (x == 0.)).all()):  True
+is_permuted?:  False
+Ideal Lower Triangular                    matrix
+ tensor([[1., 1., 0.,  ..., 1., 0., 1.],
+        [0., 1., 0.,  ..., 1., 0., 0.],
+        [1., 1., 1.,  ..., 1., 1., 1.],
+        ...,
+        [0., 0., 0.,  ..., 1., 0., 0.],
+        [1., 1., 0.,  ..., 1., 1., 1.],
+        [1., 1., 0.,  ..., 1., 0., 1.]], device='cuda:0')
+Epoch  1
+Median Row Sum: 1.0, Col Sum: 1.0 Row Max: 0.01 Col Max: 0.01
+Ideal Permutation Matrix
+ tensor([[0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.]], device='cuda:0')
+Is it a permutation matrix?
+x.ndim:  2
+x.shape[0] == x.shape[1]:  True
+(x.sum(axis=0) == 1.).all():  False
+(x.sum(axis=1) == 1.).all():  True
+((x == 1.) | (x == 0.)).all()):  True
+is_permuted?:  False
+Ideal Lower Triangular                    matrix
+ tensor([[1., 1., 0.,  ..., 1., 0., 1.],
+        [0., 1., 0.,  ..., 1., 0., 0.],
+        [1., 1., 1.,  ..., 1., 1., 1.],
+        ...,
+        [0., 0., 0.,  ..., 1., 0., 0.],
+        [1., 1., 0.,  ..., 1., 1., 1.],
+        [1., 1., 0.,  ..., 1., 0., 1.]], device='cuda:0')
+Epoch  2
+Median Row Sum: 1.0, Col Sum: 1.0 Row Max: 0.01 Col Max: 0.01
+Ideal Permutation Matrix
+ tensor([[0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.]], device='cuda:0')
+Is it a permutation matrix?
+x.ndim:  2
+x.shape[0] == x.shape[1]:  True
+(x.sum(axis=0) == 1.).all():  False
+(x.sum(axis=1) == 1.).all():  True
+((x == 1.) | (x == 0.)).all()):  True
+is_permuted?:  False
+Ideal Lower Triangular                    matrix
+ tensor([[1., 1., 0.,  ..., 1., 0., 1.],
+        [0., 1., 0.,  ..., 1., 0., 0.],
+        [1., 1., 1.,  ..., 1., 1., 1.],
+        ...,
+        [0., 0., 0.,  ..., 1., 0., 0.],
+        [1., 1., 0.,  ..., 1., 1., 1.],
+        [1., 1., 0.,  ..., 1., 0., 1.]], device='cuda:0')
+Epoch  3
+Median Row Sum: 1.0, Col Sum: 1.0 Row Max: 0.01 Col Max: 0.01
+Ideal Permutation Matrix
+ tensor([[0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.]], device='cuda:0')
+Is it a permutation matrix?
+x.ndim:  2
+x.shape[0] == x.shape[1]:  True
+(x.sum(axis=0) == 1.).all():  False
+(x.sum(axis=1) == 1.).all():  True
+((x == 1.) | (x == 0.)).all()):  True
+is_permuted?:  False
+Ideal Lower Triangular                    matrix
+ tensor([[1., 1., 0.,  ..., 1., 0., 1.],
+        [0., 1., 0.,  ..., 1., 0., 0.],
+        [1., 1., 1.,  ..., 1., 1., 1.],
+        ...,
+        [0., 0., 0.,  ..., 1., 0., 0.],
+        [1., 1., 0.,  ..., 1., 1., 1.],
+        [1., 1., 0.,  ..., 1., 0., 1.]], device='cuda:0')
+Epoch  4
+Median Row Sum: 1.0, Col Sum: 1.0 Row Max: 0.01 Col Max: 0.01
+Ideal Permutation Matrix
+ tensor([[0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.]], device='cuda:0')
+Is it a permutation matrix?
+x.ndim:  2
+x.shape[0] == x.shape[1]:  True
+(x.sum(axis=0) == 1.).all():  False
+(x.sum(axis=1) == 1.).all():  True
+((x == 1.) | (x == 0.)).all()):  True
+is_permuted?:  False
+Ideal Lower Triangular                    matrix
+ tensor([[1., 1., 0.,  ..., 1., 0., 1.],
+        [0., 1., 0.,  ..., 1., 0., 0.],
+        [1., 1., 1.,  ..., 1., 1., 1.],
+        ...,
+        [0., 0., 0.,  ..., 1., 0., 0.],
+        [1., 1., 0.,  ..., 1., 1., 1.],
+        [1., 1., 0.,  ..., 1., 0., 1.]], device='cuda:0')
+Shutting down background jobs, please wait a moment...
+Done!
+Waiting for the remaining 51 operations to synchronize with Neptune. Do not kill this process.
+All 51 operations synced, thanks for waiting!
+Explore the metadata in the Neptune app:
+https://app.neptune.ai/phdprojects/challenge/e/CHAL-1

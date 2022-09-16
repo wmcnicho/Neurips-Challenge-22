@@ -1,0 +1,89 @@
+{"obj": {"type": "AssignString", "path": ["sys", "name"], "value": "Untitled"}, "version": 1}
+{"obj": {"type": "AssignString", "path": ["sys", "description"], "value": ""}, "version": 2}
+{"obj": {"type": "AssignString", "path": ["sys", "hostname"], "value": "gypsum-gpu185"}, "version": 3}
+{"obj": {"type": "AssignBool", "path": ["sys", "failed"], "value": false}, "version": 4}
+{"obj": {"type": "ClearStringLog", "path": ["monitoring", "stdout"]}, "version": 5}
+{"obj": {"type": "ClearStringLog", "path": ["monitoring", "stderr"]}, "version": 6}
+{"obj": {"type": "AssignString", "path": ["source_code", "entrypoint"], "value": "predict_graph.py"}, "version": 7}
+{"obj": {"type": "UploadFileSet", "path": ["source_code", "files"], "file_globs": ["/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py"], "reset": "False"}, "version": 8}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Epoch ", "step": null, "ts": 1663351482.8289278}]}, "version": 9}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351482.8357453}]}, "version": 10}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "0", "step": null, "ts": 1663351482.8406594}]}, "version": 11}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351482.8463032}]}, "version": 12}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Median Row Sum: 1.0, Col Sum: 1.0 Row Max: 0.01 Col Max: 0.01", "step": null, "ts": 1663351498.431383}]}, "version": 13}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.4340692}]}, "version": 14}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Ideal Permutation Matrix\n", "step": null, "ts": 1663351498.4357104}]}, "version": 15}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.4375966}]}, "version": 16}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]], device='cuda:0')", "step": null, "ts": 1663351498.4415467}]}, "version": 17}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.4437842}]}, "version": 18}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Is it a permutation matrix?", "step": null, "ts": 1663351498.4490795}]}, "version": 19}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.451312}]}, "version": 20}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "x.ndim: ", "step": null, "ts": 1663351498.4534397}]}, "version": 21}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.4553497}]}, "version": 22}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "2", "step": null, "ts": 1663351498.457375}]}, "version": 23}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.4592538}]}, "version": 24}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "x.shape[0] == x.shape[1]: ", "step": null, "ts": 1663351498.460997}]}, "version": 25}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.4631221}]}, "version": 26}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "True", "step": null, "ts": 1663351498.4653003}]}, "version": 27}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.4672859}]}, "version": 28}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "(x.sum(axis=0) == 1.).all(): ", "step": null, "ts": 1663351498.4704094}]}, "version": 29}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.4724522}]}, "version": 30}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "False", "step": null, "ts": 1663351498.4746845}]}, "version": 31}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.4764032}]}, "version": 32}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "(x.sum(axis=1) == 1.).all(): ", "step": null, "ts": 1663351498.4797683}]}, "version": 33}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.4864}]}, "version": 34}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "True", "step": null, "ts": 1663351498.488992}]}, "version": 35}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.4908223}]}, "version": 36}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "((x == 1.) | (x == 0.)).all()): ", "step": null, "ts": 1663351498.4963968}]}, "version": 37}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.49825}]}, "version": 38}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "True", "step": null, "ts": 1663351498.5002186}]}, "version": 39}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.501922}]}, "version": 40}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "is_permuted?: ", "step": null, "ts": 1663351498.5041733}]}, "version": 41}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.5070133}]}, "version": 42}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "False", "step": null, "ts": 1663351498.5092664}]}, "version": 43}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.5116918}]}, "version": 44}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Ideal Lower Triangular                    matrix\n", "step": null, "ts": 1663351498.5138826}]}, "version": 45}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": " ", "step": null, "ts": 1663351498.5156417}]}, "version": 46}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "tensor([[1., 0., 0.,  ..., 1., 0., 1.],\n        [1., 1., 0.,  ..., 1., 0., 1.],\n        [1., 1., 1.,  ..., 1., 1., 1.],\n        ...,\n        [0., 0., 0.,  ..., 1., 0., 0.],\n        [1., 1., 0.,  ..., 1., 1., 1.],\n        [0., 0., 0.,  ..., 1., 0., 1.]], device='cuda:0')", "step": null, "ts": 1663351498.5216246}]}, "version": 47}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "\n", "step": null, "ts": 1663351498.5236607}]}, "version": 48}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "traceback"], "values": [{"value": "An uncaught exception occurred while run was active on worker gypsum-gpu185.", "step": null, "ts": 1663351501.1454601}, {"value": "Marking run as failed", "step": null, "ts": 1663351501.1454601}, {"value": "Traceback:", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 326, in <module>\n    main()\n", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 301, in main\n    loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))\n", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/work/wanyongfeng_umass_edu/venvs/BOBCAT/lib/python3.8/site-packages/torch/nn/modules/module.py\", line 1130, in _call_impl\n    return forward_call(*input, **kwargs)\n", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 196, in forward\n    hidden_states, _ = self.gru(input)\n", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/work/wanyongfeng_umass_edu/venvs/BOBCAT/lib/python3.8/site-packages/torch/nn/modules/module.py\", line 1130, in _call_impl\n    return forward_call(*input, **kwargs)\n", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 161, in forward\n    hidden = self.cell(x, lower, hidden)\n", "step": null, "ts": 1663351501.1454601}, {"value": "  File \"/work/wanyongfeng_umass_edu/venvs/BOBCAT/lib/python3.8/site-packages/torch/nn/modules/module.py\", line 1130, in _call_impl\n    return forward_call(*input, **kwargs)\n", "step": null, "ts": 1663351501.1454601}]}, "version": 49}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "traceback"], "values": [{"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 56, in forward\n    W_hz = self.W_hz * lower.to(device)\n", "step": null, "ts": 1663351501.1454601}, {"value": "CUDA out of memory. Tried to allocate 20.00 MiB (GPU 0; 47.46 GiB total capacity; 46.57 GiB already allocated; 21.44 MiB free; 46.58 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF", "step": null, "ts": 1663351501.1454601}]}, "version": 50}
+{"obj": {"type": "AssignBool", "path": ["sys", "failed"], "value": true}, "version": 51}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "Traceback (most recent call last):\n", "step": null, "ts": 1663351501.1527686}]}, "version": 52}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 326, in <module>\n", "step": null, "ts": 1663351501.1555812}]}, "version": 53}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.1586893}]}, "version": 54}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "main()", "step": null, "ts": 1663351501.1659172}]}, "version": 55}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.1692731}]}, "version": 56}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 301, in main\n", "step": null, "ts": 1663351501.1752448}]}, "version": 57}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.178718}]}, "version": 58}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))", "step": null, "ts": 1663351501.1817114}]}, "version": 59}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.1891031}]}, "version": 60}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/work/wanyongfeng_umass_edu/venvs/BOBCAT/lib/python3.8/site-packages/torch/nn/modules/module.py\", line 1130, in _call_impl\n", "step": null, "ts": 1663351501.1924071}]}, "version": 61}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.196398}]}, "version": 62}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "return forward_call(*input, **kwargs)", "step": null, "ts": 1663351501.2026742}]}, "version": 63}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.2052405}]}, "version": 64}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 196, in forward\n", "step": null, "ts": 1663351501.2073812}]}, "version": 65}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.2101467}]}, "version": 66}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "hidden_states, _ = self.gru(input)", "step": null, "ts": 1663351501.2142522}]}, "version": 67}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.2166939}]}, "version": 68}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/work/wanyongfeng_umass_edu/venvs/BOBCAT/lib/python3.8/site-packages/torch/nn/modules/module.py\", line 1130, in _call_impl\n", "step": null, "ts": 1663351501.2190492}]}, "version": 69}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.222691}]}, "version": 70}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "return forward_call(*input, **kwargs)", "step": null, "ts": 1663351501.2247767}]}, "version": 71}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.2268565}]}, "version": 72}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 161, in forward\n", "step": null, "ts": 1663351501.2283843}]}, "version": 73}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.2307093}]}, "version": 74}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "hidden = self.cell(x, lower, hidden)", "step": null, "ts": 1663351501.2326233}]}, "version": 75}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.2347767}]}, "version": 76}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/work/wanyongfeng_umass_edu/venvs/BOBCAT/lib/python3.8/site-packages/torch/nn/modules/module.py\", line 1130, in _call_impl\n", "step": null, "ts": 1663351501.2375667}]}, "version": 77}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.24156}]}, "version": 78}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "return forward_call(*input, **kwargs)", "step": null, "ts": 1663351501.24419}]}, "version": 79}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.2461007}]}, "version": 80}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py\", line 56, in forward\n", "step": null, "ts": 1663351501.2503605}]}, "version": 81}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663351501.254762}]}, "version": 82}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "W_hz = self.W_hz * lower.to(device)", "step": null, "ts": 1663351501.258948}]}, "version": 83}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.263561}]}, "version": 84}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "RuntimeError", "step": null, "ts": 1663351501.2677662}]}, "version": 85}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": ": ", "step": null, "ts": 1663351501.2706854}]}, "version": 86}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "CUDA out of memory. Tried to allocate 20.00 MiB (GPU 0; 47.46 GiB total capacity; 46.57 GiB already allocated; 21.44 MiB free; 46.58 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF", "step": null, "ts": 1663351501.2733362}]}, "version": 87}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663351501.2799609}]}, "version": 88}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Shutting down background jobs, please wait a moment...\n", "step": null, "ts": 1663351501.2848597}]}, "version": 89}

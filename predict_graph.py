@@ -4,10 +4,10 @@ from torch.utils.data import Dataset, DataLoader
 from scipy import stats
 
 import math
-import pudb
 import torch
 import torch.nn as nn
 import numpy as np
+import neptune.new as neptune
 
 torch.manual_seed(37)
 
@@ -56,20 +56,7 @@ class PermutedGruCell(nn.Module):
         W_hz = self.W_hz * lower.to(device)
         W_in = self.W_in * lower.to(device)
         W_hn = self.W_hn * lower.to(device)
-        # print("********"*10)
-        # print("DEBUG NAN")
-        # print("W_ir: \n", self.W_ir)
-        # print("W_hr: \n", self.W_hr)
-        # print("W_iz: \n", self.W_iz)
-        # print("W_hz: \n", self.W_hz)
-        # print("W_in: \n", self.W_in)
-        # print("W_hn: \n", self.W_hn)
-        # print("W_ir: \n", W_ir)
-        # print("W_hr: \n", W_hr)
-        # print("W_iz: \n", W_iz)
-        # print("W_hz: \n", W_hz)
-        # print("W_in: \n", W_in)
-        # print("W_hn: \n", W_hn)
+
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
         r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr)).to(device)
@@ -105,16 +92,8 @@ class PermutationMatrix(nn.Module):
         # print(self.matrix)
         # print("isNan: ", torch.sum(torch.isnan(self.matrix)))
         matrix_shape = self.matrix.shape[0]
-
         max_row = torch.max(self.matrix, dim=1).values.reshape(matrix_shape, 1).to(device)
         ones = torch.ones(matrix_shape).reshape(1, matrix_shape).to(device)
-
-        # for i, val in enumerate(self.matrix):
-        #     print("row: ", i, "\n", "val: ", val, "\n", "max_row: ", max_row)
-        #     self.matrix[i] = val - max_row[i]
-        # dummy_col = torch.ones(self.matrix.size(0))
-        # X = torch.matmul(max_row, dummy_col)
-        # print("XX: ", X.shape)
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix))).to(device)
         # matrix = torch.exp(self.temperature * (self.matrix - torch.matmul(max_row, ones)))
         # print(matrix)
@@ -176,7 +155,7 @@ class PermutedGru(nn.Module):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
-        lower = self.permuted_matrix(verbose=True) # Verbose Flag
+        lower = self.permuted_matrix(verbose=False) # Verbose Flag
         outputs = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
@@ -204,8 +183,6 @@ class PermutedDKT(nn.Module):
         # Input[i,j]=k at time i, for student j, construct k is attended
         # label is T,B 0/1
         T, B = construct_input.shape
-        print("Time: ", T)
-        print("Student: ", B)
         input = torch.zeros(T, B, self.n_constructs).to(device)
         # mask = labels.apply_(lambda x: 0 if x == 0 else 1)
         mask = torch.zeros(labels.shape).to(device)
@@ -284,26 +261,7 @@ def createDataset(filename: str):
 
         tot_construct_list.append(constructs)
         tot_label_list.append(labels)
-
-        # serialized_constructs = list(map(lambda construct: self.unique_construct_list.index(construct), constructs))
-        # tot_serialized_construct_list.append(serialized_constructs)
-
-    # Need to add 0 as for construct not learned by the student
     tot_construct_set.add(0)
-
-    ######################
-    ### How to store TD?
-    ######################
-    # Added tot_construct_set for initialization to store the number of total constructs.
-    # 1) [Q, S] as in transposed format
-    # TD = TrainingDataset(list(map(list, zip(*tot_construct_list))), list(map(list, zip(*tot_label_list))), tot_construct_set)
-    # 2) [S, Q]
-    # TD = TrainingDataset(tot_construct_list, tot_label_list, tot_construct_set)
-
-
-    ########################
-    ### For One-Hot encoding
-    #########################
     tot_serialized_construct_list = list()
     unique_construct_list = list(tot_construct_set)
     # print(unique_construct_list)
@@ -313,88 +271,55 @@ def createDataset(filename: str):
         tot_serialized_construct_list.append(serialized_constructs)
     TD = TrainingDataset(tot_serialized_construct_list, tot_label_list, tot_construct_set)
 
-    # construct_label_df = pd.DataFrame({'Construct' : tot_construct_list, 'Label' : tot_label_list})
-    # TD = TrainingDataset(construct_label_df['Construct'], construct_label_df['Label'], tot_construct_set)
-
-    # # Display text and label.
-    # print('\nFirst iteration of data set: ', next(iter(TD)), '\n')
-    # # Print how many items are in the data set
-    # print('Length of data set: ', len(TD), '\n')
-    # # Print entire data set
-    # print('Entire data set: ', list(DataLoader(TD)), '\n')
-
-    # DL = DataLoader(TD, batch_size=2, shuffle=False)
-    # for (idx, batch) in enumerate(DL):
-    #     # Print the 'text' data of the batch
-    #     print(idx, 'Construct ', batch['Construct'])
-    #     # Print the 'class' data of batch
-    #     print(idx, 'Label: ', batch['Label'], '\n')
-
     return TD
 
 def main():
-    # training_set = createDataset('data/sample_data_lessons_small.csv')
-    # training_set = createDataset('data/Task_3_dataset/checkins_lessons_checkouts_training.csv')
-    training_set = createDataset('data/Task_3_dataset/tmp_training.csv')
-
-    print("Number of constructs: ", training_set.n_constructs)
+    print("start")
+    training_set = createDataset('data/Task_3_dataset/checkins_lessons_checkouts_training.csv')
+    # training_set = createDataset('data/Task_3_dataset/tmp_training.csv')
     dkt = PermutedDKT(n_constructs=training_set.n_constructs).to(device)
-    training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
-    learning_rate = 0.01
+    training_loader = DataLoader(training_set, batch_size=64, shuffle=True)
+    learning_rate = 0.001
     optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
-    n_epochs = 20
+    n_epochs = 100
+    best_loss = 100.0
+    best_accuracy = 0.0
+    best_epoch = 0.0
+    run = neptune.init(
+    project="phdprojects/challenge",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3MTYwYjA3Zi01NmNhLTQ4YWMtOWFmMy0zMjdmZDliOGE4YzAifQ==",
+    capture_hardware_metrics = False
+    )
     for epoch in range(n_epochs): # loop over the dataset multiple times
-        print("========"*20)
         print("Epoch ", epoch)
-        print("========"*20)
         train_loss=[]
         train_accuracy=[]
         for i, data in enumerate(training_loader, 0):
-            print("Batch #: ", i)
             constructs = data['Construct']
             labels = data['Label']
-            # print("constructs: ", constructs)
-            # print("labels: ", labels)
             optimizer.zero_grad()
-            print("constructs: ", torch.stack(constructs))
-            print("labels: ", torch.stack(labels))
-            print("labels shape: ", len([len(a) for a in labels]))
             loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))
-
             train_accuracy.append(acc)
-            # train_loss.append(loss.item())
-            # total_loss.backward()
+            train_loss.append(loss.mean().item())
             loss.mean().backward()
-            print("len: ", len(loss))
-            for name, param in dkt.named_parameters():
-                print(name, torch.isfinite(param.grad).all())
             optimizer.step()
-            print("--------"*10)
-            print("loss: ", loss.data, "\nacc: ", acc.data)
+        if (sum(train_loss)/len(train_loss) < best_loss):
+            # print("========"*10)
+            best_loss = sum(train_loss)/len(train_loss)
+            best_accuracy = sum(train_accuracy)/len(train_accuracy)
+            best_epoch = epoch
+            run['best_loss'] = best_loss
+            run['best_accuracy'] = best_accuracy
+            run['best_epoch'] = best_epoch
+            torch.save(dkt.state_dict(), './model/best_dkt.pt') 
+            # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.mean().item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+            # print("========"*10)
+        run['loss'].log(sum(train_loss)/len(train_loss))
+        run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
-            # print("********"*10)
-            # print("DEBUG NAN")
-            # print("W_ir: \n", dkt.gru.cell.W_ir.grad)
-            # print("W_hr: \n", dkt.gru.cell.W_hr.grad)
-            # print("W_iz: \n", dkt.gru.cell.W_iz.grad)
-            # print("W_hz: \n", dkt.gru.cell.W_hz.grad)
-            # print("W_in: \n", dkt.gru.cell.W_in.grad)
-            # print("W_hn: \n", dkt.gru.cell.W_hn.grad)
-            # print("permuted_matrix: \n", dkt.gru.permuted_matrix.matrix)
-            # print("has nan?: ", torch.sum(torch.isnan(dkt.gru.permuted_matrix.matrix)))
-        if (epoch + 1) % 5 == 0:
-            print("========"*10)
-            # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
-            print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.mean().item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
-            # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.sum() / len(loss):.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+    torch.save(dkt.state_dict(), './model/final_dkt.pt') 
 
-            print("========"*10)
 
-    # dkt = PermutedDKT(n_constructs=5)
-    # construct_input = torch.randint(0, 5, (4, 2))
-    # labels = torch.randint(0, 2, (4, 2)) * 2 - 1
-    # loss, acc = dkt(construct_input, labels)
-    # print(loss, acc)
 
 
 if __name__ == "__main__":
