@@ -12,6 +12,7 @@ import numpy as np
 torch.manual_seed(37)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # torch.autograd.set_detect_anomaly(True)
 
 ###########################
@@ -49,14 +50,14 @@ class PermutedGruCell(nn.Module):
         # x is B, input_size
         if hidden is None:
             hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
-        W_ir = self.W_ir * lower
-        W_hr = self.W_hr * lower
-        W_iz = self.W_iz * lower
-        W_hz = self.W_hz * lower
-        W_in = self.W_in * lower
-        W_hn = self.W_hn * lower
-        print("********"*10)
-        print("DEBUG NAN")
+        W_ir = self.W_ir * lower.to(device)
+        W_hr = self.W_hr * lower.to(device)
+        W_iz = self.W_iz * lower.to(device)
+        W_hz = self.W_hz * lower.to(device)
+        W_in = self.W_in * lower.to(device)
+        W_hn = self.W_hn * lower.to(device)
+        # print("********"*10)
+        # print("DEBUG NAN")
         # print("W_ir: \n", self.W_ir)
         # print("W_hr: \n", self.W_hr)
         # print("W_iz: \n", self.W_iz)
@@ -71,15 +72,15 @@ class PermutedGruCell(nn.Module):
         # print("W_hn: \n", W_hn)
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
-        r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
-        z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
-        n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
-        hy = hidden * z_t + (1.0 - z_t) * n_t
-        print("hy: \n", hy)
+        r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr)).to(device)
+        z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz)).to(device)
+        n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn)).to(device)
+        hy = (hidden * z_t + (1.0 - z_t) * n_t).to(device)
+        # print("hy: \n", hy)
         return hy
 
 def is_permuation_matrix(x):
-     x = np.asanyarray(x)
+     x = np.asanyarray(x.to("cpu"))
      print("Is it a permutation matrix?")
      print("x.ndim: ", x.ndim)
      print("x.shape[0] == x.shape[1]: ", x.shape[0] == x.shape[1])
@@ -92,12 +93,12 @@ def is_permuation_matrix(x):
              ((x == 1.) | (x == 0.)).all())
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=50, unroll=10000):
+    def __init__(self, input_size, temperature=100, unroll=1000):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
-        self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+        self.matrix = nn.Parameter(torch.empty(input_size, input_size)).to(device)
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-        self.lower = torch.tril(torch.ones(input_size, input_size))
+        self.lower = torch.tril(torch.ones(input_size, input_size)).to(device)
 
     def forward(self, verbose=False):
         # print("matrix debug: ")
@@ -105,8 +106,8 @@ class PermutationMatrix(nn.Module):
         # print("isNan: ", torch.sum(torch.isnan(self.matrix)))
         matrix_shape = self.matrix.shape[0]
 
-        max_row = torch.max(self.matrix, dim=1).values.reshape(matrix_shape, 1)
-        ones = torch.ones(matrix_shape).reshape(1, matrix_shape)
+        max_row = torch.max(self.matrix, dim=1).values.reshape(matrix_shape, 1).to(device)
+        ones = torch.ones(matrix_shape).reshape(1, matrix_shape).to(device)
 
         # for i, val in enumerate(self.matrix):
         #     print("row: ", i, "\n", "val: ", val, "\n", "max_row: ", max_row)
@@ -114,17 +115,17 @@ class PermutationMatrix(nn.Module):
         # dummy_col = torch.ones(self.matrix.size(0))
         # X = torch.matmul(max_row, dummy_col)
         # print("XX: ", X.shape)
-        matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
+        matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix))).to(device)
         # matrix = torch.exp(self.temperature * (self.matrix - torch.matmul(max_row, ones)))
         # print(matrix)
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
-        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
+        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t().to(device)
         ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True)
         new_matrix = torch.zeros_like(matrix)
         new_matrix.scatter_(
-            1, ideal_matrix_order, torch.ones_like(ideal_matrix_order).float()
+            1, ideal_matrix_order, torch.ones_like(ideal_matrix_order).float().to(device)
         )
         causal_order = [(idx, int(d[0])) for idx, d in enumerate(ideal_matrix_order)]
         causal_order.sort(key=lambda x: x[1])
@@ -139,11 +140,11 @@ class PermutationMatrix(nn.Module):
                     row_sum, col_sum, row_max, col_max
                 )
             )
-            print("Permutation Matrix\n", matrix.data.numpy().round(1))
-            print(
-                "Permuted Lower Triangular Matrix\n",
-                output_lower.t().data.numpy().round(1),
-            )
+            # print("Permutation Matrix\n", matrix.data.numpy().round(1))
+            # print(
+            #     "Permuted Lower Triangular Matrix\n",
+            #     output_lower.t().data.numpy().round(1),
+            # )
             print("Ideal Permutation Matrix\n", new_matrix.data)
             is_permuted = is_permuation_matrix(new_matrix.data)
             print("is_permuted?: ", is_permuted)
@@ -205,8 +206,13 @@ class PermutedDKT(nn.Module):
         T, B = construct_input.shape
         print("Time: ", T)
         print("Student: ", B)
-        input = torch.zeros(T, B, self.n_constructs)
-        mask = labels.apply_(lambda x: 0 if x == 0 else 1)
+        input = torch.zeros(T, B, self.n_constructs).to(device)
+        # mask = labels.apply_(lambda x: 0 if x == 0 else 1)
+        mask = torch.zeros(labels.shape).to(device)
+        for i, row in enumerate(labels):
+            for j, col in enumerate(row):
+                if labels[i][j] != 0:
+                    mask[i][j] = 1
         input.scatter_(2, construct_input.unsqueeze(2), labels.unsqueeze(2).float())
         # print("Non-zero element in input: ", torch.count_nonzero(input))
         labels = torch.clamp(labels, min=0)
@@ -332,11 +338,11 @@ def main():
     training_set = createDataset('data/Task_3_dataset/tmp_training.csv')
 
     print("Number of constructs: ", training_set.n_constructs)
-    dkt = PermutedDKT(n_constructs=training_set.n_constructs)
+    dkt = PermutedDKT(n_constructs=training_set.n_constructs).to(device)
     training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
-    learning_rate = 0.5
+    learning_rate = 0.01
     optimizer = torch.optim.Adam(dkt.parameters(), lr=learning_rate)
-    n_epochs = 5
+    n_epochs = 20
     for epoch in range(n_epochs): # loop over the dataset multiple times
         print("========"*20)
         print("Epoch ", epoch)
@@ -353,12 +359,12 @@ def main():
             print("constructs: ", torch.stack(constructs))
             print("labels: ", torch.stack(labels))
             print("labels shape: ", len([len(a) for a in labels]))
-            loss, acc = dkt(torch.stack(constructs), torch.stack(labels))
+            loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))
 
             train_accuracy.append(acc)
             # train_loss.append(loss.item())
             # total_loss.backward()
-            loss.sum().backward()
+            loss.mean().backward()
             print("len: ", len(loss))
             for name, param in dkt.named_parameters():
                 print(name, torch.isfinite(param.grad).all())
@@ -366,20 +372,21 @@ def main():
             print("--------"*10)
             print("loss: ", loss.data, "\nacc: ", acc.data)
 
-            print("********"*10)
-            print("DEBUG NAN")
-            print("W_ir: \n", dkt.gru.cell.W_ir.grad)
-            print("W_hr: \n", dkt.gru.cell.W_hr.grad)
-            print("W_iz: \n", dkt.gru.cell.W_iz.grad)
-            print("W_hz: \n", dkt.gru.cell.W_hz.grad)
-            print("W_in: \n", dkt.gru.cell.W_in.grad)
-            print("W_hn: \n", dkt.gru.cell.W_hn.grad)
-            print("permuted_matrix: \n", dkt.gru.permuted_matrix.matrix)
-            print("has nan?: ", torch.sum(torch.isnan(dkt.gru.permuted_matrix.matrix)))
+            # print("********"*10)
+            # print("DEBUG NAN")
+            # print("W_ir: \n", dkt.gru.cell.W_ir.grad)
+            # print("W_hr: \n", dkt.gru.cell.W_hr.grad)
+            # print("W_iz: \n", dkt.gru.cell.W_iz.grad)
+            # print("W_hz: \n", dkt.gru.cell.W_hz.grad)
+            # print("W_in: \n", dkt.gru.cell.W_in.grad)
+            # print("W_hn: \n", dkt.gru.cell.W_hn.grad)
+            # print("permuted_matrix: \n", dkt.gru.permuted_matrix.matrix)
+            # print("has nan?: ", torch.sum(torch.isnan(dkt.gru.permuted_matrix.matrix)))
         if (epoch + 1) % 5 == 0:
             print("========"*10)
             # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
-            print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.sum() / len(loss):.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+            print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.mean().item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+            # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.sum() / len(loss):.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
 
             print("========"*10)
 
