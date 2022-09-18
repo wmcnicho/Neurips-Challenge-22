@@ -2,4 +2,6 @@
 data/Task_3_dataset/*
 log
 test.py
-output/*
+./output/*.out
+./error/*.out
+.neptune/

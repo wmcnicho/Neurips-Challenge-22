@@ -1,2 +1,0 @@
-/var/spool/slurm/slurmd/job3367460/slurm_script: line 12: ​: command not found
-slurmstepd-gypsum-gpu159: error: *** JOB 3367460 ON gypsum-gpu159 CANCELLED AT 2022-09-16T15:21:15 ***

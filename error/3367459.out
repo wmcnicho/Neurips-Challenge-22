@@ -1,5 +1,0 @@
-/var/spool/slurm/slurmd/job3367459/slurm_script: line 12: ​: command not found
-Traceback (most recent call last):
-  File "/home/wanyongfeng_umass_edu/my-work/Neurips-Challenge-22/predict_graph.py", line 7, in <module>
-    import pudb
-ModuleNotFoundError: No module named 'pudb'
