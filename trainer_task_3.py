@@ -58,7 +58,7 @@ if __name__ == "__main__":
     random.seed(seedNum)
 
     data_path = os.path.normpath('data_task_3/Task_3_dataset/checkins_lessons_checkouts_training.csv')
-    create_dataset(data_path)
+    train_data, valid_data = create_dataset(data_path)
     # data_df = pd.read_csv(data_path)
     # # data_df = data_df.astype('category')
     # checkin_df = data_df[data_df['Type'] == 'Checkin'] # Only consider CheckIn.

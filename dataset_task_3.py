@@ -5,6 +5,7 @@ from torch.utils import data
 import time
 import torch
 import random
+
 # from utils import open_json, dump_json
 
 def pivot_df(df, values, DEBUG=False):
@@ -15,8 +16,8 @@ def pivot_df(df, values, DEBUG=False):
     data = df.pivot_table(index='QuestionId', columns='UserId', values=values, sort=False)
     # data = df.pivot_table(index='QuestionId', columns='UserId', values=values, fill_value=0, sort=False)
 
-    print("Number of questions: ", data.shape[0])
-    print("Number of students: ", data.shape[1])
+    # print("Number of questions: ", data.shape[0])
+    # print("Number of students: ", data.shape[1])
     # data.replace(np.nan,0)
     if values == 'ConstructId':
         data.fillna(0, inplace=True)
@@ -37,11 +38,35 @@ def pivot_df(df, values, DEBUG=False):
 
     return data
 
+class TaskDataset(data.Dataset):
+    def __init__(self, X_data, Y_data):
+        self.x = X_data
+        self.y = Y_data
+
+    def __len__(self):
+        'Denotes the total number of questions'
+        return len(self.x)
+
+    def __getitem__(self, idx):
+        'Generates one sample of data: Answer of a student for whole questions'
+        sample = {'construct': torch.tensor([self.x[index]]), 
+                'answer': torch.tensor([self.y[index]])}
+        return sample
+
+
 def create_dataset(data_path: str, DEBUG=False):
     data_df = pd.read_csv(data_path)
     checkin_df = data_df[data_df['Type'] == 'Checkin'] # Only consider CheckIn.
-    construct_data = pivot_df(checkin_df, 'ConstructId') # feature
-    answer_data = pivot_df(checkin_df, 'IsCorrect') # label
+    X_data = pivot_df(checkin_df, 'ConstructId') # feature
+    Y_data = pivot_df(checkin_df, 'IsCorrect') # label
+    task_dataset = TaskDataset(X_data, Y_data)
+    if DEBUG:
+        print("length of the dataset is:", len(task_dataset))
+    train_size = int(0.8 * len(task_dataset))
+    valid_size = len(task_dataset) - train_size
+    
+    return data.random_split(task_dataset, [train_size, valid_size])
+    
 
 
 # class TrainingDataset(Dataset):
