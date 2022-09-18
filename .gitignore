@@ -4,4 +4,5 @@ log
 test.py
 ./output/*.out
 ./error/*.out
-.neptune/
+.neptune/*
+__pycache__/*

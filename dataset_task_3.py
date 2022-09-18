@@ -5,20 +5,15 @@ from torch.utils import data
 import time
 import torch
 import random
-
 # from utils import open_json, dump_json
 
 def pivot_df(df, values, DEBUG=False):
     """
-    Convert dataframe of question and answerrecords to pivoted array, filling in missing columns if some questions are 
-    unobserved.
+    Convert dataframe of question and answer records to pivoted array, filling in missing columns  
+    if some questions are unobserved.
     """    
     data = df.pivot_table(index='QuestionId', columns='UserId', values=values, sort=False)
-    # data = df.pivot_table(index='QuestionId', columns='UserId', values=values, fill_value=0, sort=False)
 
-    # print("Number of questions: ", data.shape[0])
-    # print("Number of students: ", data.shape[1])
-    # data.replace(np.nan,0)
     if values == 'ConstructId':
         data.fillna(0, inplace=True)
         data = data.astype(int)
@@ -64,60 +59,29 @@ def create_dataset(data_path: str, DEBUG=False):
         print("length of the dataset is:", len(task_dataset))
     train_size = int(0.8 * len(task_dataset))
     valid_size = len(task_dataset) - train_size
-    
+
     return data.random_split(task_dataset, [train_size, valid_size])
     
+# class ff_collate(object):
+#     def __init__(self):
+#         pass
 
+#     def __call__(self, batch):
+#         # output = {'input_label': torch.FloatTensor(input_label), 'input_question': torch.FloatTensor(input_question),
+#         #          'output_question': torch.FloatTensor(output_question), 'output_label': torch.FloatTensor(output_label),
+#         #          'input_subjects': input_subjects, 'output_subjects': output_subjects, 'input_ans': torch.FloatTensor(input_ans)}
+#         B = len(batch)
+#         input_labels =  torch.zeros(B,948).long()
+#         output_labels = torch.zeros(B, 948).long()
+#         input_ans = torch.ones(B, 948).long()
+#         input_mask  = torch.zeros(B,948).long()
+#         output_mask = torch.zeros(B, 948).long()
+#         for b_idx in range(B):
+#             input_labels[b_idx, batch[b_idx]['input_question'].long()] =  batch[b_idx]['input_label'].long()
+#             input_ans[b_idx, batch[b_idx]['input_question'].long()] = batch[b_idx]['input_ans'].long()
+#             input_mask[b_idx, batch[b_idx]['input_question'].long()] = 1
+#             output_labels[b_idx, batch[b_idx]['output_question'].long()] =  batch[b_idx]['output_label'].long()
+#             output_mask[b_idx, batch[b_idx]['output_question'].long()] = 1
 
-# class TrainingDataset(Dataset):
-#     def __init__(self, constructs, labels, tot_construct_set):
-#         self.constructs = constructs
-#         self.labels = labels
-#         self.n_constructs = len(tot_construct_set)
-#         self.unique_construct_list = list(tot_construct_set)
-#     def __len__(self):
-#         return len(self.labels)
-#     def __getitem__(self, idx):
-#         construct = self.constructs[idx]
-#         label = self.labels[idx]
-#         sample = {"Construct": construct, "Label": label}
-#         return sample
-
-# def createDataset(filename: str):
-#     lessons_df = pd.read_csv(filename)
-#     checkin_df = lessons_df[lessons_df['Type'] == 'Checkin']
-#     simple_df = checkin_df.iloc[:, [2, 5, 9]] 
-#     simple_df.loc[simple_df["IsCorrect"] == 0, "IsCorrect"] = -1 
-
-#     num_of_questions = stats.mode(simple_df["UserId"]).count[0]
-
-#     tot_construct_set = set()
-#     tot_construct_list = list()
-#     tot_label_list = list()
-    
-#     for user, user_info in simple_df.groupby('UserId'):
-
-#         constructs = user_info["ConstructId"].values.tolist() # [C]
-#         labels = user_info["IsCorrect"].values.tolist() # [C]
-
-#         tot_construct_set.update(constructs)
-
-#         num_of_constructs = len(constructs)
-#         pad_needed = num_of_questions - num_of_constructs # [P = Q - C]
-
-#         constructs += [0] * pad_needed # [Q]
-#         labels += [0] * pad_needed # [Q]
-
-#         tot_construct_list.append(constructs)
-#         tot_label_list.append(labels)
-#     tot_construct_set.add(0)
-#     tot_serialized_construct_list = list()
-#     unique_construct_list = list(tot_construct_set)
-#     # print(unique_construct_list)
-#     for constructs in tot_construct_list:
-#         # print("constructs: ", constructs)
-#         serialized_constructs = list(map(lambda x: unique_construct_list.index(x), constructs))
-#         tot_serialized_construct_list.append(serialized_constructs)
-#     TD = TrainingDataset(tot_serialized_construct_list, tot_label_list, tot_construct_set)
-
-#     return TD
+#         output = {'input_labels':input_labels, 'input_ans':input_ans, 'input_mask':input_mask, 'output_labels':output_labels, 'output_mask':output_mask}
+#         return output
