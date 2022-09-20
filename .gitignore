@@ -5,4 +5,5 @@ test.py
 ./output/*.out
 ./error/*.out
 .neptune/*
+./model/*
 __pycache__/*

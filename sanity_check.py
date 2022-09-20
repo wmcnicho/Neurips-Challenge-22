@@ -344,7 +344,7 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
 
 def main():
     # C (constructs), Q (questions), S (students)
-    C, Q, S = 15, 20, 4
+    C, Q, S = 10, 20, 50
     print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
@@ -362,7 +362,7 @@ def main():
     dkt = PermutedDKT(n_concepts=C).to(device)
 
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
-    optimizer = torch.optim.Adam(dkt.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(dkt.parameters(), lr=0.001)
    
     n_epochs = 200
     best_loss = 100.0
