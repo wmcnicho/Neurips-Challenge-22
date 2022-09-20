@@ -41,14 +41,17 @@ class TaskDataset(data.Dataset):
             c_list = X_data[q_id].unique()
             unique_const_set.update(c_list)
         self.unique_const_list = list(unique_const_set)
+
     def __len__(self):
         'Denotes the total number of students'
         return len(self.x)
 
     def __getitem__(self, idx):
         'Generates one sample of data: Answer of a student for whole questions'
-        sample = {'construct': torch.tensor([self.x[index]]), 
-                'answer': torch.tensor([self.y[index]])}
+        # sample = {'construct': torch.tensor([self.x.iloc[idx]]), 
+        #         'answer': torch.tensor([self.y.iloc[idx]])}
+        sample = {'construct': torch.tensor(self.x.iloc[idx].values), 
+                'answer': torch.tensor(self.y.iloc[idx].values)}
         return sample
 
 
@@ -76,18 +79,31 @@ class f_collate(object):
         #          'output_question': torch.FloatTensor(output_question), 'output_label': torch.FloatTensor(output_label),
         #          'input_subjects': input_subjects, 'output_subjects': output_subjects, 'input_ans': torch.FloatTensor(input_ans)}
         B = len(batch)
-        input_labels  = torch.zeros(B, 2941).long()
-        output_labels = torch.zeros(B, 2941).long()
-        input_ans     = torch.ones(B, 2941).long()
-        input_mask    = torch.zeros(B,2941).long()
-        output_mask   = torch.zeros(B, 2941).long()
+
+        # input_labels  = torch.zeros(B, 2941).long()
+        # output_labels = torch.zeros(B, 2941).long()
+        # input_ans     = torch.ones(B, 2941).long()
+        # input_mask    = torch.zeros(B,2941).long()
+        # output_mask   = torch.zeros(B, 2941).long()
+        # for b_idx in range(B):
+        #     input_labels[b_idx, batch[b_idx]['input_question'].long()] =  batch[b_idx]['input_label'].long()
+        #     input_ans[b_idx, batch[b_idx]['input_question'].long()] = batch[b_idx]['input_ans'].long()
+        #     input_mask[b_idx, batch[b_idx]['input_question'].long()] = 1
+        #     output_labels[b_idx, batch[b_idx]['output_question'].long()] =  batch[b_idx]['output_label'].long()
+        #     output_mask[b_idx, batch[b_idx]['output_question'].long()] = 1
+
+        # output = {'input_labels':input_labels, 'input_ans':input_ans, 'input_mask':input_mask, 'output_labels':output_labels, 'output_mask':output_mask}
+        input_const  = torch.zeros(B, 2941).long()
+        input_ans  = torch.ones(B, 2941).long()
+        input_mask = torch.zeros(B,2941).long()
+        print("DEBUG")
         for b_idx in range(B):
-            input_labels[b_idx, batch[b_idx]['input_question'].long()] =  batch[b_idx]['input_label'].long()
-            input_ans[b_idx, batch[b_idx]['input_question'].long()] = batch[b_idx]['input_ans'].long()
-            input_mask[b_idx, batch[b_idx]['input_question'].long()] = 1
-            output_labels[b_idx, batch[b_idx]['output_question'].long()] =  batch[b_idx]['output_label'].long()
-            output_mask[b_idx, batch[b_idx]['output_question'].long()] = 1
-
-        output = {'input_labels':input_labels, 'input_ans':input_ans, 'input_mask':input_mask, 'output_labels':output_labels, 'output_mask':output_mask}
-
+            print("b_idx: ", b_idx)
+            print("=====================================")
+            input_const[b_idx] = batch[b_idx]['construct']
+            input_mask[b_idx] = batch[b_idx]['construct'].bool().int()
+            input_ans[b_idx] = batch[b_idx]['answer']
+            # torch.set_printoptions(threshold=40_000)
+            print("=====================================")
+        output = {'input_const' : input_const, 'input_mask' : input_mask, 'input_ans' : input_ans}
         return output

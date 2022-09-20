@@ -161,6 +161,51 @@ class PermutedGru(nn.Module):
         return hidden_states, last_states
 
 
+# class PermutedDKT(nn.Module):
+#     def __init__(self, n_constructs):
+#         super().__init__()
+#         self.gru = PermutedGru(n_constructs, batch_first=False)
+#         self.n_constructs = n_constructs
+#         self.output_layer = nn.Linear(1, 1)
+
+#     def forward(self, construct_input, labels):
+#         # Input shape is T, B
+#         # Input[i,j]=k at time i, for student j, construct k is attended
+#         # label is T,B 0/1
+#         T, B = construct_input.shape
+#         input = torch.zeros(T, B, self.n_constructs).to(device)
+#         # mask = labels.apply_(lambda x: 0 if x == 0 else 1)
+#         mask = torch.zeros(labels.shape).to(device)
+#         for i, row in enumerate(labels):
+#             for j, col in enumerate(row):
+#                 if labels[i][j] != 0:
+#                     mask[i][j] = 1
+#         input.scatter_(2, construct_input.unsqueeze(2), labels.unsqueeze(2).float())
+#         # print("Non-zero element in input: ", torch.count_nonzero(input))
+#         labels = torch.clamp(labels, min=0)
+#         hidden_states, _ = self.gru(input)
+
+#         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
+#         # print("init state: ", init_state)
+#         # print("hidden state: ", hidden_states)
+#         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
+#         # output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
+#         # print("Shifted hidden states: ", shifted_hidden_states)
+#         # print("DEBUG SHAPE: ", shifted_hidden_states.shape)
+#         output = torch.sigmoid(self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3))
+#         output = torch.gather(output, 2, construct_input.unsqueeze(2)).squeeze(2)
+#         pred = (output >= 0.5).float()
+#         # acc = torch.mean((pred == labels).float())
+#         acc = torch.mean((pred == torch.clamp(labels, min=0).float()).float())
+#         # cc_loss = nn.BCEWithLogitsLoss()
+#         cc_loss = nn.BCELoss(reduction='none')
+#         # cc_loss = nn.BCELoss()
+#         # loss = cc_loss(output, labels.float())
+#         loss = cc_loss(output, torch.clamp(labels, min=0).float())
+#         loss = loss * mask
+
+#         return loss, acc
+
 class PermutedDKT(nn.Module):
     def __init__(self, n_constructs):
         super().__init__()
@@ -168,40 +213,67 @@ class PermutedDKT(nn.Module):
         self.n_constructs = n_constructs
         self.output_layer = nn.Linear(1, 1)
 
-    def forward(self, construct_input, labels):
-        # Input shape is T, B
-        # Input[i,j]=k at time i, for student j, construct k is attended
-        # label is T,B 0/1
-        T, B = construct_input.shape
+    def forward(self, batch):
+        # T, B = construct_input.shape
+        # input = torch.zeros(T, B, self.n_constructs).to(device)
+        # mask = torch.zeros(labels.shape).to(device)
+        # for i, row in enumerate(labels):
+        #     for j, col in enumerate(row):
+        #         if labels[i][j] != 0:
+        #             mask[i][j] = 1
+        # input.scatter_(2, construct_input.unsqueeze(2), labels.unsqueeze(2).float())
+        # labels = torch.clamp(labels, min=0)
+        # hidden_states, _ = self.gru(input)
+
+        # init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
+        # shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
+        # output = torch.sigmoid(self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3))
+        # output = torch.gather(output, 2, construct_input.unsqueeze(2)).squeeze(2)
+        # pred = (output >= 0.5).float()
+        # acc = torch.mean((pred == torch.clamp(labels, min=0).float()).float())
+        # cc_loss = nn.BCELoss(reduction='none')
+        # loss = cc_loss(output, torch.clamp(labels, min=0).float())
+        # loss = loss * mask
+
+        input_const = batch['input_const'].to(device) # B,2941
+        input_ans = batch['input_ans'].to(device)  # B,2941
+        input_mask = batch['input_mask'].to(device)  # B,2941
+
+        B, T = input_const.shape
+        print("B: ", B, "\t", "T: ", T)
         input = torch.zeros(T, B, self.n_constructs).to(device)
-        # mask = labels.apply_(lambda x: 0 if x == 0 else 1)
-        mask = torch.zeros(labels.shape).to(device)
-        for i, row in enumerate(labels):
-            for j, col in enumerate(row):
-                if labels[i][j] != 0:
-                    mask[i][j] = 1
-        input.scatter_(2, construct_input.unsqueeze(2), labels.unsqueeze(2).float())
-        # print("Non-zero element in input: ", torch.count_nonzero(input))
-        labels = torch.clamp(labels, min=0)
+        # for i, d0 in enumerate(input):
+        #     for j, d1 in enumerate(d0):
+        #         for k, d2 in enumerate(d1):
+        #             input[i][j][k] = 1
+
+        # print(input)
+        input_const_t = input_const.t()
+        input_ans_t = input_ans.t()
+
+        print("input_const_t shape: ", input_const_t.shape)
+        print("input_ans_t shape: ", input_ans_t.shape)
+        # print ((input_const.t()).unsqueeze(2).shape)
+        # torch.set_printoptions(threshold=40_000)
+        print(input_const_t.unsqueeze(2).shape)
+        # print ((input_ans.t()).unsqueeze(2).float().shape)
+        # print(input_const_t)
+        # dim, index, src
+        input.scatter_(2, input_const_t.unsqueeze(2), input_ans_t.unsqueeze(2).float())
+        labels = torch.clamp(input_ans, min=0)
         hidden_states, _ = self.gru(input)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
-        # print("init state: ", init_state)
-        # print("hidden state: ", hidden_states)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
-        # output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        # print("Shifted hidden states: ", shifted_hidden_states)
-        # print("DEBUG SHAPE: ", shifted_hidden_states.shape)
         output = torch.sigmoid(self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3))
-        output = torch.gather(output, 2, construct_input.unsqueeze(2)).squeeze(2)
+        output = torch.gather(output, 2, input_const.unsqueeze(2)).squeeze(2)
         pred = (output >= 0.5).float()
-        # acc = torch.mean((pred == labels).float())
-        acc = torch.mean((pred == torch.clamp(labels, min=0).float()).float())
-        # cc_loss = nn.BCEWithLogitsLoss()
-        cc_loss = nn.BCELoss(reduction='none')
-        # cc_loss = nn.BCELoss()
-        # loss = cc_loss(output, labels.float())
-        loss = cc_loss(output, torch.clamp(labels, min=0).float())
-        loss = loss * mask
+        acc = torch.mean((pred == torch.clamp(input_ans, min=0).float()).float())
+
+        loss_fn = nn.BCELoss(reduction='none')
+        loss = loss_fn(output, torch.clamp(input_ans, min=0).float())
+        loss = loss * input_mask
 
         return loss, acc
+
+        

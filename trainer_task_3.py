@@ -16,14 +16,19 @@ from model_task_3 import PermutedDKT
 
 import neptune.new as neptune
 
-DEBUG = True
+DEBUG = False
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 epoch_information = []
 
 def train_model():
     global epoch_information
-    dkt.train()
-
+    # dkt.train()
+    for idx, batch in enumerate(train_loader):
+        # print("BATCH: ", batch, type(batch))
+        optimizer.zero_grad()
+        dkt(batch)
+        # loss.backward()
+        # optimizer.step()
 if __name__ == "__main__":
 
     seedNum = 221
@@ -40,6 +45,8 @@ if __name__ == "__main__":
     unique_const_list = task_dataset.unique_const_list
 
     if DEBUG:
+        for idx, dataset_dict in enumerate(task_dataset):
+            print("idx: ", idx, "\t", dataset_dict['construct'], dataset_dict['answer'])
         print("length of the dataset is:", len(task_dataset))
         print("number of constructs is:", len(unique_const_list))
     train_size = int(0.8 * len(task_dataset))
@@ -49,9 +56,14 @@ if __name__ == "__main__":
 
     collate_fn = f_collate()
     num_workers = 3
+    # print(train_dataset)
+    # for idx, tmp in enumerate(train_dataset):
+    #     print(tmp)
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, collate_fn=collate_fn, batch_size=2, num_workers=num_workers, shuffle=True, drop_last=True)
+        train_dataset, collate_fn=collate_fn, batch_size=4, num_workers=0, shuffle=True, drop_last=True)
+    # train_loader = torch.utils.data.DataLoader(
+    #     train_dataset, batch_size=2, num_workers=0, shuffle=True, drop_last=True)
     dkt = PermutedDKT(n_constructs=len(unique_const_list)).to(device)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=0.001)
     start_time = time.time()
