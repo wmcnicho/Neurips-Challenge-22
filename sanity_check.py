@@ -240,16 +240,21 @@ class PermutedDKT(nn.Module):
         # Input shape is T, B
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
-        T, B = concept_input.shape
+        # T, B = concept_input.shape
+        B, T = concept_input.shape
         input = torch.zeros(T, B, self.n_concepts)
-        input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
+        concept_input_t = concept_input.t()
+        labels_t = labels.t()
+        print("cocept_input_t: \n", concept_input_t)
+        print("labels_t: \n", labels_t)
+        input.scatter_(2, concept_input_t.unsqueeze(2), labels_t.unsqueeze(2).float())
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
+        output = torch.gather(output, 2, concept_input_t.unsqueeze(2)).squeeze(2).t()
         pred = (output > 0.0).float()
         acc = torch.mean((pred == labels).float())
         cc_loss = nn.BCEWithLogitsLoss()
@@ -306,7 +311,7 @@ def main():
 
     dkt = PermutedDKT(n_concepts=len(training_set.unique_constructs)).to(device)
 
-    training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
+    training_loader = DataLoader(training_set, batch_size=1, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=0.001)
    
     # loss, acc = dkt(features, labels)
@@ -324,13 +329,13 @@ def main():
         train_loss=[]
         train_accuracy=[]
         for i, data in enumerate(training_loader, 0):
-            constructs = data['Features']
-            labels = data['Labels']
-            print("constructs: \n", constructs)
-            print("labels: \n", labels)
+            b_construct = data['Features']
+            b_label = data['Labels']
+            print("constructs: \n", b_construct)
+            print("labels: \n", b_label)
             optimizer.zero_grad()
             # loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))
-            loss, acc = dkt(features, labels)
+            loss, acc = dkt(b_construct, b_label)
             train_accuracy.append(acc)
             train_loss.append(loss.mean().item())
             loss.mean().backward()
