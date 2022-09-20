@@ -310,9 +310,9 @@ def main():
     print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
-    # features = torch.randint(0, C, (Q, S))
     features = torch.randint(0, C, (S, Q))
     labels = gt_dkt(features)
+
     print("========="*10)
     print("Data generation")
     print("Features: \n", features)
@@ -326,16 +326,15 @@ def main():
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=0.01)
    
-    # loss, acc = dkt(features, labels)
-    n_epochs = 100
+    n_epochs = 2
     best_loss = 100.0
     best_accuracy = 0.0
     best_epoch = 0.0
-    run = neptune.init(
-        project="phdprojects/challenge",
-        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3MTYwYjA3Zi01NmNhLTQ4YWMtOWFmMy0zMjdmZDliOGE4YzAifQ==",
-        capture_hardware_metrics = False
-    )
+    # run = neptune.init(
+    #     project="phdprojects/challenge",
+    #     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3MTYwYjA3Zi01NmNhLTQ4YWMtOWFmMy0zMjdmZDliOGE4YzAifQ==",
+    #     capture_hardware_metrics = False
+    # )
     for epoch in range(n_epochs): # loop over the dataset multiple times
         print("Epoch ", epoch)
         train_loss=[]
@@ -343,8 +342,6 @@ def main():
         for i, data in enumerate(training_loader, 0):
             b_construct = data['Features']
             b_label = data['Labels']
-            # print("constructs: \n", b_construct)
-            # print("labels: \n", b_label)
             optimizer.zero_grad()
             loss, acc = dkt(b_construct, b_label)
             train_accuracy.append(acc)
@@ -352,19 +349,34 @@ def main():
             loss.backward()
             optimizer.step()
         if (sum(train_loss)/len(train_loss) < best_loss):
-            # print("========"*10)
             best_loss = sum(train_loss)/len(train_loss)
             best_accuracy = sum(train_accuracy)/len(train_accuracy)
             best_epoch = epoch
-            run['best_loss'] = best_loss
-            run['best_accuracy'] = best_accuracy
-            run['best_epoch'] = best_epoch
-            torch.save(dkt.state_dict(), './model/best_dkt.pt') 
+            # run['best_loss'] = best_loss
+            # run['best_accuracy'] = best_accuracy
+            # run['best_epoch'] = best_epoch
+            # torch.save(dkt.state_dict(), './model/best_dkt.pt') 
+            torch.save(dkt, './model/best_dkt.pt')
         print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
-            # print("========"*10)
-        run['loss'].log(sum(train_loss)/len(train_loss))
-        run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
+        # run['loss'].log(sum(train_loss)/len(train_loss))
+        # run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
-    torch.save(dkt.state_dict(), './model/final_dkt.pt') 
+        torch.save(dkt, './model/final_dkt.pt')
+
+        # best_dkt.load_state_dict()
+        # for param in best_dkt.state_dict():
+        #     print(dir(param))
+    best_dkt = torch.load('./model/best_dkt.pt')
+    perm_list = []
+    for name, param in best_dkt.named_parameters():
+        if (name == "gru.permuted_matrix.matrix"):
+            torch.set_printoptions(threshold=10_000)
+            print(param)
+    #         for i, row in enumerate(param):
+    #             x = torch.argmax(row)
+    #             # print(x.item())
+    #             perm_list.append(x.item())
+    # print("permutation list:\n", perm_list)
+
 if __name__ == "__main__":
     main()
