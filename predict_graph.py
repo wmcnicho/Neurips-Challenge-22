@@ -208,7 +208,7 @@ class PermutedDKT(nn.Module):
         hidden_states, _ = self.gru(input)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
-        shifted_hidden_states = (torch.cat([init_state, hidden_states], dim=0)[1:, :, :]).to(device)
+        shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) # NOTE: Why this?
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
         pred = (output > 0.0).float()
@@ -253,9 +253,9 @@ def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
     return optimizer, scheduler
 
 def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler):
-    if os.path.exists('train_debug.txt'):
-        os.remove('train_debug.txt')
-    train_file = open('train_debug.txt', 'w')
+    if os.path.exists('train_debug_new.txt'):
+        os.remove('train_debug_new.txt')
+    train_file = open('train_debug_new.txt', 'w')
     epochswise_train_losses, epochwise_val_losses = [], []
     prev_val_loss, early_stop_ctr, early_stop_threshold, early_stop_patience = 0, 0, 5, 0.0001
     least_val_loss = math.inf
@@ -375,8 +375,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
+    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -403,7 +403,7 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 64
+    batch_size = 4
     epochs = 100
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
@@ -415,6 +415,9 @@ def main():
 
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+    # TODO: Save the model
+    torch.save(model, 'saved_models/nips.pt')
+
 
     with open('train_epochwise_loss.json', 'w') as infile:
         json.dump(epoch_train_loss, infile)
