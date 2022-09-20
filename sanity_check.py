@@ -216,10 +216,10 @@ class GroundTruthPermutedGru(nn.Module):
         outputs = []
         labels = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-            print("features: \n", x)
             hidden = self.cell(x, lower, hidden)
             labels.append(torch.sigmoid(hidden).clone()*x)
-            print("labels: \n", torch.sigmoid(hidden).clone()*x)
+            # print("features: \n", x)
+            # print("labels: \n", torch.sigmoid(hidden).clone()*x)
             outputs.append(hidden.clone())
         labels = torch.stack(labels)
         ans = torch.zeros(labels.shape[0], labels.shape[1])
@@ -246,8 +246,9 @@ class PermutedDKT(nn.Module):
         input = torch.zeros(T, B, self.n_concepts)
         concept_input_t = concept_input.t()
         labels_t = labels.t()
-        print("cocept_input_t: \n", concept_input_t)
-        print("labels_t: \n", labels_t)
+        print("input shape: ", input.shape)
+        print("concept_input_t shape: ", concept_input_t.shape)
+        print("labels_t shape: ", labels_t.shape)
         input.scatter_(2, concept_input_t.unsqueeze(2), labels_t.unsqueeze(2).float())
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
@@ -260,6 +261,7 @@ class PermutedDKT(nn.Module):
         acc = torch.mean((pred == labels).float())
         cc_loss = nn.BCEWithLogitsLoss()
         loss = cc_loss(output, labels.float())
+
         return loss, acc
 
 class GroundTruthPermutedDKT(nn.Module):
@@ -274,8 +276,6 @@ class GroundTruthPermutedDKT(nn.Module):
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
         B, T = concept_input.shape
-        print("DEBUG: \n", concept_input.shape)
-        print(concept_input)
         input = torch.zeros(T, B, self.n_concepts)
         concept_input_t = concept_input.t()
         input.scatter_(2, concept_input_t.unsqueeze(2), 1)
@@ -287,7 +287,7 @@ class TrainingDataset(Dataset):
     def __init__(self, features, labels):
         self.features = features
         self.labels = labels
-        self.unique_constructs = features.unique()
+        # self.unique_constructs = features.unique()
     def __len__(self):
         return len(self.labels)
     def __getitem__(self, idx):
@@ -302,7 +302,7 @@ def createDataset(features, labels):
 
 def main():
     # C (constructs), Q (questions), S (students)
-    C, Q, S = 4, 8, 2
+    C, Q, S = 15, 10, 2
     print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
@@ -317,7 +317,7 @@ def main():
 
     training_set = createDataset(features, labels)
 
-    dkt = PermutedDKT(n_concepts=len(training_set.unique_constructs)).to(device)
+    dkt = PermutedDKT(n_concepts=C).to(device)
 
     training_loader = DataLoader(training_set, batch_size=1, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=0.001)
