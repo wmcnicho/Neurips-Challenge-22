@@ -304,6 +304,44 @@ def createDataset(features, labels):
     training_set = TrainingDataset(features, labels)
     return training_set    
 
+def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
+    p_matrix = torch.exp(temperature * (matrix - torch.max(matrix)))
+    lower = torch.tril(torch.ones(matrix.shape[0], matrix.shape[1]))
+    for _ in range(unroll):
+        p_matrix = p_matrix / torch.sum(p_matrix, dim=1, keepdim=True)
+        p_matrix = p_matrix / torch.sum(p_matrix, dim=0, keepdim=True)
+    output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t()).t()
+    ideal_matrix_order = p_matrix.data.argmax(dim=1, keepdim=True)
+    new_matrix = torch.zeros_like(p_matrix)
+    new_matrix.scatter_(
+        1, ideal_matrix_order, torch.ones_like(ideal_matrix_order).float()
+    )
+    causal_order = [(idx, int(d[0])) for idx, d in enumerate(ideal_matrix_order)]
+    causal_order.sort(key=lambda x: x[1])
+    causal_order = [d[0] for d in causal_order]
+    if verbose:
+        row_sum = round(float(torch.median(torch.sum(p_matrix, dim=1)[0])), 2)
+        col_sum = round(float(torch.median(torch.sum(p_matrix, dim=0)[0])), 2)
+        row_max = round(float(torch.median(torch.max(p_matrix, dim=1)[0])), 2)
+        col_max = round(float(torch.median(torch.max(p_matrix, dim=0)[0])), 2)
+        print(
+            "Median Row Sum: {}, Col Sum: {} Row Max: {} Col Max: {}".format(
+                row_sum, col_sum, row_max, col_max
+            )
+        )
+        print("Permutation Matrix\n", p_matrix.data.numpy().round(1))
+        print(
+            "Permuted Lower Triangular Matrix\n",
+            output_lower.t().data.numpy().round(1),
+        )
+        print("Ideal Permutation Matrix\n", new_matrix.data)
+        print(
+            "Ideal Lower Triangular\
+                p_matrix\n",
+            torch.matmul(torch.matmul(new_matrix, lower), new_matrix.t()),
+        )
+        print("Causal Order\n", causal_order)
+
 def main():
     # C (constructs), Q (questions), S (students)
     C, Q, S = 15, 20, 4
@@ -326,7 +364,7 @@ def main():
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=0.01)
    
-    n_epochs = 2
+    n_epochs = 200
     best_loss = 100.0
     best_accuracy = 0.0
     best_epoch = 0.0
@@ -363,20 +401,11 @@ def main():
 
         torch.save(dkt, './model/final_dkt.pt')
 
-        # best_dkt.load_state_dict()
-        # for param in best_dkt.state_dict():
-        #     print(dir(param))
     best_dkt = torch.load('./model/best_dkt.pt')
-    perm_list = []
     for name, param in best_dkt.named_parameters():
         if (name == "gru.permuted_matrix.matrix"):
-            torch.set_printoptions(threshold=10_000)
-            print(param)
-    #         for i, row in enumerate(param):
-    #             x = torch.argmax(row)
-    #             # print(x.item())
-    #             perm_list.append(x.item())
-    # print("permutation list:\n", perm_list)
+            # torch.set_printoptions(threshold=10_000)
+            sink_horn(param, verbose=True)
 
 if __name__ == "__main__":
     main()
