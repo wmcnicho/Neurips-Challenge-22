@@ -3,6 +3,7 @@ import math
 import pudb
 import torch
 import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(2)
@@ -273,15 +274,81 @@ class GroundTruthPermutedDKT(nn.Module):
 
         return labels
 
+class TrainingDataset(Dataset):
+    def __init__(self, features, labels):
+        self.features = features
+        self.labels = labels
+        self.unique_constructs = features.unique()
+    def __len__(self):
+        return len(self.labels)
+    def __getitem__(self, idx):
+        features = self.features[idx]
+        label = self.labels[idx]
+        sample = {"Features": features, "Labels": label}
+        return sample
+
+def createDataset(features, labels):
+    training_set = TrainingDataset(features, labels)
+    return training_set    
+
 def main():
+    # C (constructs), Q (questions), S (students)
+    C, Q, S = 5, 4, 2
+
     gt_dkt = GroundTruthPermutedDKT(n_concepts=5)
-    concept_input = torch.randint(0, 5, (4, 2))
-    labels = gt_dkt(concept_input)
-    print("concept input: \n", concept_input)
+    # features = torch.randint(0, C, (Q, S))
+    features = torch.randint(0, C, (S, Q))
+    labels = gt_dkt(features)
+    print("features: \n", features)
     print("labels: \n", labels)
 
-    dkt = PermutedDKT(n_concepts=5)
-    loss, acc = dkt(concept_input, labels)
+    training_set = createDataset(features, labels)
 
+    dkt = PermutedDKT(n_concepts=len(training_set.unique_constructs)).to(device)
+
+    training_loader = DataLoader(training_set, batch_size=2, shuffle=False)
+    optimizer = torch.optim.Adam(dkt.parameters(), lr=0.001)
+   
+    # loss, acc = dkt(features, labels)
+    n_epochs = 4
+    best_loss = 100.0
+    best_accuracy = 0.0
+    best_epoch = 0.0
+    # run = neptune.init(
+    #     project="phdprojects/challenge",
+    #     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3MTYwYjA3Zi01NmNhLTQ4YWMtOWFmMy0zMjdmZDliOGE4YzAifQ==",
+    #     capture_hardware_metrics = False
+    # )
+    for epoch in range(n_epochs): # loop over the dataset multiple times
+        print("Epoch ", epoch)
+        train_loss=[]
+        train_accuracy=[]
+        for i, data in enumerate(training_loader, 0):
+            constructs = data['Features']
+            labels = data['Labels']
+            print("constructs: \n", constructs)
+            print("labels: \n", labels)
+            optimizer.zero_grad()
+            # loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))
+            loss, acc = dkt(features, labels)
+            train_accuracy.append(acc)
+            train_loss.append(loss.mean().item())
+            loss.mean().backward()
+            optimizer.step()
+        if (sum(train_loss)/len(train_loss) < best_loss):
+            # print("========"*10)
+            best_loss = sum(train_loss)/len(train_loss)
+            best_accuracy = sum(train_accuracy)/len(train_accuracy)
+            best_epoch = epoch
+            # run['best_loss'] = best_loss
+            # run['best_accuracy'] = best_accuracy
+            # run['best_epoch'] = best_epoch
+            torch.save(dkt.state_dict(), './model/best_dkt.pt') 
+            # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.mean().item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+            # print("========"*10)
+        # run['loss'].log(sum(train_loss)/len(train_loss))
+        # run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
+
+    torch.save(dkt.state_dict(), './model/final_dkt.pt') 
 if __name__ == "__main__":
     main()
