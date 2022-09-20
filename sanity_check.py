@@ -216,9 +216,10 @@ class GroundTruthPermutedGru(nn.Module):
         outputs = []
         labels = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-            print("x: \n", x)
+            print("features: \n", x)
             hidden = self.cell(x, lower, hidden)
             labels.append(torch.sigmoid(hidden).clone()*x)
+            print("labels: \n", torch.sigmoid(hidden).clone()*x)
             outputs.append(hidden.clone())
         labels = torch.stack(labels)
         ans = torch.zeros(labels.shape[0], labels.shape[1])
@@ -272,12 +273,15 @@ class GroundTruthPermutedDKT(nn.Module):
         # Input shape is T, B
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
-        T, B = concept_input.shape
+        B, T = concept_input.shape
+        print("DEBUG: \n", concept_input.shape)
+        print(concept_input)
         input = torch.zeros(T, B, self.n_concepts)
-        input.scatter_(2, concept_input.unsqueeze(2), 1)
+        concept_input_t = concept_input.t()
+        input.scatter_(2, concept_input_t.unsqueeze(2), 1)
         labels = self.gru(input)
 
-        return labels
+        return labels.t()
 
 class TrainingDataset(Dataset):
     def __init__(self, features, labels):
@@ -298,14 +302,18 @@ def createDataset(features, labels):
 
 def main():
     # C (constructs), Q (questions), S (students)
-    C, Q, S = 5, 4, 2
+    C, Q, S = 4, 8, 2
+    print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
 
-    gt_dkt = GroundTruthPermutedDKT(n_concepts=5)
+    gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
     # features = torch.randint(0, C, (Q, S))
     features = torch.randint(0, C, (S, Q))
     labels = gt_dkt(features)
-    print("features: \n", features)
-    print("labels: \n", labels)
+    print("========="*10)
+    print("Data generation")
+    print("Features: \n", features)
+    print("Labels: \n", labels)
+    print("========="*10)
 
     training_set = createDataset(features, labels)
 
