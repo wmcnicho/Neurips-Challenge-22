@@ -8,7 +8,8 @@ from torch.utils.data import Dataset, DataLoader
 import neptune.new as neptune
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch.manual_seed(2)
+# torch.manual_seed(2)
+torch.manual_seed(25)
 
 class GroundTruthPermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -25,12 +26,31 @@ class GroundTruthPermutedGruCell(nn.Module):
         \end{array}
         """
         self.hidden_size = hidden_size
-        self.W_ir = torch.rand(hidden_size, hidden_size)
-        self.W_hr = torch.rand(hidden_size, hidden_size)
-        self.W_iz = torch.rand(hidden_size, hidden_size)
-        self.W_hz = torch.rand(hidden_size, hidden_size)
-        self.W_in = torch.rand(hidden_size, hidden_size)
-        self.W_hn = torch.rand(hidden_size, hidden_size)
+        # self.W_ir = torch.rand(hidden_size, hidden_size)
+        # self.W_hr = torch.rand(hidden_size, hidden_size)
+        # self.W_iz = torch.rand(hidden_size, hidden_size)
+        # self.W_hz = torch.rand(hidden_size, hidden_size)
+        # self.W_in = torch.rand(hidden_size, hidden_size)
+        # self.W_hn = torch.rand(hidden_size, hidden_size)
+
+        W_ir = torch.empty(hidden_size, hidden_size, dtype = torch.double)
+        W_hr = torch.empty(hidden_size, hidden_size, dtype = torch.double)
+        W_iz = torch.empty(hidden_size, hidden_size, dtype = torch.double)
+        W_hz = torch.empty(hidden_size, hidden_size, dtype = torch.double)
+        W_in = torch.empty(hidden_size, hidden_size, dtype = torch.double)
+        W_hn = torch.empty(hidden_size, hidden_size, dtype = torch.double)
+        b_ir = torch.randn(hidden_size, dtype = torch.double)
+        b_hr = torch.randn(hidden_size, dtype = torch.double)
+        b_iz = torch.randn(hidden_size, dtype = torch.double)
+        b_hz = torch.randn(hidden_size, dtype = torch.double)
+        b_in = torch.randn(hidden_size, dtype = torch.double)
+        b_hn = torch.randn(hidden_size, dtype = torch.double)
+        nn.init.kaiming_normal_(W_hn, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(W_ir, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(W_hr, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(W_iz, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(W_hz, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(W_in, a=math.sqrt(hidden_size), mode='fan_out')
 
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
@@ -44,10 +64,12 @@ class GroundTruthPermutedGruCell(nn.Module):
         W_hn = self.W_hn * lower
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
-        r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
-        z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
-        n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
+        mask = torch.zeros(self.hidden_size, dtype = torch.double)
+        r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr) + self.b_hr )
+        z_t = sigmoid(torch.matmul(x, W_iz) + self.b_iz * mask + torch.matmul(hidden, W_hz) + self.b_hz )
+        n_t = tanh(torch.matmul(x, W_in) +  self.b_in * mask + r_t * (torch.matmul(hidden, W_hn) + self.b_hn))
         hy = hidden * z_t + (1.0 - z_t) * n_t
+
         return hy
 
 class PermutedGruCell(nn.Module):
@@ -72,7 +94,6 @@ class PermutedGruCell(nn.Module):
         self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.reset_parameters()
-
 
     def reset_parameters(self):
         for w in self.parameters():
@@ -213,16 +234,21 @@ class GroundTruthPermutedGru(nn.Module):
     def forward(self, input_, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
+        W = torch.randn(input_.shape[2]) * input_.shape[0]
+        b = torch.randn(1)
         dim = 1 if self.batch_first else 0
         lower = self.permuted_matrix(verbose=False)
         outputs = []
         labels = []
-        for x in torch.unbind(input_, dim=dim):  # x dim is B, I
+        # for x in torch.unbind(input_, dim=dim):  # x dim is B, I
+        #     hidden = self.cell(x, lower, hidden)
+        #     labels.append(torch.sigmoid(hidden).clone()*x)
+        #     # print("features: \n", x)
+        #     # print("labels: \n", torch.sigmoid(hidden).clone()*x)
+        #     outputs.append(hidden.clone())
+        for t, x in enumerate(torch.unbind(input_, dim=dim)):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
-            labels.append(torch.sigmoid(hidden).clone()*x)
-            # print("features: \n", x)
-            # print("labels: \n", torch.sigmoid(hidden).clone()*x)
-            outputs.append(hidden.clone())
+            labels.append(torch.sigmoid(hidden*W+b).clone()*x)
         labels = torch.stack(labels)
         ans = torch.zeros(labels.shape[0], labels.shape[1])
         for i, xx in enumerate(labels):
@@ -273,7 +299,7 @@ class GroundTruthPermutedDKT(nn.Module):
         super().__init__()
         self.gru = GroundTruthPermutedGru(n_concepts, batch_first=False)
         self.n_concepts = n_concepts
-        self.output_layer = nn.Linear(1, 1)
+        # self.output_layer = nn.Linear(1, 1)
 
     def forward(self, concept_input):
         # Input shape is T, B
@@ -344,7 +370,8 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
 
 def main():
     # C (constructs), Q (questions), S (students)
-    C, Q, S = 10, 20, 50
+    # C, Q, S = 10, 20, 50
+    C, Q, S = 5, 10, 10
     print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
@@ -362,9 +389,10 @@ def main():
     dkt = PermutedDKT(n_concepts=C).to(device)
 
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
-    optimizer = torch.optim.Adam(dkt.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(dkt.parameters(), lr=0.01)
+    #0.01
    
-    n_epochs = 200
+    n_epochs = 500
     best_loss = 100.0
     best_accuracy = 0.0
     best_epoch = 0.0
