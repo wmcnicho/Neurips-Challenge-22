@@ -1,5 +1,5 @@
 import math
-
+import numpy as np
 import pudb
 import torch
 import torch.nn as nn
@@ -9,8 +9,9 @@ import neptune.new as neptune
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # torch.manual_seed(2)
-torch.manual_seed(25)
-
+SEED = 54
+torch.manual_seed(SEED)
+np.random.seed(SEED)
 class GroundTruthPermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
         super().__init__()
@@ -383,9 +384,17 @@ def main():
     print("Features: \n", features)
     print("Labels: \n", labels)
     print("========="*10)
-
+    perm_dataset = True
+    # gt_perm = torch.randperm(C)
+    gt_perm = list(np.random.permutation(C))
+    if perm_dataset:
+        print("Ground truth permutation: ", gt_perm)
+        for i, xx in enumerate(features):
+            for j, yy in enumerate(xx):
+                features[i][j] = gt_perm[features[i][j]]
     training_set = createDataset(features, labels)
-
+        # print("Features: \n", features)
+    
     dkt = PermutedDKT(n_concepts=C).to(device)
 
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
@@ -402,7 +411,7 @@ def main():
     #     capture_hardware_metrics = False
     # )
     for epoch in range(n_epochs): # loop over the dataset multiple times
-        print("Epoch ", epoch)
+        # print("Epoch ", epoch)
         train_loss=[]
         train_accuracy=[]
         for i, data in enumerate(training_loader, 0):
@@ -423,7 +432,7 @@ def main():
             # run['best_epoch'] = best_epoch
             # torch.save(dkt.state_dict(), './model/best_dkt.pt') 
             torch.save(dkt, './model/best_dkt.pt')
-        print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+        # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
         # run['loss'].log(sum(train_loss)/len(train_loss))
         # run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
@@ -434,6 +443,7 @@ def main():
         if (name == "gru.permuted_matrix.matrix"):
             # torch.set_printoptions(threshold=10_000)
             sink_horn(param, verbose=True)
-
+    if perm_dataset: 
+        print("Ground truth permutation:\n", gt_perm)
 if __name__ == "__main__":
     main()
