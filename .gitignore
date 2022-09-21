@@ -7,4 +7,5 @@ error/*.out
 neptune/*
 model/*
 logs/*
+sanity_check/model*
 __pycache__/*

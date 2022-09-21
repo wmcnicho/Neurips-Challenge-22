@@ -57,7 +57,7 @@ class PermutedGruCell(nn.Module):
 
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=20):
+    def __init__(self, input_size, temperature, unroll):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
@@ -107,6 +107,8 @@ class PermutedGru(nn.Module):
     def __init__(
         self,
         hidden_size,
+        temperature,
+        unroll,
         bias=False,
         num_layers=1,
         batch_first=False,
@@ -115,7 +117,7 @@ class PermutedGru(nn.Module):
         super().__init__()
         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
-        self.permuted_matrix = PermutationMatrix(hidden_size)
+        self.permuted_matrix = PermutationMatrix(hidden_size, temperature, unroll)
 
     def forward(self, input_, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
@@ -138,9 +140,9 @@ class PermutedGru(nn.Module):
         return hidden_states, last_states
 
 class PermutedDKT(nn.Module):
-    def __init__(self, n_concepts):
+    def __init__(self, n_concepts, temperature, unroll):
         super().__init__()
-        self.gru = PermutedGru(n_concepts, batch_first=False)
+        self.gru = PermutedGru(n_concepts, temperature, unroll, batch_first=False)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(1, 1)
 

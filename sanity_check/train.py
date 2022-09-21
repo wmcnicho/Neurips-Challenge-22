@@ -4,8 +4,9 @@ import pudb
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-
+import argparse
 import neptune.new as neptune
+import random
 
 from ground_truth_model import GroundTruthPermutedDKT
 from model import PermutedDKT
@@ -70,9 +71,9 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
         return causal_order
 
 def test():
-    global SEED
-    torch.manual_seed(SEED)
-    np.random.seed(SEED)
+    # global SEED
+    # torch.manual_seed(SEED)
+    # np.random.seed(SEED)
     # C (constructs), Q (questions), S (students)
     # C, Q, S = 10, 20, 50
     C, Q, S = 5, 10, 10
@@ -98,7 +99,7 @@ def test():
     training_set = createDataset(features, labels)
         # print("Features: \n", features)
     
-    dkt = PermutedDKT(n_concepts=C).to(device)
+    dkt = PermutedDKT(n_concepts=C, temperature=params.temperature, unroll=params.unroll).to(device)
 
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=0.01)
@@ -146,12 +147,31 @@ def test():
     for name, param in best_dkt.named_parameters():
         if (name == "gru.permuted_matrix.matrix"):
             # torch.set_printoptions(threshold=10_000)
-            causal_order = sink_horn(param, verbose=True)
+            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
     if perm_dataset: 
         print("Ground truth permutation:\n", gt_perm)
     return causal_order == gt_perm
 if __name__ == "__main__":
-    for i in range(500):
+
+    parser = argparse.ArgumentParser(description='ML')
+    # parser.add_argument('--model', type=str, default='ff', help='type')
+    # hidden state -> number of constructs
+    parser.add_argument('-C', '--num_constructs', type=int, default=5, help='number of constructs')
+    parser.add_argument('-Q', '--num_questions', type=int, default=10, help='number of questions')
+    parser.add_argument('-S', '--num_students', type=int, default=20, help='number of students')
+    parser.add_argument('-T', '--temperature', type=int ,default=100, help='temperature')
+    parser.add_argument('-U', '--unroll', type=int, default=20, help='unroll')
+    params = parser.parse_args()
+    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll]
+    file_name =  [str(d) for d in file_name]
+    params.file_name = '_'.join(file_name)
+    seed_num = 221
+    np.random.seed(seed_num)
+    torch.manual_seed(seed_num)
+    np.random.seed(seed_num)
+    random.seed(seed_num)
+
+    for i in range(1):
         print("========"*10)
         SEED = i
         is_true_order = test()
