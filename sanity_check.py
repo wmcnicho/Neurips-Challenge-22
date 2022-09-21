@@ -9,9 +9,7 @@ import neptune.new as neptune
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # torch.manual_seed(2)
-SEED = 54
-torch.manual_seed(SEED)
-np.random.seed(SEED)
+
 class GroundTruthPermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
         super().__init__()
@@ -369,7 +367,12 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
         )
         print("Causal Order\n", causal_order)
 
-def main():
+        return causal_order
+
+def test():
+    global SEED
+    torch.manual_seed(SEED)
+    np.random.seed(SEED)
     # C (constructs), Q (questions), S (students)
     # C, Q, S = 10, 20, 50
     C, Q, S = 5, 10, 10
@@ -439,11 +442,19 @@ def main():
         torch.save(dkt, './model/final_dkt.pt')
 
     best_dkt = torch.load('./model/best_dkt.pt')
+    causal_order = []
     for name, param in best_dkt.named_parameters():
         if (name == "gru.permuted_matrix.matrix"):
             # torch.set_printoptions(threshold=10_000)
-            sink_horn(param, verbose=True)
+            causal_order = sink_horn(param, verbose=True)
     if perm_dataset: 
         print("Ground truth permutation:\n", gt_perm)
+    return causal_order == gt_perm
 if __name__ == "__main__":
-    main()
+    for i in range(500):
+        print("========"*10)
+        SEED = i
+        is_true_order = test()
+        if is_true_order:
+            print("SEED: ", SEED)
+        print("========"*10)

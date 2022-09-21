@@ -2,8 +2,9 @@
 data/Task_3_dataset/*
 log
 test.py
-./output/*.out
-./error/*.out
-.neptune/*
-./model/*
+output/*.out
+error/*.out
+neptune/*
+model/*
+logs/*
 __pycache__/*
