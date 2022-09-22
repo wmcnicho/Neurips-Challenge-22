@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 import argparse
 import neptune.new as neptune
 import random
-
+import matplotlib.pyplot as plt
 from ground_truth_model import GroundTruthPermutedDKT
 from model import PermutedDKT
 
@@ -70,24 +70,44 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
 
         return causal_order
 
+def visualize(features, labels):
+    global C, Q, S
+    # y1 = features.numpy()
+    # y2 = labels.numpy()
+    # x = np.array([i for i in range(Q)])
+    # y = np.array([i for i in range(C)])
+    # plt.xticks(x)
+    # plt.yticks(y)
+    # step = 0
+    # for yy1, yy2 in zip(y1, y2):
+    #     kcolors = ['red' if value == 0 else 'blue' for value in yy2]
+    #     print("kcolors: \n", kcolors)
+    #     xx1= [i + 0.1 * step for i in x]
+    #     yy3 = [i + 0.1 * step for i in yy1]
+    #     plt.plot(xx1, yy1, zorder=-1, alpha=0.150, lw=2)
+    #     plt.scatter(xx1, yy1, c=kcolors, s=1)
+    #     step +=1 
+    # plt.savefig("./graph/dummy.png")
+
+    for idx, (x1, x2) in enumerate(zip(features.tolist(), labels.tolist())):
+        print("========" * 10)
+        print(f"Student {idx}: ")
+        print(x1)
+        print(x2)
 def test():
-    # global SEED
-    # torch.manual_seed(SEED)
-    # np.random.seed(SEED)
-    # C (constructs), Q (questions), S (students)
+    global C, Q, S
     # C, Q, S = 10, 20, 50
-    C, Q, S = 5, 10, 10
     print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
     features = torch.randint(0, C, (S, Q))
     labels = gt_dkt(features)
-
-    print("========="*10)
-    print("Data generation")
-    print("Features: \n", features)
-    print("Labels: \n", labels)
-    print("========="*10)
+    visualize(features, labels)
+    # print("========="*10)
+    # print("Data generation")
+    # print("Features: \n", features)
+    # print("Labels: \n", labels)
+    # print("========="*10)
     perm_dataset = True
     # gt_perm = torch.randperm(C)
     gt_perm = list(np.random.permutation(C))
@@ -98,7 +118,8 @@ def test():
                 features[i][j] = gt_perm[features[i][j]]
     training_set = createDataset(features, labels)
         # print("Features: \n", features)
-    
+    # Different seed number
+    torch.manual_seed(seed_num-1)
     dkt = PermutedDKT(n_concepts=C, temperature=params.temperature, unroll=params.unroll).to(device)
 
     training_loader = DataLoader(training_set, batch_size=4, shuffle=False)
@@ -160,21 +181,24 @@ if __name__ == "__main__":
     parser.add_argument('-Q', '--num_questions', type=int, default=10, help='number of questions')
     parser.add_argument('-S', '--num_students', type=int, default=20, help='number of students')
     parser.add_argument('-T', '--temperature', type=int ,default=100, help='temperature')
-    parser.add_argument('-U', '--unroll', type=int, default=20, help='unroll')
+    parser.add_argument('-U', '--unroll', type=int, default=100, help='unroll')
     params = parser.parse_args()
     file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
-    seed_num = 221
+    seed_num = 37
     np.random.seed(seed_num)
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)
     random.seed(seed_num)
 
-    for i in range(1):
-        print("========"*10)
-        SEED = i
-        is_true_order = test()
-        if is_true_order:
-            print("SEED: ", SEED)
-        print("========"*10)
+    # C, Q, S = 5, 10, 10
+    C, Q, S = 5, 50, 100
+    test()
+    # for i in range(1):
+    #     print("========"*10)
+    #     SEED = i
+    #     is_true_order = test()
+    #     if is_true_order:
+    #         print("SEED: ", SEED)
+    #     print("========"*10)

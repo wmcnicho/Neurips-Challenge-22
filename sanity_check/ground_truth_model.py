@@ -51,7 +51,7 @@ class GroundTruthPermutedGruCell(nn.Module):
         nn.init.kaiming_normal_(self.W_hz, a=math.sqrt(hidden_size), mode='fan_out')
         nn.init.kaiming_normal_(self.W_in, a=math.sqrt(hidden_size), mode='fan_out')
 
-    def forward(self, x, lower, hidden=None):
+    def forward(self, x, lower, mask, hidden=None):
         # x is B, input_size
         if hidden is None:
             hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
@@ -64,7 +64,8 @@ class GroundTruthPermutedGruCell(nn.Module):
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
         # mask = torch.zeros(self.hidden_size, dtype = torch.double)
-        mask = torch.zeros(self.hidden_size)
+        # mask = torch.zeros(self.hidden_size)
+        # mask[construct_id] = 1.0
         r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr) + self.b_hr)
         z_t = sigmoid(torch.matmul(x, W_iz) + self.b_iz * mask + torch.matmul(hidden, W_hz) + self.b_hz)
         n_t = tanh(torch.matmul(x, W_in) +  self.b_in * mask + r_t * (torch.matmul(hidden, W_hn) + self.b_hn))
@@ -120,8 +121,11 @@ class GroundTruthPermutedGru(nn.Module):
         #     # print("features: \n", x)
         #     # print("labels: \n", torch.sigmoid(hidden).clone()*x)
         #     outputs.append(hidden.clone())
+        # print("Debug")
         for t, x in enumerate(torch.unbind(input_, dim=dim)):  # x dim is B, I
-            hidden = self.cell(x, lower, hidden)
+            # print(f"t: {t}, x: {x}")
+            # x as a mask
+            hidden = self.cell(x, lower, x, hidden)
             labels.append(torch.sigmoid(hidden*W+b).clone()*x)
         labels = torch.stack(labels)
         ans = torch.zeros(labels.shape[0], labels.shape[1])

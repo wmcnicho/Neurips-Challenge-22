@@ -40,7 +40,8 @@ class PermutedGruCell(nn.Module):
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
         if hidden is None:
-            hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            # hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            hidden = torch.rand(x.size(0), self.hidden_size).to(device)
         W_ir = self.W_ir * lower
         W_hr = self.W_hr * lower
         W_iz = self.W_iz * lower
