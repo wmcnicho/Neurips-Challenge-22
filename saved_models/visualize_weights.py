@@ -212,9 +212,7 @@ class PermutedDKT(nn.Module):
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
         pred = (output > 0.0).float()
-        acc_raw = torch.mean((pred*mask == labels*mask).float())
-        acc_corrrection = len((mask==0).nonzero())/(mask.shape[0]*mask.shape[1])
-        acc = acc_raw - acc_corrrection
+        acc = torch.mean((pred == labels).float())
         raw_loss = self.ce_loss(output, labels.float())
         loss_masked = (raw_loss * mask).mean()
         return loss_masked, acc
@@ -378,58 +376,30 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
-    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
-        tot_construct_list = json.load(fp)
+    # dataset_tensor = torch.load('../serialized_torch/student_data_tensor.pt')
+    # with open("../serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    #     tot_construct_list = json.load(fp)
     
-    num_of_questions, _, num_of_students = dataset_tensor.shape
+    # num_of_questions, _, num_of_students = dataset_tensor.shape
 
-    dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
+    # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
+    model_load = torch.load('saved_models/nips.pt', map_location=torch.device('cpu'))
+    print('stay')
+    # dkt_model.load('nips.pt')
+    # for param in model_load.parameters():
+    #     print(param)
+    # 
     # concept_input = dataset_tensor[:, 0, :]
     # labels = dataset_tensor[:, 1, :]
-    initial_concept_input = dataset_tensor[:, 0, :]
-    map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
-    concept_input = torch.tensor(map_concept_input, dtype=torch.long)
+    # initial_concept_input = dataset_tensor[:, 0, :]
+    # map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
+    # concept_input = torch.tensor(map_concept_input, dtype=torch.long)
     
-    labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
-    # TODO: Batch student-wise not question-wise (dim-1 must be student)
-    concept_inp_transpose = torch.transpose(concept_input, 0, 1)
-    labels_transpose = torch.transpose(labels, 0, 1)
-    # TODO: Get train-validation set
-    train_input, valid_input, train_label, valid_label = train_test_split(concept_inp_transpose, labels_transpose, 
-                                                            train_size=0.8, random_state=seed_val)
-    
-    print("PermutedDKT")
-    print("Number of questions: ", num_of_questions)
-    print("Number of students: ", num_of_students)
-    print("Number of concepts:", len(tot_construct_list)+1)
-
-    # TODO: construct a tensor dataset
-    batch_size = 4
-    epochs = 100
-    train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
-    val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
-    
-    print("Successfull in data prepration!")
-    # TODO: Getting optimzer and scheduler
-    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, len(train_dataloader), epochs)
-    print("Successfully loaded the optimizer")
-
-    # Main Traning
-    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
-    # TODO: Save the model
-    torch.save(model, 'saved_models/nips.pt')
-
-
-    with open('train_epochwise_loss.json', 'w') as infile:
-        json.dump(epoch_train_loss, infile)
-
-    with open('val_epochwise_loss.json', 'w') as infile:
-        json.dump(epoch_val_loss, infile)
-
-    # loss, acc = dkt_model(concept_input, labels)
-    # print(loss, acc)
+    # labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+    # # TODO: Batch student-wise not question-wise (dim-1 must be student)
+    # concept_inp_transpose = torch.transpose(concept_input, 0, 1)
+    # labels_transpose = torch.transpose(labels, 0, 1)
 
 if __name__ == "__main__":
     main()
