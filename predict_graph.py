@@ -174,6 +174,7 @@ class PermutedDKT(nn.Module):
         self.gru = PermutedGru(n_concepts, batch_first=False)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(1, 1)
+        self.sigmoid = nn.Sigmoid()
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
 
     def forward(self, concept_input, labels):
@@ -210,8 +211,9 @@ class PermutedDKT(nn.Module):
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) # NOTE: Why this?
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
-        pred = (output > 0.0).float()
+        sigmoid_output = self.sigmoid(output)
+        output = torch.gather(sigmoid_output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
+        pred = (output > 0.5).float()
         acc_raw = torch.mean((pred*mask == labels*mask).float())
         acc_corrrection = len((mask==0).nonzero())/(mask.shape[0]*mask.shape[1])
         acc = acc_raw - acc_corrrection
