@@ -356,12 +356,13 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         print("  Average vakidation accuracy: {0:.2f}".format(avg_acc))
         epochwise_val_losses.append(avg_val_loss)
         
-        if abs(avg_val_loss-prev_val_loss) < early_stop_patience:
-            if early_stop_ctr < early_stop_threshold:
-                early_stop_ctr += 1
-            else:
-                print('Early Stopping. No improvement in validation loss')
-                break 
+        # # NOTE: Early stopping
+        # if abs(avg_val_loss-prev_val_loss) < early_stop_patience:
+        #     if early_stop_ctr < early_stop_threshold:
+        #         early_stop_ctr += 1
+        #     else:
+        #         print('Early Stopping. No improvement in validation loss')
+        #         break 
         
         if avg_val_loss < least_val_loss:
             model_copy = copy.deepcopy(model)
@@ -375,8 +376,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
-    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
+    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -403,7 +404,7 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 4
+    batch_size = 64
     epochs = 100
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
