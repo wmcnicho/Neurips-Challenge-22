@@ -384,9 +384,13 @@ def main():
 
     # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
-    model_load = torch.load('saved_models/nips.pt', map_location=torch.device('cpu'))
-    with open('p_matrix.json', 'w') as outfile:
-        json.dump(model_load.gru.permuted_matrix.matrix.cpu().detach().numpy().tolist(), fp=outfile)
+    model_load = torch.load('saved_models/nips_vanilla.pt', map_location=torch.device('cpu'))
+    np_matrix = model_load.gru.permuted_matrix.matrix.cpu().detach().numpy()
+    argmax_list = np.argmax(np_matrix, axis=1)
+    p_matrix = np.zeros(np_matrix.shape)
+    for row, col in enumerate(argmax_list):
+        p_matrix[row][col] = 1
+    np.save('saved_models/p_matrix.npy', p_matrix)
     # dkt_model.load('nips.pt')
     # for param in model_load.parameters():
     #     print(param)
