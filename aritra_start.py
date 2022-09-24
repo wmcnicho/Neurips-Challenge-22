@@ -155,7 +155,7 @@ class PermutedDKT(nn.Module):
         hidden_states, _ = self.gru(input)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
-        shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[1:, :, :]
+        shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2)
         pred = (output > 0.0).float()

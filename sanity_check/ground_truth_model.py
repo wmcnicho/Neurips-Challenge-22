@@ -54,7 +54,8 @@ class GroundTruthPermutedGruCell(nn.Module):
     def forward(self, x, lower, mask, hidden=None):
         # x is B, input_size
         if hidden is None:
-            hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            # hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            hidden = torch.randn(x.size(0), self.hidden_size).to(device)
         W_ir = self.W_ir * lower
         W_hr = self.W_hr * lower
         W_iz = self.W_iz * lower
@@ -63,13 +64,12 @@ class GroundTruthPermutedGruCell(nn.Module):
         W_hn = self.W_hn * lower
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
-        # mask = torch.zeros(self.hidden_size, dtype = torch.double)
-        # mask = torch.zeros(self.hidden_size)
-        # mask[construct_id] = 1.0
+        print(f"before h:\n {hidden}")
         r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr) + self.b_hr)
         z_t = sigmoid(torch.matmul(x, W_iz) + self.b_iz * mask + torch.matmul(hidden, W_hz) + self.b_hz)
         n_t = tanh(torch.matmul(x, W_in) +  self.b_in * mask + r_t * (torch.matmul(hidden, W_hn) + self.b_hn))
         hy = hidden * z_t + (1.0 - z_t) * n_t
+        print(f"after h:\n {hy}")
 
         return hy
 
@@ -81,7 +81,8 @@ class GroundTruthPermutationMatrix(nn.Module):
         # self.matrix = self.matrix.to(torch.double)
         # self.lower = self.lower.to(torch.double)
     def forward(self, verbose=False):
-        output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t()).t()
+        # output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t()).t()
+        output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t())
         # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         
         ideal_matrix_order = self.matrix.data.argmax(dim=1, keepdim=True)
@@ -115,16 +116,11 @@ class GroundTruthPermutedGru(nn.Module):
         lower = self.permuted_matrix(verbose=False)
         outputs = []
         labels = []
-        # for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-        #     hidden = self.cell(x, lower, hidden)
-        #     labels.append(torch.sigmoid(hidden).clone()*x)
-        #     # print("features: \n", x)
-        #     # print("labels: \n", torch.sigmoid(hidden).clone()*x)
-        #     outputs.append(hidden.clone())
-        # print("Debug")
-        for t, x in enumerate(torch.unbind(input_, dim=dim)):  # x dim is B, I
-            # print(f"t: {t}, x: {x}")
-            # x as a mask
+        print("Debug student minds: \n")
+        for t, x in enumerate(torch.unbind(input_, dim=dim)):  # x dim is S(B)
+            print("======" * 10)
+            print(f"time step: {t}")
+            print(f"construct: {x.argmax()}")
             hidden = self.cell(x, lower, x, hidden)
             labels.append(torch.sigmoid(hidden*W+b).clone()*x)
         labels = torch.stack(labels)
@@ -133,7 +129,7 @@ class GroundTruthPermutedGru(nn.Module):
             for j, yy in enumerate(xx):
                 ans[i][j] = torch.max(yy)
         ans = (ans >= 0.5).int()
-        
+        # x = torch.where(ans == 0, -1, ans)
         return ans
 
 class GroundTruthPermutedDKT(nn.Module):
@@ -144,7 +140,7 @@ class GroundTruthPermutedDKT(nn.Module):
         # self.output_layer = nn.Linear(1, 1)
 
     def forward(self, concept_input):
-        # Input shape is T, B
+        # Input shape is Q(T), S(B)
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
         B, T = concept_input.shape

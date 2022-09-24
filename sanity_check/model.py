@@ -41,7 +41,7 @@ class PermutedGruCell(nn.Module):
         # x is B, input_size
         if hidden is None:
             # hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
-            hidden = torch.rand(x.size(0), self.hidden_size).to(device)
+            hidden = torch.randn(x.size(0), self.hidden_size).to(device)
         W_ir = self.W_ir * lower
         W_hr = self.W_hr * lower
         W_iz = self.W_iz * lower
@@ -70,7 +70,8 @@ class PermutationMatrix(nn.Module):
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
-        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
+        # output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
+        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t())
         ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True)
         new_matrix = torch.zeros_like(matrix)
         new_matrix.scatter_(
@@ -92,7 +93,9 @@ class PermutationMatrix(nn.Module):
             print("Permutation Matrix\n", matrix.data.numpy().round(1))
             print(
                 "Permuted Lower Triangular Matrix\n",
-                output_lower.t().data.numpy().round(1),
+                # output_lower.t().data.numpy().round(1),
+                output_lower.data.numpy().round(1),
+
             )
             print("Ideal Permutation Matrix\n", new_matrix.data)
             print(
