@@ -64,12 +64,12 @@ class GroundTruthPermutedGruCell(nn.Module):
         W_hn = self.W_hn * lower
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
-        print(f"before h:\n {hidden}")
+        # print(f"before h:\n {hidden}")
         r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr) + self.b_hr)
         z_t = sigmoid(torch.matmul(x, W_iz) + self.b_iz * mask + torch.matmul(hidden, W_hz) + self.b_hz)
         n_t = tanh(torch.matmul(x, W_in) +  self.b_in * mask + r_t * (torch.matmul(hidden, W_hn) + self.b_hn))
         hy = hidden * z_t + (1.0 - z_t) * n_t
-        print(f"after h:\n {hy}")
+        # print(f"after h:\n {hy}")
 
         return hy
 
@@ -116,11 +116,11 @@ class GroundTruthPermutedGru(nn.Module):
         lower = self.permuted_matrix(verbose=False)
         outputs = []
         labels = []
-        print("Debug student minds: \n")
+        # print("Debug student minds: \n")
         for t, x in enumerate(torch.unbind(input_, dim=dim)):  # x dim is S(B)
-            print("======" * 10)
-            print(f"time step: {t}")
-            print(f"construct: {x.argmax()}")
+            # print("======" * 10)
+            # print(f"time step: {t}")
+            # print(f"construct: {x.argmax()}")
             hidden = self.cell(x, lower, x, hidden)
             labels.append(torch.sigmoid(hidden*W+b).clone()*x)
         labels = torch.stack(labels)

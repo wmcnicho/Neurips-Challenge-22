@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import argparse
+# import neptune
 import neptune.new as neptune
 import random
 import matplotlib.pyplot as plt
@@ -95,14 +96,13 @@ def visualize(features, labels):
         print(x1)
         print(x2)
 def test():
-    global C, Q, S
+    # global C, Q, S
     # C, Q, S = 10, 20, 50
-    print(f"# of constructs: {C}\n# of questions: {Q}\n# of students: {S}")
-
-    gt_dkt = GroundTruthPermutedDKT(n_concepts=C)
-    # features = torch.randint(0, C, (S, Q))
-    tmp = [[i for i in range(C)], [i for i in range(C)]]
-    features = torch.tensor(tmp)
+    
+    gt_dkt = GroundTruthPermutedDKT(n_concepts=params.num_constructs)
+    features = torch.randint(0, params.num_constructs, (params.num_students, params.num_questions))
+    # tmp = [[i for i in range(C)], [i for i in range(C)]]
+    # features = torch.tensor(tmp)
     labels = gt_dkt(features)
     # visualize(features, labels)
     # print("========="*10)
@@ -111,94 +111,107 @@ def test():
     # print("Labels: \n", labels)
     # print("========="*10)
 
-    # # Training
+    # Training
 
-    # perm_dataset = True
-    # gt_perm = list(np.random.permutation(C))
-    # if perm_dataset:
-    #     print("Ground truth permutation: ", gt_perm)
-    #     for i, xx in enumerate(features):
-    #         for j, yy in enumerate(xx):
-    #             features[i][j] = gt_perm[features[i][j]]
-    # training_set = createDataset(features, labels)
-    # # Different seed number
-    # torch.manual_seed(seed_num-1)
-    # dkt = PermutedDKT(n_concepts=C, temperature=params.temperature, unroll=params.unroll).to(device)
+    perm_dataset = True
+    gt_perm = list(np.random.permutation(params.num_constructs))
+    if perm_dataset:
+        print("Ground truth permutation: ", gt_perm)
+        for i, xx in enumerate(features):
+            for j, yy in enumerate(xx):
+                features[i][j] = gt_perm[features[i][j]]
+    training_set = createDataset(features, labels)
+    # Different seed number
+    torch.manual_seed(seed_num-1)
+    dkt = PermutedDKT(n_concepts=params.num_constructs, temperature=params.temperature, unroll=params.unroll).to(device)
 
-    # training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
-    # optimizer = torch.optim.Adam(dkt.parameters(), lr=0.01)
-    # #0.01
+    training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
+    optimizer = torch.optim.Adam(dkt.parameters(), lr=params.learning_rate)
+    #0.01
    
-    # n_epochs = 1
-    # best_loss = 100.0
-    # best_accuracy = 0.0
-    # best_epoch = 0.0
-    # # run = neptune.init(
-    # #     project="phdprojects/challenge",
-    # #     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3MTYwYjA3Zi01NmNhLTQ4YWMtOWFmMy0zMjdmZDliOGE4YzAifQ==",
-    # #     capture_hardware_metrics = False
-    # # )
-    # for epoch in range(n_epochs): # loop over the dataset multiple times
-    #     # print("Epoch ", epoch)
-    #     train_loss=[]
-    #     train_accuracy=[]
-    #     for i, data in enumerate(training_loader, 0):
-    #         b_construct = data['Features']
-    #         b_label = data['Labels']
-    #         optimizer.zero_grad()
-    #         loss, acc = dkt(b_construct, b_label)
-    #         train_accuracy.append(acc)
-    #         train_loss.append(loss.item())
-    #         loss.backward()
-    #         optimizer.step()
-    #     if (sum(train_loss)/len(train_loss) < best_loss):
-    #         best_loss = sum(train_loss)/len(train_loss)
-    #         best_accuracy = sum(train_accuracy)/len(train_accuracy)
-    #         best_epoch = epoch
-    #         # run['best_loss'] = best_loss
-    #         # run['best_accuracy'] = best_accuracy
-    #         # run['best_epoch'] = best_epoch
-    #         # torch.save(dkt.state_dict(), './model/best_dkt.pt') 
-    #         torch.save(dkt, './model/best_dkt.pt')
-    #     # print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
-    #     # run['loss'].log(sum(train_loss)/len(train_loss))
-    #     # run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
+    n_epochs = params.num_epochs
+    best_loss = 100.0
+    best_accuracy = 0.0
+    best_epoch = 0.0
+    # run = neptune.init(
+    #     project="phdprojects/neurips-sanity",
+    #     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJiZTRjZTIxNi1kMzE5LTRlNzgtOGUyZC1hZmMwMTRiNzkzMWYifQ==",
+    # )
+    # PARAMS = {'num_constructs': params.num_constructs,
+    #         'num_questions': params.num_questions,
+    #         'num_students': params.num_students,
+    #         'batch_size': params.batch_size,
+    #         'temperature': params.temperature,
+    #         'unroll': params.unroll,
+    #         'learning_rate': params.learning_rate,
+    #         'num_epochs': params.num_epochs,
+    #         }
+    # run["parameters"] = PARAMS
 
-    #     torch.save(dkt, './model/final_dkt.pt')
+    for epoch in range(n_epochs): # loop over the dataset multiple times
+        # print("Epoch ", epoch)
+        train_loss=[]
+        train_accuracy=[]
+        for i, data in enumerate(training_loader, 0):
+            b_construct = data['Features']
+            b_label = data['Labels']
+            optimizer.zero_grad()
+            loss, acc = dkt(b_construct, b_label)
+            train_accuracy.append(acc)
+            train_loss.append(loss.item())
+            loss.backward()
+            optimizer.step()
+        if (sum(train_loss)/len(train_loss) < best_loss):
+            best_loss = sum(train_loss)/len(train_loss)
+            best_accuracy = sum(train_accuracy)/len(train_accuracy)
+            best_epoch = epoch
+            # run['best_loss'] = best_loss
+            # run['best_accuracy'] = best_accuracy
+            # run['best_epoch'] = best_epoch
+            torch.save(dkt.state_dict(), './model/best_dkt.pt') 
+            torch.save(dkt, './model/best_dkt.pt')
+        print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+        # run['loss'].log(sum(train_loss)/len(train_loss))
+        # run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
-    # best_dkt = torch.load('./model/best_dkt.pt')
-    # causal_order = []
-    # for name, param in best_dkt.named_parameters():
-    #     if (name == "gru.permuted_matrix.matrix"):
-    #         # torch.set_printoptions(threshold=10_000)
-    #         causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
-    # if perm_dataset: 
-    #     print("Ground truth permutation:\n", gt_perm)
-    # return causal_order == gt_perm
+        torch.save(dkt, './model/final_dkt.pt')
+
+    best_dkt = torch.load('./model/best_dkt.pt')
+    causal_order = []
+    for name, param in best_dkt.named_parameters():
+        if (name == "gru.permuted_matrix.matrix"):
+            # torch.set_printoptions(threshold=10_000)
+            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
+    if perm_dataset: 
+        print("Ground truth permutation:\n", gt_perm)
+    return causal_order == gt_perm
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='ML')
     # parser.add_argument('--model', type=str, default='ff', help='type')
     # hidden state -> number of constructs
+    parser.add_argument('-B', '--batch_size', type=int ,default=1, help='batch size')
     parser.add_argument('-C', '--num_constructs', type=int, default=5, help='number of constructs')
     parser.add_argument('-Q', '--num_questions', type=int, default=10, help='number of questions')
     parser.add_argument('-S', '--num_students', type=int, default=20, help='number of students')
     parser.add_argument('-T', '--temperature', type=int ,default=100, help='temperature')
-    parser.add_argument('-B', '--batch_size', type=int ,default=1, help='batch size')
     parser.add_argument('-U', '--unroll', type=int, default=100, help='unroll')
+    parser.add_argument('-L', '--learning_rate', type=float, default=0.01, help='learning rate')
+    parser.add_argument('-E', '--num_epochs', type=int, default=100, help='number of epochs')
     params = parser.parse_args()
     file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
-    seed_num = 37
+    seed_num = 35
     np.random.seed(seed_num)
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)
     random.seed(seed_num)
 
-    C, Q, S = 4, 4, 2
-    # C, Q, S = 4, 50, 50
+    print(f"# of constructs: {params.num_constructs}\n# of questions: {params.num_questions}\n# of students: {params.num_students}")
+    # C, Q, S = 4, 4, 2
+    # C, Q, S = 4, 200, 100
     # C, Q, S = 4, 50, 100
     test()
     # for i in range(1):
