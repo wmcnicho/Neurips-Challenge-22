@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py", line 211, in <module>
+    test()
+  File "/work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py", line 106, in test
+    labels = gt_dkt(features)
+  File "/home/jaewooklee_umass_edu/.local/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/jaewooklee_umass_edu/neurips_2022/sanity_check/ground_truth_model.py", line 150, in forward
+    labels = self.gru(input)
+  File "/home/jaewooklee_umass_edu/.local/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/jaewooklee_umass_edu/neurips_2022/sanity_check/ground_truth_model.py", line 124, in forward
+    hidden = self.cell(x, lower, x, hidden)
+  File "/home/jaewooklee_umass_edu/.local/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/jaewooklee_umass_edu/neurips_2022/sanity_check/ground_truth_model.py", line 68, in forward
+    r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr) + self.b_hr)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu! (when checking argument for argument mat2 in method wrapper_mm)

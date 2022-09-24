@@ -133,20 +133,20 @@ def test():
     best_loss = 100.0
     best_accuracy = 0.0
     best_epoch = 0.0
-    # run = neptune.init(
-    #     project="phdprojects/neurips-sanity",
-    #     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJiZTRjZTIxNi1kMzE5LTRlNzgtOGUyZC1hZmMwMTRiNzkzMWYifQ==",
-    # )
-    # PARAMS = {'num_constructs': params.num_constructs,
-    #         'num_questions': params.num_questions,
-    #         'num_students': params.num_students,
-    #         'batch_size': params.batch_size,
-    #         'temperature': params.temperature,
-    #         'unroll': params.unroll,
-    #         'learning_rate': params.learning_rate,
-    #         'num_epochs': params.num_epochs,
-    #         }
-    # run["parameters"] = PARAMS
+    run = neptune.init(
+        project="phdprojects/neurips-sanity",
+        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJiZTRjZTIxNi1kMzE5LTRlNzgtOGUyZC1hZmMwMTRiNzkzMWYifQ==",
+    )
+    PARAMS = {'num_constructs': params.num_constructs,
+            'num_questions': params.num_questions,
+            'num_students': params.num_students,
+            'batch_size': params.batch_size,
+            'temperature': params.temperature,
+            'unroll': params.unroll,
+            'learning_rate': params.learning_rate,
+            'num_epochs': params.num_epochs,
+            }
+    run["parameters"] = PARAMS
 
     for epoch in range(n_epochs): # loop over the dataset multiple times
         # print("Epoch ", epoch)
@@ -165,14 +165,14 @@ def test():
             best_loss = sum(train_loss)/len(train_loss)
             best_accuracy = sum(train_accuracy)/len(train_accuracy)
             best_epoch = epoch
-            # run['best_loss'] = best_loss
-            # run['best_accuracy'] = best_accuracy
-            # run['best_epoch'] = best_epoch
+            run['best_loss'] = best_loss
+            run['best_accuracy'] = best_accuracy
+            run['best_epoch'] = best_epoch
             torch.save(dkt.state_dict(), './model/best_dkt.pt') 
             torch.save(dkt, './model/best_dkt.pt')
         print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
-        # run['loss'].log(sum(train_loss)/len(train_loss))
-        # run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
+        run['loss'].log(sum(train_loss)/len(train_loss))
+        run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
         torch.save(dkt, './model/final_dkt.pt')
 
@@ -180,7 +180,6 @@ def test():
     causal_order = []
     for name, param in best_dkt.named_parameters():
         if (name == "gru.permuted_matrix.matrix"):
-            # torch.set_printoptions(threshold=10_000)
             causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
     if perm_dataset: 
         print("Ground truth permutation:\n", gt_perm)
@@ -189,8 +188,7 @@ def test():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='ML')
-    # parser.add_argument('--model', type=str, default='ff', help='type')
-    # hidden state -> number of constructs
+
     parser.add_argument('-B', '--batch_size', type=int ,default=1, help='batch size')
     parser.add_argument('-C', '--num_constructs', type=int, default=5, help='number of constructs')
     parser.add_argument('-Q', '--num_questions', type=int, default=10, help='number of questions')
@@ -210,14 +208,4 @@ if __name__ == "__main__":
     random.seed(seed_num)
 
     print(f"# of constructs: {params.num_constructs}\n# of questions: {params.num_questions}\n# of students: {params.num_students}")
-    # C, Q, S = 4, 4, 2
-    # C, Q, S = 4, 200, 100
-    # C, Q, S = 4, 50, 100
     test()
-    # for i in range(1):
-    #     print("========"*10)
-    #     SEED = i
-    #     is_true_order = test()
-    #     if is_true_order:
-    #         print("SEED: ", SEED)
-    #     print("========"*10)
