@@ -386,8 +386,8 @@ def main():
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
 
-    dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
-    # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
+    # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
+    dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
     # concept_input = dataset_tensor[:, 0, :]
     # labels = dataset_tensor[:, 1, :]
     initial_concept_input = dataset_tensor[:, 0, :]
@@ -408,8 +408,8 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 128
-    epochs = 100
+    batch_size = 64
+    epochs = 50
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
     
