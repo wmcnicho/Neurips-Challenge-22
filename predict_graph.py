@@ -1,3 +1,4 @@
+import wandb
 import os
 import copy
 import math
@@ -21,6 +22,9 @@ torch.cuda.manual_seed_all(seed_val)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
+
+# Start Wandb run
+wandb.init(project="predict-graph", entity="ml4ed")
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -242,10 +246,10 @@ def get_data_loader(batch_size, concept_input, labels):
     dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
     return dataloader
 
-def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
+def get_optimizer_scheduler(name, model, lr, train_dataloader_len, epochs):
     if name == "Adam":
         optimizer = AdamW(model.parameters(),
-                    lr = 5e-3, # args.learning_rate - default is 5e-5, our notebook had 2e-5
+                    lr = lr, # args.learning_rate - default is 5e-5, our notebook had 2e-5
                     eps = 1e-8 # args.adam_epsilon  - default is 1e-8.
                 )
         total_steps = train_dataloader_len * epochs
@@ -373,6 +377,12 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             least_val_loss = avg_val_loss
 
         prev_val_loss = avg_val_loss
+
+        # Wandb Log Metrics
+        wandb.log({"Epoch": epoch_i,
+            "Average training loss": avg_train_loss,
+            "Average validation loss":avg_val_loss,
+            "Validation Accuracy": avg_acc})
     
     print('Least Validation loss:', least_val_loss)
     return model_copy, epochswise_train_losses, epochwise_val_losses
@@ -415,8 +425,16 @@ def main():
     
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
-    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, len(train_dataloader), epochs)
+    lr = 5e-3
+    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, lr, len(train_dataloader), epochs)
     print("Successfully loaded the optimizer")
+
+    # Log Hyperparameters
+    wandb.config = {
+    "learning_rate": lr,
+    "epochs": epochs,
+    "batch_size": batch_size
+    }
 
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
