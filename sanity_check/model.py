@@ -32,6 +32,7 @@ class PermutedGruCell(nn.Module):
         self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size))
         self.reset_parameters()
+        # self.init_hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
 
     def reset_parameters(self):
         for w in self.parameters():
@@ -42,6 +43,7 @@ class PermutedGruCell(nn.Module):
         if hidden is None:
             # hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
             hidden = torch.randn(x.size(0), self.hidden_size).to(device)
+            self.init_hidden = torch.unsqueeze(hidden, dim=0)
         W_ir = self.W_ir * lower
         W_hr = self.W_hr * lower
         W_iz = self.W_iz * lower
@@ -70,8 +72,8 @@ class PermutationMatrix(nn.Module):
         for _ in range(self.unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
-        # output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
-        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t())
+        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
+        # output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t())
         ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True)
         new_matrix = torch.zeros_like(matrix)
         new_matrix.scatter_(
@@ -93,8 +95,8 @@ class PermutationMatrix(nn.Module):
             print("Permutation Matrix\n", matrix.data.numpy().round(1))
             print(
                 "Permuted Lower Triangular Matrix\n",
-                # output_lower.t().data.numpy().round(1),
-                output_lower.data.numpy().round(1),
+                output_lower.t().data.numpy().round(1),
+                # output_lower.data.numpy().round(1),
 
             )
             print("Ideal Permutation Matrix\n", new_matrix.data)
@@ -166,7 +168,8 @@ class PermutedDKT(nn.Module):
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
 
-        init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
+        # init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
+        init_state = self.gru.cell.init_hidden
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input_t.unsqueeze(2)).squeeze(2).t()

@@ -10,7 +10,7 @@
 #SBATCH -o /work/jaewooklee_umass_edu/neurips_2022/sanity_check/output/%j.out
 #SBATCH -e /work/jaewooklee_umass_edu/neurips_2022/sanity_check/error/%j.out
 
-while getopts b:c:q:s:t:u:l:e: option
+while getopts b:c:q:s:t:u:l:e:p: option
 do
     case "${option}"
         in        
@@ -22,7 +22,8 @@ do
         u)unroll=${OPTARG};;
         l)learning_rate=${OPTARG};;
         e)num_epochs=${OPTARG};;
+	    p)permutation=${OPTARG};;
     esac
 done
 
-python3 /work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py -B $batch -C $num_constructs -Q $num_questions -S $num_students -T $temperature -U $unroll -L $learning_rate -E $num_epochs
+python3 /work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py -B $batch -C $num_constructs -Q $num_questions -S $num_students -T $temperature -U $unroll -L $learning_rate -E $num_epochs -P $permutation

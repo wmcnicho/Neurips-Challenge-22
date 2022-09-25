@@ -11,3 +11,6 @@ graph/*
 sanity_check/model*
 __pycache__/*
 sanity_check/.neptune/
+sanity_check/output/*.out
+sanity_check/error/*.out
+sanity_check/model/*.kt

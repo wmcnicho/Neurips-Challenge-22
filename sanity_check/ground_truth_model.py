@@ -129,7 +129,7 @@ class GroundTruthPermutedGru(nn.Module):
             for j, yy in enumerate(xx):
                 ans[i][j] = torch.max(yy)
         ans = (ans >= 0.5).int()
-        # x = torch.where(ans == 0, -1, ans)
+        ans = torch.where(ans==0, ans-1, ans)
         return ans
 
 class GroundTruthPermutedDKT(nn.Module):

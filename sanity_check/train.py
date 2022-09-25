@@ -71,55 +71,27 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
 
         return causal_order
 
-def visualize(features, labels):
-    global C, Q, S
-    # y1 = features.numpy()
-    # y2 = labels.numpy()
-    # x = np.array([i for i in range(Q)])
-    # y = np.array([i for i in range(C)])
-    # plt.xticks(x)
-    # plt.yticks(y)
-    # step = 0
-    # for yy1, yy2 in zip(y1, y2):
-    #     kcolors = ['red' if value == 0 else 'blue' for value in yy2]
-    #     print("kcolors: \n", kcolors)
-    #     xx1= [i + 0.1 * step for i in x]
-    #     yy3 = [i + 0.1 * step for i in yy1]
-    #     plt.plot(xx1, yy1, zorder=-1, alpha=0.150, lw=2)
-    #     plt.scatter(xx1, yy1, c=kcolors, s=1)
-    #     step +=1 
-    # plt.savefig("./graph/dummy.png")
+def model_train():
 
-    for idx, (x1, x2) in enumerate(zip(features.tolist(), labels.tolist())):
-        print("========" * 10)
-        print(f"Student {idx}: ")
-        print(x1)
-        print(x2)
-def test():
-    # global C, Q, S
-    # C, Q, S = 10, 20, 50
-    
     gt_dkt = GroundTruthPermutedDKT(n_concepts=params.num_constructs)
     features = torch.randint(0, params.num_constructs, (params.num_students, params.num_questions))
     # tmp = [[i for i in range(C)], [i for i in range(C)]]
     # features = torch.tensor(tmp)
     labels = gt_dkt(features)
-    # visualize(features, labels)
-    # print("========="*10)
-    # print("Data generation")
-    # print("Features: \n", features)
-    # print("Labels: \n", labels)
-    # print("========="*10)
 
-    # Training
+    student_info = {}
+    for idx, (feature, label) in enumerate(zip(features.tolist(), labels.tolist())):
+        student_info[idx] = {}
+        student_info[idx]["feature"] = feature
+        student_info[idx]["label"] = label
 
-    perm_dataset = True
-    gt_perm = list(np.random.permutation(params.num_constructs))
-    if perm_dataset:
-        print("Ground truth permutation: ", gt_perm)
+    if params.permutation:
+        gt_perm = list(np.random.permutation(params.num_constructs))
+        # print("Ground truth permutation: ", gt_perm)
         for i, xx in enumerate(features):
             for j, yy in enumerate(xx):
                 features[i][j] = gt_perm[features[i][j]]
+
     training_set = createDataset(features, labels)
     # Different seed number
     torch.manual_seed(seed_num-1)
@@ -127,7 +99,6 @@ def test():
 
     training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=params.learning_rate)
-    #0.01
    
     n_epochs = params.num_epochs
     best_loss = 100.0
@@ -136,8 +107,10 @@ def test():
     run = neptune.init(
         project="phdprojects/neurips-sanity",
         api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJiZTRjZTIxNi1kMzE5LTRlNzgtOGUyZC1hZmMwMTRiNzkzMWYifQ==",
+        capture_hardware_metrics = False
     )
-    PARAMS = {'num_constructs': params.num_constructs,
+    PARAMS = {
+            'num_constructs': params.num_constructs,
             'num_questions': params.num_questions,
             'num_students': params.num_students,
             'batch_size': params.batch_size,
@@ -145,8 +118,11 @@ def test():
             'unroll': params.unroll,
             'learning_rate': params.learning_rate,
             'num_epochs': params.num_epochs,
+            'permutation': params.permutation,
             }
+
     run["parameters"] = PARAMS
+    run["student_info"] = student_info
 
     for epoch in range(n_epochs): # loop over the dataset multiple times
         # print("Epoch ", epoch)
@@ -168,22 +144,27 @@ def test():
             run['best_loss'] = best_loss
             run['best_accuracy'] = best_accuracy
             run['best_epoch'] = best_epoch
-            torch.save(dkt.state_dict(), './model/best_dkt.pt') 
+            torch.save(dkt.state_dict(), f'./model/{params.file_name}_best_dkt.pt') 
             torch.save(dkt, './model/best_dkt.pt')
         print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
         run['loss'].log(sum(train_loss)/len(train_loss))
         run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
-        torch.save(dkt, './model/final_dkt.pt')
+        torch.save(dkt, f'./model/{params.file_name}_final_dkt.pt')
 
-    best_dkt = torch.load('./model/best_dkt.pt')
+    best_dkt = torch.load(f'./model/{params.file_name}_best_dkt.pt')
     causal_order = []
     for name, param in best_dkt.named_parameters():
         if (name == "gru.permuted_matrix.matrix"):
             causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
-    if perm_dataset: 
-        print("Ground truth permutation:\n", gt_perm)
-    return causal_order == gt_perm
+
+    if params.permutation:
+        print("====="*10)
+        print("Trained permutiation:\n", causal_order)
+        print("Ground Truth permutiation:\n", gt_perm)
+    else:
+        print("====="*10)
+        print("Trained permutiation:\n", causal_order)        
 
 if __name__ == "__main__":
 
@@ -197,7 +178,11 @@ if __name__ == "__main__":
     parser.add_argument('-U', '--unroll', type=int, default=100, help='unroll')
     parser.add_argument('-L', '--learning_rate', type=float, default=0.01, help='learning rate')
     parser.add_argument('-E', '--num_epochs', type=int, default=100, help='number of epochs')
+    parser.add_argument('-P', '--permutation', action="store_true", help='permute construct order')
+
     params = parser.parse_args()
+
+    print("PERMUTATION: ", params.permutation)
     file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
@@ -208,4 +193,4 @@ if __name__ == "__main__":
     random.seed(seed_num)
 
     print(f"# of constructs: {params.num_constructs}\n# of questions: {params.num_questions}\n# of students: {params.num_students}")
-    test()
+    model_train()
