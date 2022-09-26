@@ -71,9 +71,9 @@ class GroundTruthPermutedGruCell(nn.Module):
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
         # print(f"before h:\n {hidden}")
-        r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr) + self.b_hr)
-        z_t = sigmoid(torch.matmul(x, W_iz) + self.b_iz * mask + torch.matmul(hidden, W_hz) + self.b_hz)
-        n_t = tanh(torch.matmul(x, W_in) +  self.b_in * mask + r_t * (torch.matmul(hidden, W_hn) + self.b_hn))
+        r_t = sigmoid(torch.matmul(x, W_ir) + self.b_ir * mask + torch.matmul(hidden, W_hr))
+        z_t = sigmoid(torch.matmul(x, W_iz) + self.b_iz * mask + torch.matmul(hidden, W_hz))
+        n_t = tanh(torch.matmul(x, W_in) +  self.b_in * mask + r_t * (torch.matmul(hidden, W_hn)))
         hy = hidden * z_t + (1.0 - z_t) * n_t
         # print(f"after h:\n {hy}")
 

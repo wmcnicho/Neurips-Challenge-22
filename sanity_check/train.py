@@ -9,6 +9,8 @@ import neptune.new as neptune
 import random
 import matplotlib.pyplot as plt
 from ground_truth_model import GroundTruthPermutedDKT
+from generate_data import generate_labels
+
 from model import PermutedDKT
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,8 +38,8 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
     for _ in range(unroll):
         p_matrix = p_matrix / torch.sum(p_matrix, dim=1, keepdim=True)
         p_matrix = p_matrix / torch.sum(p_matrix, dim=0, keepdim=True)
-    output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t()).t()
-    # output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t())
+    # output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t()).t()
+    output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t())
 
     ideal_matrix_order = p_matrix.data.argmax(dim=1, keepdim=True)
     new_matrix = torch.zeros_like(p_matrix)
@@ -80,7 +82,8 @@ def model_train():
     features = torch.randint(0, params.num_constructs, (params.num_students, params.num_questions))
     # tmp = [[i for i in range(C)], [i for i in range(C)]]
     # features = torch.tensor(tmp)
-    labels = gt_dkt(features)
+    labels = generate_labels(features, params)
+    # labels = gt_dkt(features)
 
     student_info = {}
     for idx, (feature, label) in enumerate(zip(features.tolist(), labels.tolist())):

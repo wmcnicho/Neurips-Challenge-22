@@ -10,7 +10,7 @@ import torch.nn as nn
 torch.manual_seed(20)
 import numpy as np
 
-def generate_labels(features: torch.tensor):
+def generate_labels(features: torch.tensor, params):
     size = params.num_constructs
 
     W_ir = torch.empty(size, size, dtype = torch.double)
@@ -36,7 +36,7 @@ def generate_labels(features: torch.tensor):
     lower = torch.tril(torch.ones(size, size))
     lower = lower.to(torch.double)
 
-    output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t()).t()
+    output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t())
 
     W_ir = W_ir * lower
     W_hr = W_hr * lower
@@ -45,7 +45,7 @@ def generate_labels(features: torch.tensor):
     W_in = W_in * lower
     W_hn = W_hn * lower
 
-    w = 3 * torch.randn(size)
+    w = 5 * torch.randn(size)
     b = 0.5 * torch.randn(size)
 
     def calulate_hidden(x, hidden, construct_id):
@@ -61,7 +61,7 @@ def generate_labels(features: torch.tensor):
 
     def pred(hidden, idx):
         y_hat = torch.sigmoid(hidden[idx] * w[idx] + b[idx])
-        print("y_hat:", y_hat)
+        # print("y_hat:", y_hat)
         return y_hat
 
     def generate_y_vals(x_vals):
@@ -74,12 +74,14 @@ def generate_labels(features: torch.tensor):
             y_vals = torch.concat((y_vals, torch.tensor([-1.0])))
         
         for idx, val in enumerate(x_vals):
+            # print("idx: ", idx)
             x = torch.zeros(size, dtype = torch.double)
             x[val] = y_vals[idx]
             # print("x:", x)
             # x[val] = 1.0
             hidden = calulate_hidden(x, hidden, val)
             # print("hidden state:", hidden)
+            # print("x_vals len: ", len(x_vals))
             if idx + 1 == len(x_vals): break
             y_hat = pred(hidden, x_vals[idx+1])
             if y_hat.item() >= 0.5:
@@ -89,20 +91,21 @@ def generate_labels(features: torch.tensor):
             # print(hidden)
         return y_vals    
 
-    number_students = 20
-    number_questions = 10
-    x_batch = np.random.randint(0, 5, size = (number_students, number_questions))
+    # number_students = 20
+    # number_questions = 10
+    # x_batch = np.random.randint(0, 5, size = (number_students, number_questions))
     y_batch = torch.tensor([], dtype = torch.double)
-    for idx, x_val in enumerate(x_batch):
-        print("-----------", idx)
+    for idx, x_val in enumerate(features):
+        # print("-----------", idx)
         # print("x_vals", x_val)
         y_batch = torch.concat((y_batch, generate_y_vals(x_val)))
+        # y_batch = torch.concat((y_batch, generate_y_vals(features)))
 
-    y_batch = torch.reshape(y_batch, (number_students, number_questions))
+    y_batch = torch.reshape(y_batch, (params.num_students, params.num_questions))
 
-    for idx, val in enumerate(x_batch):
-        print("x:", val)
-        print("y:", y_batch[idx]) 
+    # for idx, val in enumerate(x_batch):
+    #     print("x:", val)
+    #     print("y:", y_batch[idx]) 
 
     return y_batch
         
@@ -137,7 +140,7 @@ if __name__ == "__main__":
     print(f"# of constructs: {params.num_constructs}\n# of questions: {params.num_questions}\n# of students: {params.num_students}")
     features = torch.randint(0, params.num_constructs, (params.num_students, params.num_questions))
     # labels = generate_labels(features.t())
-    labels = generate_labels(features)
+    labels = generate_labels(features, params)
 
     print(labels)
 
