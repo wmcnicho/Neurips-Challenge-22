@@ -62,6 +62,12 @@ class GroundTruthPermutedGruCell(nn.Module):
         W_hz = self.W_hz * lower
         W_in = self.W_in * lower
         W_hn = self.W_hn * lower
+        # W_ir = torch.matmul(self.W_ir, lower)
+        # W_hr = torch.matmul(self.W_hr, lower)
+        # W_iz = torch.matmul(self.W_iz, lower)
+        # W_hz = torch.matmul(self.W_hz, lower)
+        # W_in = torch.matmul(self.W_in, lower)
+        # W_hn = torch.matmul(self.W_hn, lower)
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
         # print(f"before h:\n {hidden}")
@@ -78,11 +84,12 @@ class GroundTruthPermutationMatrix(nn.Module):
         super().__init__()
         self.matrix = torch.eye(input_size)
         self.lower = torch.tril(torch.ones(input_size, input_size))
+        # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
         # self.matrix = self.matrix.to(torch.double)
         # self.lower = self.lower.to(torch.double)
     def forward(self, verbose=False):
-        # output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t()).t()
-        output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t())
+        output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t()).t()
+        # output_lower = torch.matmul(torch.matmul(self.matrix, self.lower), self.matrix.t())
         # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         
         ideal_matrix_order = self.matrix.data.argmax(dim=1, keepdim=True)

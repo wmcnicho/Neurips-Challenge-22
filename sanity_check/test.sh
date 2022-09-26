@@ -11,4 +11,4 @@
 
 #python3 /work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py  -B 4 -C 4 -Q 500 -S 500 -T 20 -U 100 -L 0.001 -E 200
 
-python3 /work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py  -B 4 -C 4 -Q 500 -S 500 -T 20 -U 100 -L 0.001 -E 200 -P
+python3 /work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py  -B 64 -C 4 -Q 500 -S 500 -T 20 -U 100 -L 0.001 -E 200 

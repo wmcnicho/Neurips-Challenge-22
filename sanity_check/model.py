@@ -41,15 +41,21 @@ class PermutedGruCell(nn.Module):
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
         if hidden is None:
-            # hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
-            hidden = torch.randn(x.size(0), self.hidden_size).to(device)
-            self.init_hidden = torch.unsqueeze(hidden, dim=0)
+            hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            # hidden = torch.randn(x.size(0), self.hidden_size).to(device)
+            # self.init_hidden = torch.unsqueeze(hidden, dim=0)
         W_ir = self.W_ir * lower
         W_hr = self.W_hr * lower
         W_iz = self.W_iz * lower
         W_hz = self.W_hz * lower
         W_in = self.W_in * lower
         W_hn = self.W_hn * lower
+        # W_ir = torch.matmul(self.W_ir, lower)
+        # W_hr = torch.matmul(self.W_hr, lower)
+        # W_iz = torch.matmul(self.W_iz, lower)
+        # W_hz = torch.matmul(self.W_hz, lower)
+        # W_in = torch.matmul(self.W_in, lower)
+        # W_hn = torch.matmul(self.W_hn, lower)
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
         r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
@@ -66,6 +72,7 @@ class PermutationMatrix(nn.Module):
         self.matrix = nn.Parameter(torch.empty(input_size, input_size))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
         self.lower = torch.tril(torch.ones(input_size, input_size))
+        # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
 
     def forward(self, verbose=False):
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
@@ -168,8 +175,8 @@ class PermutedDKT(nn.Module):
         labels = torch.clamp(labels, min=0)
         hidden_states, _ = self.gru(input)
 
-        # init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
-        init_state = self.gru.cell.init_hidden
+        init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
+        # init_state = self.gru.cell.init_hidden
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1:, :, :]
         output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input_t.unsqueeze(2)).squeeze(2).t()

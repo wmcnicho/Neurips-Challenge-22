@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import argparse
-# import neptune
 import neptune.new as neptune
 import random
 import matplotlib.pyplot as plt
@@ -38,6 +37,8 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
         p_matrix = p_matrix / torch.sum(p_matrix, dim=1, keepdim=True)
         p_matrix = p_matrix / torch.sum(p_matrix, dim=0, keepdim=True)
     output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t()).t()
+    # output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t())
+
     ideal_matrix_order = p_matrix.data.argmax(dim=1, keepdim=True)
     new_matrix = torch.zeros_like(p_matrix)
     new_matrix.scatter_(
@@ -59,7 +60,9 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
         print("Permutation Matrix\n", p_matrix.data.numpy().round(1))
         print(
             "Permuted Lower Triangular Matrix\n",
-            output_lower.t().data.numpy().round(1),
+            # output_lower.t().data.numpy().round(1),
+            output_lower.data.numpy().round(1),
+
         )
         print("Ideal Permutation Matrix\n", new_matrix.data)
         print(
@@ -125,7 +128,6 @@ def model_train():
     run["student_info"] = student_info
 
     for epoch in range(n_epochs): # loop over the dataset multiple times
-        # print("Epoch ", epoch)
         train_loss=[]
         train_accuracy=[]
         for i, data in enumerate(training_loader, 0):
@@ -144,8 +146,8 @@ def model_train():
             run['best_loss'] = best_loss
             run['best_accuracy'] = best_accuracy
             run['best_epoch'] = best_epoch
-            torch.save(dkt.state_dict(), f'./model/{params.file_name}_best_dkt.pt') 
-            torch.save(dkt, './model/best_dkt.pt')
+            # torch.save(dkt.state_dict(), f'./model/{params.file_name}_best_dkt.pt') 
+            torch.save(dkt, f'./model/{params.file_name}_best_dkt.pt')
         print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
         run['loss'].log(sum(train_loss)/len(train_loss))
         run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
@@ -182,8 +184,7 @@ if __name__ == "__main__":
 
     params = parser.parse_args()
 
-    print("PERMUTATION: ", params.permutation)
-    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll]
+    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
     seed_num = 35
