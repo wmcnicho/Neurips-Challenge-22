@@ -421,7 +421,7 @@ def main():
 
     # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
-    model_load = torch.load('saved_models/nips_vanilla.pt', map_location=torch.device('cpu'))
+    model_load = torch.load('saved_models/nips.pt', map_location=torch.device('cpu'))
     sinkhorn_output = get_sinkhorn_output(model_load.gru.permuted_matrix.matrix)
     np_matrix = sinkhorn_output.cpu().detach().numpy()
     argmax_search = search_argmax(np_matrix)
@@ -432,7 +432,7 @@ def main():
     p_matrix = np.zeros(np_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
-    np.save('saved_models/p_matrix_vanilla.npy', p_matrix)
+    np.save('saved_models/p_matrix.npy', p_matrix)
     # dkt_model.load('nips.pt')
     # for param in model_load.parameters():
     #     print(param)

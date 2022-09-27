@@ -1,1 +1,1 @@
-{"Epoch": 47, "Average training loss": 0.014000277770798148, "Average validation loss": 0.013736622408032417, "Validation Accuracy": 0.016436154022812843, "_timestamp": 1664230502.2139926, "_runtime": 26025.546232700348, "_step": 47}
+{"Epoch": 99, "Average training loss": 0.012976054688570675, "Average validation loss": 0.014092183849286465, "Validation Accuracy": 0.016262071207165718, "_timestamp": 1664258360.5073817, "_runtime": 53883.8396217823, "_step": 99, "_wandb": {"runtime": 53883}}
