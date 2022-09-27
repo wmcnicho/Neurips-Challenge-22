@@ -68,11 +68,29 @@ class PermutedGruCell(nn.Module):
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature, unroll):
         super().__init__()
+        train_permute = True
         self.unroll, self.temperature = unroll, temperature
-        self.matrix = nn.Parameter(torch.empty(input_size, input_size))
-        nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-        self.lower = torch.tril(torch.ones(input_size, input_size))
-        # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
+        
+        if train_permute:
+            self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
+        else:
+            self.matrix = torch.eye(input_size)
+        
+        if train_permute:
+            self.lower = torch.tril(torch.ones(input_size, input_size))
+            self.explicit_p = nn.Parameter(torch.ones(int(input_size * (input_size + 1) / 2),), requires_grad=False)
+            # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
+        else:
+            # Learnable lower matrix L
+            self.explicit_p = nn.Parameter(torch.rand(int(input_size * (input_size + 1) / 2),))
+            row, col = torch.tril_indices(input_size, input_size)
+            self.lower = torch.zeros(input_size, input_size)
+            idx = 0
+            for r, c in zip(row, col):
+                self.lower[r.item(), c.item()] = self.explicit_p[idx]
+                idx += 1
+            print("init lower:\n", self.lower)
 
     def forward(self, verbose=False):
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))

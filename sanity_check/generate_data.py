@@ -44,8 +44,17 @@ def generate_labels(features: torch.tensor, params):
     W_hz = W_hz * lower
     W_in = W_in * lower
     W_hn = W_hn * lower
+    print("Ground Truth Ws.")
+    print("=====" * 10)
+    print("W_ir\n:", W_ir)
+    print("W_hr\n:", W_hr)
+    print("W_iz\n:", W_iz)
+    print("W_hz\n:", W_hz)
+    print("W_in\n:", W_in)
+    print("W_hn\n:", W_hn)
+    print("=====" * 10)
 
-    w = 5 * torch.randn(size)
+    w = 10 * torch.randn(size)
     b = 0.5 * torch.randn(size)
 
     def calulate_hidden(x, hidden, construct_id):
@@ -56,6 +65,11 @@ def generate_labels(features: torch.tensor, params):
         r_t = sigmoid(torch.matmul(x, W_ir) + b_ir * mask + torch.matmul(hidden, W_hr) + b_hr * mask)
         z_t = sigmoid(torch.matmul(x, W_iz) + b_iz * mask + torch.matmul(hidden, W_hz) + b_hz * mask)
         n_t = tanh(torch.matmul(x, W_in) +  b_in * mask + r_t * (torch.matmul(hidden, W_hn) + b_hn * mask))
+
+        # r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
+        # z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
+        # n_t = tanh(torch.matmul(x, W_in) + r_t * (torch.matmul(hidden, W_hn)))
+
         hy =  (1.0 - z_t) * n_t + z_t * hidden
         return hy
 
@@ -66,6 +80,7 @@ def generate_labels(features: torch.tensor, params):
 
     def generate_y_vals(x_vals):
         hidden = torch.randn(size, dtype = torch.double)
+        # hidden = torch.zeros(size, dtype = torch.double)
         y_vals = torch.tensor([], dtype = torch.double)
         y_0 = pred(hidden, x_vals[0])
         if y_0.item() >= 0.5:
@@ -131,7 +146,7 @@ if __name__ == "__main__":
     file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
-    seed_num = 35
+    seed_num = 36
     np.random.seed(seed_num)
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)

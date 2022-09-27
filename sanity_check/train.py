@@ -76,6 +76,17 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
 
         return causal_order
 
+def print_lower(explicit_p):
+    row, col = torch.tril_indices(params.num_constructs, params.num_constructs)
+    lower = torch.zeros(params.num_constructs, params.num_constructs)
+
+    idx = 0
+    for r, c in zip(row, col):
+        lower[r.item(), c.item()] = explicit_p[idx]
+        idx += 1
+    print("Lower matrix:\n")
+    print(lower)
+
 def model_train():
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=params.num_constructs)
@@ -140,7 +151,7 @@ def model_train():
             loss, acc = dkt(b_construct, b_label)
             train_accuracy.append(acc)
             train_loss.append(loss.item())
-            loss.backward()
+            loss.backward(retain_graph=True)
             optimizer.step()
         if (sum(train_loss)/len(train_loss) < best_loss):
             best_loss = sum(train_loss)/len(train_loss)
@@ -158,11 +169,25 @@ def model_train():
         torch.save(dkt, f'./model/{params.file_name}_final_dkt.pt')
 
     best_dkt = torch.load(f'./model/{params.file_name}_best_dkt.pt')
+    last_dkt = torch.load(f'./model/{params.file_name}_final_dkt.pt')
     causal_order = []
+    print("best_dkt parameters")
+    print("-----" * 10)
     for name, param in best_dkt.named_parameters():
+        print(name, param)
         if (name == "gru.permuted_matrix.matrix"):
             causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
-
+        elif (name == "gru.permuted_matrix.explicit_p"):
+            print_lower(param)
+    print("last_dkt parameters")
+    print("-----" * 10)
+    for name, param in last_dkt.named_parameters():
+        print(name, param)
+        if (name == "gru.permuted_matrix.matrix"):
+            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
+        elif (name == "gru.permuted_matrix.explicit_p"):
+            print_lower(param)
+    
     if params.permutation:
         print("====="*10)
         print("Trained permutiation:\n", causal_order)
@@ -190,7 +215,7 @@ if __name__ == "__main__":
     file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
-    seed_num = 35
+    seed_num = 36
     np.random.seed(seed_num)
     torch.manual_seed(seed_num)
     np.random.seed(seed_num)

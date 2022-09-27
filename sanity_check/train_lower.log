@@ -1,0 +1,341 @@
+# of constructs: 4
+# of questions: 20
+# of students: 128
+Ground Truth Ws.
+==================================================
+W_ir
+: tensor([[ 0.4025, -0.0000, -0.0000, -0.0000],
+        [-0.0755,  0.4685,  0.0000,  0.0000],
+        [ 0.5214, -0.2561,  0.1969, -0.0000],
+        [-0.1865, -0.0892,  0.2557, -0.2694]], dtype=torch.float64)
+W_hr
+: tensor([[ 0.2165, -0.0000,  0.0000, -0.0000],
+        [ 0.0269,  0.1024,  0.0000, -0.0000],
+        [-0.0918,  0.0337,  0.5411, -0.0000],
+        [ 0.0582, -0.5787, -0.4636,  0.4309]], dtype=torch.float64)
+W_iz
+: tensor([[0.2127, 0.0000, -0.0000, 0.0000],
+        [0.3069, 0.2519, 0.0000, 0.0000],
+        [0.2823, 0.6486, 0.1324, 0.0000],
+        [0.5337, 0.1417, 0.1009, 0.2708]], dtype=torch.float64)
+W_hz
+: tensor([[ 0.4487,  0.0000,  0.0000, -0.0000],
+        [ 0.0617,  0.4037, -0.0000, -0.0000],
+        [ 0.1443, -0.3663,  0.2134,  0.0000],
+        [-0.0654, -0.0260, -0.4763, -0.1150]], dtype=torch.float64)
+W_in
+: tensor([[-0.1082, -0.0000, -0.0000, -0.0000],
+        [ 0.3180, -0.1247,  0.0000,  0.0000],
+        [ 0.1068,  0.4424, -0.6312,  0.0000],
+        [-0.2550,  0.2976, -0.1157,  0.5599]], dtype=torch.float64)
+W_hn
+: tensor([[-0.6019, -0.0000,  0.0000, -0.0000],
+        [-0.1973, -0.6819, -0.0000,  0.0000],
+        [-0.0164,  0.0500, -0.1693, -0.0000],
+        [-0.0752,  0.3671, -0.4074,  0.5494]], dtype=torch.float64)
+==================================================
+init lower:
+ tensor([[0.9793, 0.0000, 0.0000, 0.0000],
+        [0.8225, 0.2654, 0.0000, 0.0000],
+        [0.3106, 0.3210, 0.8349, 0.0000],
+        [0.5505, 0.5434, 0.3693, 0.4937]], grad_fn=<CopySlices>)
+https://app.neptune.ai/phdprojects/neurips-sanity/e/NEUR-102
+Epoch 1/200, Train Loss: 0.6917, Train Accuracy: 0.62
+Epoch 2/200, Train Loss: 0.7017, Train Accuracy: 0.62
+Epoch 3/200, Train Loss: 0.6938, Train Accuracy: 0.62
+Epoch 4/200, Train Loss: 0.6937, Train Accuracy: 0.62
+Epoch 5/200, Train Loss: 0.6879, Train Accuracy: 0.62
+Epoch 6/200, Train Loss: 0.6959, Train Accuracy: 0.62
+Epoch 7/200, Train Loss: 0.6898, Train Accuracy: 0.62
+Epoch 8/200, Train Loss: 0.6947, Train Accuracy: 0.62
+Epoch 9/200, Train Loss: 0.6741, Train Accuracy: 0.62
+Epoch 10/200, Train Loss: 0.6946, Train Accuracy: 0.62
+Epoch 11/200, Train Loss: 0.6840, Train Accuracy: 0.62
+Epoch 12/200, Train Loss: 0.6911, Train Accuracy: 0.62
+Epoch 13/200, Train Loss: 0.6735, Train Accuracy: 0.62
+Epoch 14/200, Train Loss: 0.6796, Train Accuracy: 0.62
+Epoch 15/200, Train Loss: 0.6728, Train Accuracy: 0.62
+Epoch 16/200, Train Loss: 0.6742, Train Accuracy: 0.62
+Epoch 17/200, Train Loss: 0.6715, Train Accuracy: 0.62
+Epoch 18/200, Train Loss: 0.6698, Train Accuracy: 0.62
+Epoch 19/200, Train Loss: 0.6746, Train Accuracy: 0.62
+Epoch 20/200, Train Loss: 0.6670, Train Accuracy: 0.62
+Epoch 21/200, Train Loss: 0.6670, Train Accuracy: 0.62
+Epoch 22/200, Train Loss: 0.6716, Train Accuracy: 0.62
+Epoch 23/200, Train Loss: 0.6729, Train Accuracy: 0.62
+Epoch 24/200, Train Loss: 0.6604, Train Accuracy: 0.62
+Epoch 25/200, Train Loss: 0.6607, Train Accuracy: 0.61
+Epoch 26/200, Train Loss: 0.6590, Train Accuracy: 0.62
+Epoch 27/200, Train Loss: 0.6598, Train Accuracy: 0.62
+Epoch 28/200, Train Loss: 0.6736, Train Accuracy: 0.62
+Epoch 29/200, Train Loss: 0.6459, Train Accuracy: 0.62
+Epoch 30/200, Train Loss: 0.6492, Train Accuracy: 0.62
+Epoch 31/200, Train Loss: 0.6531, Train Accuracy: 0.62
+Epoch 32/200, Train Loss: 0.6407, Train Accuracy: 0.62
+Epoch 33/200, Train Loss: 0.6483, Train Accuracy: 0.62
+Epoch 34/200, Train Loss: 0.6553, Train Accuracy: 0.62
+Epoch 35/200, Train Loss: 0.6386, Train Accuracy: 0.61
+Epoch 36/200, Train Loss: 0.6469, Train Accuracy: 0.62
+Epoch 37/200, Train Loss: 0.6295, Train Accuracy: 0.63
+Epoch 38/200, Train Loss: 0.6427, Train Accuracy: 0.63
+Epoch 39/200, Train Loss: 0.6208, Train Accuracy: 0.63
+Epoch 40/200, Train Loss: 0.6296, Train Accuracy: 0.63
+Epoch 41/200, Train Loss: 0.6314, Train Accuracy: 0.65
+Epoch 42/200, Train Loss: 0.6200, Train Accuracy: 0.65
+Epoch 43/200, Train Loss: 0.6322, Train Accuracy: 0.66
+Epoch 44/200, Train Loss: 0.6020, Train Accuracy: 0.67
+Epoch 45/200, Train Loss: 0.6213, Train Accuracy: 0.67
+Epoch 46/200, Train Loss: 0.6052, Train Accuracy: 0.68
+Epoch 47/200, Train Loss: 0.6035, Train Accuracy: 0.69
+Epoch 48/200, Train Loss: 0.5990, Train Accuracy: 0.69
+Epoch 49/200, Train Loss: 0.6021, Train Accuracy: 0.70
+Epoch 50/200, Train Loss: 0.6258, Train Accuracy: 0.70
+Epoch 51/200, Train Loss: 0.6064, Train Accuracy: 0.72
+Epoch 52/200, Train Loss: 0.5890, Train Accuracy: 0.72
+Epoch 53/200, Train Loss: 0.6118, Train Accuracy: 0.73
+Epoch 54/200, Train Loss: 0.6072, Train Accuracy: 0.74
+Epoch 55/200, Train Loss: 0.5927, Train Accuracy: 0.75
+Epoch 56/200, Train Loss: 0.5875, Train Accuracy: 0.75
+Epoch 57/200, Train Loss: 0.5684, Train Accuracy: 0.76
+Epoch 58/200, Train Loss: 0.5997, Train Accuracy: 0.76
+Epoch 59/200, Train Loss: 0.5751, Train Accuracy: 0.76
+Epoch 60/200, Train Loss: 0.5661, Train Accuracy: 0.77
+Epoch 61/200, Train Loss: 0.5849, Train Accuracy: 0.77
+Epoch 62/200, Train Loss: 0.5651, Train Accuracy: 0.78
+Epoch 63/200, Train Loss: 0.5445, Train Accuracy: 0.79
+Epoch 64/200, Train Loss: 0.5672, Train Accuracy: 0.79
+Epoch 65/200, Train Loss: 0.5738, Train Accuracy: 0.79
+Epoch 66/200, Train Loss: 0.5499, Train Accuracy: 0.79
+Epoch 67/200, Train Loss: 0.5592, Train Accuracy: 0.79
+Epoch 68/200, Train Loss: 0.5489, Train Accuracy: 0.79
+Epoch 69/200, Train Loss: 0.5282, Train Accuracy: 0.80
+Epoch 70/200, Train Loss: 0.5455, Train Accuracy: 0.80
+Epoch 71/200, Train Loss: 0.5363, Train Accuracy: 0.80
+Epoch 72/200, Train Loss: 0.5365, Train Accuracy: 0.80
+Epoch 73/200, Train Loss: 0.5196, Train Accuracy: 0.81
+Epoch 74/200, Train Loss: 0.5443, Train Accuracy: 0.81
+Epoch 75/200, Train Loss: 0.5226, Train Accuracy: 0.81
+Epoch 76/200, Train Loss: 0.5087, Train Accuracy: 0.81
+Epoch 77/200, Train Loss: 0.5305, Train Accuracy: 0.81
+Epoch 78/200, Train Loss: 0.5256, Train Accuracy: 0.81
+Epoch 79/200, Train Loss: 0.5430, Train Accuracy: 0.81
+Epoch 80/200, Train Loss: 0.5196, Train Accuracy: 0.81
+Epoch 81/200, Train Loss: 0.5027, Train Accuracy: 0.81
+Epoch 82/200, Train Loss: 0.5104, Train Accuracy: 0.81
+Epoch 83/200, Train Loss: 0.5116, Train Accuracy: 0.80
+Epoch 84/200, Train Loss: 0.5152, Train Accuracy: 0.81
+Epoch 85/200, Train Loss: 0.5044, Train Accuracy: 0.81
+Epoch 86/200, Train Loss: 0.4964, Train Accuracy: 0.81
+Epoch 87/200, Train Loss: 0.4870, Train Accuracy: 0.82
+Epoch 88/200, Train Loss: 0.4984, Train Accuracy: 0.81
+Epoch 89/200, Train Loss: 0.5000, Train Accuracy: 0.81
+Epoch 90/200, Train Loss: 0.4865, Train Accuracy: 0.82
+Epoch 91/200, Train Loss: 0.4763, Train Accuracy: 0.81
+Epoch 92/200, Train Loss: 0.4972, Train Accuracy: 0.82
+Epoch 93/200, Train Loss: 0.4843, Train Accuracy: 0.82
+Epoch 94/200, Train Loss: 0.4802, Train Accuracy: 0.82
+Epoch 95/200, Train Loss: 0.4873, Train Accuracy: 0.81
+Epoch 96/200, Train Loss: 0.4752, Train Accuracy: 0.81
+Epoch 97/200, Train Loss: 0.4528, Train Accuracy: 0.82
+Epoch 98/200, Train Loss: 0.5083, Train Accuracy: 0.82
+Epoch 99/200, Train Loss: 0.4662, Train Accuracy: 0.82
+Epoch 100/200, Train Loss: 0.4780, Train Accuracy: 0.82
+Epoch 101/200, Train Loss: 0.4668, Train Accuracy: 0.81
+Epoch 102/200, Train Loss: 0.4952, Train Accuracy: 0.81
+Epoch 103/200, Train Loss: 0.4734, Train Accuracy: 0.81
+Epoch 104/200, Train Loss: 0.4572, Train Accuracy: 0.81
+Epoch 105/200, Train Loss: 0.4594, Train Accuracy: 0.82
+Epoch 106/200, Train Loss: 0.4751, Train Accuracy: 0.82
+Epoch 107/200, Train Loss: 0.4506, Train Accuracy: 0.82
+Epoch 108/200, Train Loss: 0.4731, Train Accuracy: 0.82
+Epoch 109/200, Train Loss: 0.4512, Train Accuracy: 0.82
+Epoch 110/200, Train Loss: 0.4508, Train Accuracy: 0.82
+Epoch 111/200, Train Loss: 0.4463, Train Accuracy: 0.82
+Epoch 112/200, Train Loss: 0.4645, Train Accuracy: 0.81
+Epoch 113/200, Train Loss: 0.4714, Train Accuracy: 0.82
+Epoch 114/200, Train Loss: 0.4512, Train Accuracy: 0.82
+Epoch 115/200, Train Loss: 0.4528, Train Accuracy: 0.82
+Epoch 116/200, Train Loss: 0.4629, Train Accuracy: 0.82
+Epoch 117/200, Train Loss: 0.4830, Train Accuracy: 0.82
+Epoch 118/200, Train Loss: 0.4495, Train Accuracy: 0.82
+Epoch 119/200, Train Loss: 0.4778, Train Accuracy: 0.81
+Epoch 120/200, Train Loss: 0.4544, Train Accuracy: 0.82
+Epoch 121/200, Train Loss: 0.4436, Train Accuracy: 0.82
+Epoch 122/200, Train Loss: 0.4372, Train Accuracy: 0.83
+Epoch 123/200, Train Loss: 0.4703, Train Accuracy: 0.81
+Epoch 124/200, Train Loss: 0.4766, Train Accuracy: 0.81
+Epoch 125/200, Train Loss: 0.4408, Train Accuracy: 0.81
+Epoch 126/200, Train Loss: 0.4586, Train Accuracy: 0.81
+Epoch 127/200, Train Loss: 0.4253, Train Accuracy: 0.82
+Epoch 128/200, Train Loss: 0.4685, Train Accuracy: 0.81
+Epoch 129/200, Train Loss: 0.4433, Train Accuracy: 0.82
+Epoch 130/200, Train Loss: 0.4254, Train Accuracy: 0.82
+Epoch 131/200, Train Loss: 0.4223, Train Accuracy: 0.82
+Epoch 132/200, Train Loss: 0.4236, Train Accuracy: 0.82
+Epoch 133/200, Train Loss: 0.4318, Train Accuracy: 0.81
+Epoch 134/200, Train Loss: 0.4300, Train Accuracy: 0.82
+Epoch 135/200, Train Loss: 0.3961, Train Accuracy: 0.82
+Epoch 136/200, Train Loss: 0.4405, Train Accuracy: 0.82
+Epoch 137/200, Train Loss: 0.4309, Train Accuracy: 0.82
+Epoch 138/200, Train Loss: 0.4094, Train Accuracy: 0.82
+Epoch 139/200, Train Loss: 0.4215, Train Accuracy: 0.83
+Epoch 140/200, Train Loss: 0.4284, Train Accuracy: 0.82
+Epoch 141/200, Train Loss: 0.4369, Train Accuracy: 0.82
+Epoch 142/200, Train Loss: 0.4396, Train Accuracy: 0.81
+Epoch 143/200, Train Loss: 0.4144, Train Accuracy: 0.82
+Epoch 144/200, Train Loss: 0.4184, Train Accuracy: 0.83
+Epoch 145/200, Train Loss: 0.4251, Train Accuracy: 0.82
+Epoch 146/200, Train Loss: 0.4065, Train Accuracy: 0.82
+Epoch 147/200, Train Loss: 0.4368, Train Accuracy: 0.81
+Epoch 148/200, Train Loss: 0.4468, Train Accuracy: 0.82
+Epoch 149/200, Train Loss: 0.4136, Train Accuracy: 0.82
+Epoch 150/200, Train Loss: 0.3994, Train Accuracy: 0.82
+Epoch 151/200, Train Loss: 0.4408, Train Accuracy: 0.82
+Epoch 152/200, Train Loss: 0.4317, Train Accuracy: 0.82
+Epoch 153/200, Train Loss: 0.4022, Train Accuracy: 0.82
+Epoch 154/200, Train Loss: 0.4450, Train Accuracy: 0.82
+Epoch 155/200, Train Loss: 0.4205, Train Accuracy: 0.82
+Epoch 156/200, Train Loss: 0.4047, Train Accuracy: 0.82
+Epoch 157/200, Train Loss: 0.4156, Train Accuracy: 0.82
+Epoch 158/200, Train Loss: 0.4262, Train Accuracy: 0.81
+Epoch 159/200, Train Loss: 0.4212, Train Accuracy: 0.82
+Epoch 160/200, Train Loss: 0.4134, Train Accuracy: 0.82
+Epoch 161/200, Train Loss: 0.4241, Train Accuracy: 0.81
+Epoch 162/200, Train Loss: 0.4091, Train Accuracy: 0.81
+Epoch 163/200, Train Loss: 0.4089, Train Accuracy: 0.81
+Epoch 164/200, Train Loss: 0.4206, Train Accuracy: 0.81
+Epoch 165/200, Train Loss: 0.4118, Train Accuracy: 0.82
+Epoch 166/200, Train Loss: 0.3934, Train Accuracy: 0.82
+Epoch 167/200, Train Loss: 0.3944, Train Accuracy: 0.81
+Epoch 168/200, Train Loss: 0.4006, Train Accuracy: 0.81
+Epoch 169/200, Train Loss: 0.3823, Train Accuracy: 0.81
+Epoch 170/200, Train Loss: 0.3907, Train Accuracy: 0.81
+Epoch 171/200, Train Loss: 0.4015, Train Accuracy: 0.81
+Epoch 172/200, Train Loss: 0.3910, Train Accuracy: 0.81
+Epoch 173/200, Train Loss: 0.3985, Train Accuracy: 0.81
+Epoch 174/200, Train Loss: 0.3993, Train Accuracy: 0.81
+Epoch 175/200, Train Loss: 0.3954, Train Accuracy: 0.81
+Epoch 176/200, Train Loss: 0.4203, Train Accuracy: 0.81
+Epoch 177/200, Train Loss: 0.3916, Train Accuracy: 0.81
+Epoch 178/200, Train Loss: 0.3937, Train Accuracy: 0.81
+Epoch 179/200, Train Loss: 0.3894, Train Accuracy: 0.81
+Epoch 180/200, Train Loss: 0.4102, Train Accuracy: 0.81
+Epoch 181/200, Train Loss: 0.4403, Train Accuracy: 0.81
+Epoch 182/200, Train Loss: 0.4019, Train Accuracy: 0.81
+Epoch 183/200, Train Loss: 0.3938, Train Accuracy: 0.81
+Epoch 184/200, Train Loss: 0.4357, Train Accuracy: 0.81
+Epoch 185/200, Train Loss: 0.3800, Train Accuracy: 0.81
+Epoch 186/200, Train Loss: 0.3938, Train Accuracy: 0.81
+Epoch 187/200, Train Loss: 0.3968, Train Accuracy: 0.81
+Epoch 188/200, Train Loss: 0.4069, Train Accuracy: 0.81
+Epoch 189/200, Train Loss: 0.3990, Train Accuracy: 0.81
+Epoch 190/200, Train Loss: 0.3660, Train Accuracy: 0.81
+Epoch 191/200, Train Loss: 0.4208, Train Accuracy: 0.81
+Epoch 192/200, Train Loss: 0.3738, Train Accuracy: 0.81
+Epoch 193/200, Train Loss: 0.3852, Train Accuracy: 0.81
+Epoch 194/200, Train Loss: 0.3857, Train Accuracy: 0.81
+Epoch 195/200, Train Loss: 0.3771, Train Accuracy: 0.81
+Epoch 196/200, Train Loss: 0.3841, Train Accuracy: 0.81
+Epoch 197/200, Train Loss: 0.4171, Train Accuracy: 0.81
+Epoch 198/200, Train Loss: 0.4046, Train Accuracy: 0.81
+Epoch 199/200, Train Loss: 0.4015, Train Accuracy: 0.81
+Epoch 200/200, Train Loss: 0.3924, Train Accuracy: 0.81
+best_dkt parameters
+--------------------------------------------------
+gru.cell.W_ir Parameter containing:
+tensor([[-0.8121, -0.3524,  0.4367, -0.3100],
+        [ 0.4249, -0.0505, -0.4785, -0.2998],
+        [ 0.6969,  0.3662,  0.8428, -0.2049],
+        [-0.2394,  0.6205,  0.8975, -0.1244]], requires_grad=True)
+gru.cell.W_hr Parameter containing:
+tensor([[-1.5121, -0.1078,  0.3141,  0.1890],
+        [ 0.9431,  1.5383,  0.2266,  0.4698],
+        [ 1.3272,  1.4121,  2.1798, -0.0625],
+        [ 0.2298,  0.1622,  0.5535,  0.9418]], requires_grad=True)
+gru.cell.W_iz Parameter containing:
+tensor([[ 1.3630,  0.3205, -0.3872,  0.1713],
+        [-1.6987,  0.4912,  0.4316,  0.3234],
+        [ 0.2220, -1.0190, -2.2090,  0.0887],
+        [ 0.4504,  0.2511, -1.3907, -1.7322]], requires_grad=True)
+gru.cell.W_hz Parameter containing:
+tensor([[-1.0734, -0.3172,  0.3248,  0.3386],
+        [-0.5727, -0.4235,  0.4295, -0.3261],
+        [-0.5414, -1.3868,  1.4106,  0.2265],
+        [-0.6408,  0.1421, -0.5542,  0.8117]], requires_grad=True)
+gru.cell.W_in Parameter containing:
+tensor([[ 1.0192, -0.0781,  0.0442, -0.4114],
+        [-1.0750,  0.7925, -0.4668,  0.3747],
+        [-0.8586,  1.6204,  1.2727, -0.3817],
+        [ 0.0183,  1.8696,  1.1562,  1.6365]], requires_grad=True)
+gru.cell.W_hn Parameter containing:
+tensor([[ 1.3630,  0.1849,  0.3943,  0.2271],
+        [-0.8196,  0.4195,  0.2852, -0.2763],
+        [-1.3583,  1.6484,  1.9649, -0.0881],
+        [-0.5418,  0.1864,  1.0095,  0.2341]], requires_grad=True)
+gru.permuted_matrix.explicit_p Parameter containing:
+tensor([2.5065, 2.0312, 1.3400, 2.0446, 2.5581, 2.9373, 0.8947, 2.3938, 2.0078,
+        2.6056], requires_grad=True)
+Lower matrix:
+
+tensor([[2.5065, 0.0000, 0.0000, 0.0000],
+        [2.0312, 1.3400, 0.0000, 0.0000],
+        [2.0446, 2.5581, 2.9373, 0.0000],
+        [0.8947, 2.3938, 2.0078, 2.6056]], grad_fn=<CopySlices>)
+output_layer.weight Parameter containing:
+tensor([[2.3526]], requires_grad=True)
+output_layer.bias Parameter containing:
+tensor([0.3960], requires_grad=True)
+last_dkt parameters
+--------------------------------------------------
+gru.cell.W_ir Parameter containing:
+tensor([[-0.7943, -0.3524,  0.4367, -0.3100],
+        [ 0.4151, -0.0550, -0.4785, -0.2998],
+        [ 0.6853,  0.3710,  0.8327, -0.2049],
+        [-0.2251,  0.6226,  0.9021, -0.0960]], requires_grad=True)
+gru.cell.W_hr Parameter containing:
+tensor([[-1.5377, -0.1078,  0.3140,  0.1890],
+        [ 0.9501,  1.5849,  0.2266,  0.4698],
+        [ 1.3307,  1.4266,  2.2126, -0.0624],
+        [ 0.2345,  0.1786,  0.5590,  1.0040]], requires_grad=True)
+gru.cell.W_iz Parameter containing:
+tensor([[ 1.3858,  0.3205, -0.3872,  0.1713],
+        [-1.7161,  0.4635,  0.4316,  0.3234],
+        [ 0.1801, -1.0523, -2.2389,  0.0887],
+        [ 0.4495,  0.2950, -1.4270, -1.8014]], requires_grad=True)
+gru.cell.W_hz Parameter containing:
+tensor([[-1.0949, -0.3171,  0.3248,  0.3385],
+        [-0.5722, -0.4351,  0.4295, -0.3261],
+        [-0.5684, -1.4553,  1.4239,  0.2265],
+        [-0.6436,  0.1446, -0.5796,  0.8120]], requires_grad=True)
+gru.cell.W_in Parameter containing:
+tensor([[ 1.0303, -0.0779,  0.0441, -0.4112],
+        [-1.0792,  0.8029, -0.4666,  0.3745],
+        [-0.8701,  1.6561,  1.2888, -0.3819],
+        [ 0.0265,  1.9134,  1.1561,  1.6835]], requires_grad=True)
+gru.cell.W_hn Parameter containing:
+tensor([[ 1.3721,  0.1848,  0.3938,  0.2273],
+        [-0.8222,  0.3856,  0.2853, -0.2764],
+        [-1.3861,  1.6603,  1.9834, -0.0883],
+        [-0.5561,  0.1758,  1.0341,  0.2510]], requires_grad=True)
+gru.permuted_matrix.explicit_p Parameter containing:
+tensor([2.5307, 2.0452, 1.3660, 2.0810, 2.6084, 2.9684, 0.9115, 2.4551, 2.0437,
+        2.6811], requires_grad=True)
+Lower matrix:
+
+tensor([[2.5307, 0.0000, 0.0000, 0.0000],
+        [2.0452, 1.3660, 0.0000, 0.0000],
+        [2.0810, 2.6084, 2.9684, 0.0000],
+        [0.9115, 2.4551, 2.0437, 2.6811]], grad_fn=<CopySlices>)
+output_layer.weight Parameter containing:
+tensor([[2.3824]], requires_grad=True)
+output_layer.bias Parameter containing:
+tensor([0.3848], requires_grad=True)
+==================================================
+Trained permutiation:
+ []
+Shutting down background jobs, please wait a moment...
+Done!
+Waiting for the remaining 171 operations to synchronize with Neptune. Do not kill this process.
+All 171 operations synced, thanks for waiting!
+Explore the metadata in the Neptune app:
+https://app.neptune.ai/phdprojects/neurips-sanity/e/NEUR-102
