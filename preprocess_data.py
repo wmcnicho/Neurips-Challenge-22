@@ -5,7 +5,7 @@ import json
 from scipy import stats
 
 
-def createDataset(filename: str):
+def createDataset(filename: str, compressed_size=None):
     lessons_df = pd.read_csv(filename)
     # 1) Consider only type "Checkin"
     #   TODO: This is pretty aggresive cleaning, maybe others Types are useful
@@ -20,6 +20,9 @@ def createDataset(filename: str):
     # 3) Set number of questions (Q) as the most questions answered by a single student
     #   A little dirty importing a module just for mode
     num_of_questions = stats.mode(simple_df["UserId"]).count[0] # Q
+    if compressed_size is not None:
+        # TODO set as tunable hyperparameter
+        num_of_questions = compressed_size
 
     # 4) Create dataset in form of [S, 2, Q]
     #   S: number of unique students
@@ -37,9 +40,24 @@ def createDataset(filename: str):
         # C: number of constructs of each user
         constructs = user_info["ConstructId"].values.tolist() # [C]
         correct = user_info["IsCorrect"].values.tolist() # [C]
-
         tot_construct_set.update(constructs)
 
+        if compressed_size is not None:
+            num_constructs = len(constructs)
+            while num_constructs > compressed_size:
+                sub_entry_constructs = constructs[0:compressed_size]
+                sub_entry_correct  = correct[0:compressed_size]
+                # By definition won't need padding
+                student = torch.tensor([sub_entry_constructs, sub_entry_correct]) # [2, Q]
+                student = torch.unsqueeze(student, 0) # [1, 2, Q]
+
+                # Add to running result
+                result = torch.cat([result, student]) # [i, 2, Q]
+                num_constructs = num_constructs - compressed_size
+                constructs = constructs[compressed_size:]
+                correct = correct[compressed_size:]
+
+        # Pad tensor and add to running total
         # Pad for ConstructId that has not been dealt with a user
         num_of_constructs = len(constructs)
         pad_needed = num_of_questions - num_of_constructs # [P = Q - C]
@@ -59,14 +77,14 @@ def createDataset(filename: str):
     return result, tot_construct_list # [S, 2, Q]
     
 def main():
-    use_main = 0 # 1 for using main data, anything else for using sample data
+    use_main = 1 # 1 for using main data, anything else for using sample data
     if use_main==1:
         data_path = 'data/Task_3_dataset/checkins_lessons_checkouts_training.csv'
         prefix_path = 'student_data'
     else:
         data_path = 'data/Task_3_dataset/tmp_dataset/tmp_training.csv'
         prefix_path = 'tmp_training_data'
-    student_data, tot_construct_list = createDataset(data_path) # [S, 2, Q] Faster and better for debugging
+    student_data, tot_construct_list = createDataset(data_path, compressed_size=200) # [S, 2, Q] Faster and better for debugging
     print("num_of_constructs: ", len(tot_construct_list))
 
     transform_student_data = torch.transpose(student_data, 0, 2) # [S, 2, Q] --> [Q, 2, S]
@@ -75,11 +93,8 @@ def main():
     with open(os.path.join('serialized_torch', prefix_path+'_construct_list.json'), "w") as fp:
         json.dump(tot_construct_list, fp)
 
-    # student_data = createDataset('data/Task_3_dataset/checkins_lessons_checkouts_training.csv') # [S, 2, Q]
     features = transform_student_data[:, 0, :] # [Q, S]
     labels = transform_student_data[:, 1, :] # [Q, S]
-    # print("labels: ", labels)
-    # print("features: ", features)
     print('Features shape:', features.shape)
     print('Labels shape', labels.shape)
 
