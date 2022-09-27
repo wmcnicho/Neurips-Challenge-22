@@ -68,7 +68,7 @@ class PermutedGruCell(nn.Module):
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature, unroll):
         super().__init__()
-        train_permute = True
+        train_permute = False
         self.unroll, self.temperature = unroll, temperature
         
         if train_permute:
@@ -83,9 +83,12 @@ class PermutationMatrix(nn.Module):
             # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
         else:
             # Learnable lower matrix L
-            self.explicit_p = nn.Parameter(torch.rand(int(input_size * (input_size + 1) / 2),))
-            row, col = torch.tril_indices(input_size, input_size)
+            # self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size + 1) / 2),))
+            # row, col = torch.tril_indices(input_size, input_size)
+            self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size - 1) / 2),))
+            row, col = torch.tril_indices(input_size, input_size, -1)
             self.lower = torch.zeros(input_size, input_size)
+            self.lower.fill_diagonal_(1)
             idx = 0
             for r, c in zip(row, col):
                 self.lower[r.item(), c.item()] = self.explicit_p[idx]

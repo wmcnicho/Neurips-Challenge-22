@@ -77,15 +77,21 @@ def sink_horn(matrix, temperature=100, unroll=20, verbose=False):
         return causal_order
 
 def print_lower(explicit_p):
-    row, col = torch.tril_indices(params.num_constructs, params.num_constructs)
+    # row, col = torch.tril_indices(params.num_constructs, params.num_constructs)
+    row, col = torch.tril_indices(params.num_constructs, params.num_constructs, -1)
     lower = torch.zeros(params.num_constructs, params.num_constructs)
-
+    lower.fill_diagonal_(1)
+    mean = torch.mean(explicit_p)
     idx = 0
     for r, c in zip(row, col):
         lower[r.item(), c.item()] = explicit_p[idx]
+        # lower[r.item(), c.item()] = explicit_p[idx] / mean
+        # lower[r.item(), c.item()] = torch.sigmoid(explicit_p[idx] / mean)
+        # lower[r.item(), c.item()] = torch.sigmoid(explicit_p[idx])
         idx += 1
     print("Lower matrix:\n")
     print(lower)
+    # print((lower >= 0.5).int())
 
 def model_train():
 
@@ -153,6 +159,11 @@ def model_train():
             train_loss.append(loss.item())
             loss.backward(retain_graph=True)
             optimizer.step()
+            print("*****"*10)
+            print_lower(dkt.gru.permuted_matrix.explicit_p )
+            with torch.no_grad():
+                dkt.gru.permuted_matrix.explicit_p[:] = torch.clamp(dkt.gru.permuted_matrix.explicit_p, min=0, max=1)
+            print_lower(dkt.gru.permuted_matrix.explicit_p )
         if (sum(train_loss)/len(train_loss) < best_loss):
             best_loss = sum(train_loss)/len(train_loss)
             best_accuracy = sum(train_accuracy)/len(train_accuracy)
