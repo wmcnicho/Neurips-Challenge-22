@@ -181,6 +181,7 @@ def model_train():
     )
     PARAMS = {
             'objective' : params.objective,
+            'mask_lower' : params.mask_lower,
             'num_constructs': params.num_constructs,
             'num_questions': params.num_questions,
             'num_students': params.num_students,
@@ -274,10 +275,14 @@ if __name__ == "__main__":
     parser.add_argument('-E', '--num_epochs', type=int, default=100, help='number of epochs')
     parser.add_argument('-P', '--permutation', action="store_true", help='permute construct order')
     parser.add_argument('-O', '--objective', default="P", choices=["P", "L", "PL"], help='training P/L/PL')
+    parser.add_argument('-M', '--mask_lower', action="store_true", help='mask L matrix')
 
     params = parser.parse_args()
 
-    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs, params.objective]
+    if params.objective == "P":
+        assert not params.mask_lower, "Mask not implemented for objective P."
+
+    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs, params.objective, params.mask_lower]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
     seed_num = 36
