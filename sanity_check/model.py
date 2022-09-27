@@ -66,10 +66,18 @@ class PermutedGruCell(nn.Module):
 
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature, unroll):
+    def __init__(self, input_size, temperature, unroll, objective):
         super().__init__()
-        train_permute = True
-        train_lower = True
+        train_permute, train_lower = False, False
+        if objective == "PL":
+            train_permute, train_lower = True, True
+        elif objective == "P":
+            train_permute = True
+        elif objective == "L":
+            train_lower = True
+        else:
+            assert 1 == 0, "You should train P or L"
+
         self.unroll, self.temperature = unroll, temperature
         
         if train_permute and train_lower:
@@ -181,6 +189,7 @@ class PermutedGru(nn.Module):
         hidden_size,
         temperature,
         unroll,
+        objective,
         bias=False,
         num_layers=1,
         batch_first=False,
@@ -189,7 +198,7 @@ class PermutedGru(nn.Module):
         super().__init__()
         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
-        self.permuted_matrix = PermutationMatrix(hidden_size, temperature, unroll)
+        self.permuted_matrix = PermutationMatrix(hidden_size, temperature, unroll, objective)
 
     def forward(self, input_, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
@@ -212,9 +221,9 @@ class PermutedGru(nn.Module):
         return hidden_states, last_states
 
 class PermutedDKT(nn.Module):
-    def __init__(self, n_concepts, temperature, unroll):
+    def __init__(self, n_concepts, temperature, unroll, objective):
         super().__init__()
-        self.gru = PermutedGru(n_concepts, temperature, unroll, batch_first=False)
+        self.gru = PermutedGru(n_concepts, temperature, unroll, objective, batch_first=False)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(1, 1)
 

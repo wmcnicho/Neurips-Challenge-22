@@ -165,7 +165,7 @@ def model_train():
     training_set = createDataset(features, labels)
     # Different seed number
     torch.manual_seed(seed_num-1)
-    dkt = PermutedDKT(n_concepts=params.num_constructs, temperature=params.temperature, unroll=params.unroll).to(device)
+    dkt = PermutedDKT(n_concepts=params.num_constructs, temperature=params.temperature, unroll=params.unroll, objective=params.objective).to(device)
 
     training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=params.learning_rate)
@@ -180,6 +180,7 @@ def model_train():
         capture_hardware_metrics = False
     )
     PARAMS = {
+            'objective' : params.objective,
             'num_constructs': params.num_constructs,
             'num_questions': params.num_questions,
             'num_students': params.num_students,
@@ -272,10 +273,11 @@ if __name__ == "__main__":
     parser.add_argument('-L', '--learning_rate', type=float, default=0.01, help='learning rate')
     parser.add_argument('-E', '--num_epochs', type=int, default=100, help='number of epochs')
     parser.add_argument('-P', '--permutation', action="store_true", help='permute construct order')
+    parser.add_argument('-O', '--objective', default="P", choices=["P", "L", "PL"], help='training P/L/PL')
 
     params = parser.parse_args()
 
-    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs]
+    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs, params.objective]
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
     seed_num = 36
