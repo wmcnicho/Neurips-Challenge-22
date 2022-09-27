@@ -68,23 +68,35 @@ class PermutedGruCell(nn.Module):
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature, unroll):
         super().__init__()
-        train_permute = False
+        train_permute = True
+        train_lower = True
         self.unroll, self.temperature = unroll, temperature
         
-        if train_permute:
+        if train_permute and train_lower:
+            # 1) Permutation Matrix P
+            self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))  
+            # 2) Lower Triangular Matirx L
+            self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size - 1) / 2),))
+            row, col = torch.tril_indices(input_size, input_size, -1)
+            self.lower = torch.zeros(input_size, input_size)
+            self.lower.fill_diagonal_(1)
+            idx = 0
+            for r, c in zip(row, col):
+                self.lower[r.item(), c.item()] = self.explicit_p[idx]
+                idx += 1
+            print("init lower:\n", self.lower)                      
+        elif train_permute:
+            # 1) Permutation Matrix P
             self.matrix = nn.Parameter(torch.empty(input_size, input_size))
             nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-        else:
-            self.matrix = torch.eye(input_size)
-        
-        if train_permute:
+            # 2) Lower Triangular Matirx L
             self.lower = torch.tril(torch.ones(input_size, input_size))
             self.explicit_p = nn.Parameter(torch.ones(int(input_size * (input_size + 1) / 2),), requires_grad=False)
-            # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
-        else:
-            # Learnable lower matrix L
-            # self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size + 1) / 2),))
-            # row, col = torch.tril_indices(input_size, input_size)
+        elif train_lower:
+            # 1) Permutation Matrix P
+            self.matrix = torch.eye(input_size)
+            # 2) Lower Triangular Matirx L
             self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size - 1) / 2),))
             row, col = torch.tril_indices(input_size, input_size, -1)
             self.lower = torch.zeros(input_size, input_size)
@@ -94,6 +106,32 @@ class PermutationMatrix(nn.Module):
                 self.lower[r.item(), c.item()] = self.explicit_p[idx]
                 idx += 1
             print("init lower:\n", self.lower)
+        else:
+            assert 1 == 0, "You should train P or L"
+
+        # if train_permute:
+        #     self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+        #     nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
+        # else:
+        #     self.matrix = torch.eye(input_size)
+        
+        # if train_permute:
+        #     self.lower = torch.tril(torch.ones(input_size, input_size))
+        #     self.explicit_p = nn.Parameter(torch.ones(int(input_size * (input_size + 1) / 2),), requires_grad=False)
+        #     # self.lower = torch.tril(torch.ones(input_size, input_size), -1)
+        # else:
+        #     # Learnable lower matrix L
+        #     # self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size + 1) / 2),))
+        #     # row, col = torch.tril_indices(input_size, input_size)
+        #     self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size - 1) / 2),))
+        #     row, col = torch.tril_indices(input_size, input_size, -1)
+        #     self.lower = torch.zeros(input_size, input_size)
+        #     self.lower.fill_diagonal_(1)
+        #     idx = 0
+        #     for r, c in zip(row, col):
+        #         self.lower[r.item(), c.item()] = self.explicit_p[idx]
+        #         idx += 1
+        #     print("init lower:\n", self.lower)
 
     def forward(self, verbose=False):
         matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))

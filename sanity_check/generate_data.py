@@ -34,7 +34,7 @@ def generate_labels(features: torch.tensor, params):
 
     p_matrix = torch.eye(size, dtype = torch.double)
     lower = torch.tril(torch.ones(size, size))
-    mask_lower = False
+    mask_lower = True
     if mask_lower:
         causal_mask = torch.randint(0, 2, (size, size))
         lower = lower * causal_mask

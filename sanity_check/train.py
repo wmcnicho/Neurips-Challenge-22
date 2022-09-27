@@ -91,8 +91,55 @@ def print_lower(explicit_p):
         idx += 1
     print("Lower matrix:\n")
     print(lower)
+    return lower
     # print((lower >= 0.5).int())
 
+
+def sink_horn_(matrix, lower, temperature=100, unroll=20, verbose=False):
+    p_matrix = torch.exp(temperature * (matrix - torch.max(matrix)))
+    # print("Debug lower: \n", lower)
+    # lower = torch.tril(torch.ones(matrix.shape[0], matrix.shape[1]))
+    for _ in range(unroll):
+        p_matrix = p_matrix / torch.sum(p_matrix, dim=1, keepdim=True)
+        p_matrix = p_matrix / torch.sum(p_matrix, dim=0, keepdim=True)
+    # output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t()).t()
+    output_lower = torch.matmul(torch.matmul(p_matrix, lower), p_matrix.t())
+
+    ideal_matrix_order = p_matrix.data.argmax(dim=1, keepdim=True)
+    new_matrix = torch.zeros_like(p_matrix)
+    new_matrix.scatter_(
+        1, ideal_matrix_order, torch.ones_like(ideal_matrix_order).float()
+    )
+    causal_order = [(idx, int(d[0])) for idx, d in enumerate(ideal_matrix_order)]
+    causal_order.sort(key=lambda x: x[1])
+    causal_order = [d[0] for d in causal_order]
+    if verbose:
+        row_sum = round(float(torch.median(torch.sum(p_matrix, dim=1)[0])), 2)
+        col_sum = round(float(torch.median(torch.sum(p_matrix, dim=0)[0])), 2)
+        row_max = round(float(torch.median(torch.max(p_matrix, dim=1)[0])), 2)
+        col_max = round(float(torch.median(torch.max(p_matrix, dim=0)[0])), 2)
+        print(
+            "Median Row Sum: {}, Col Sum: {} Row Max: {} Col Max: {}".format(
+                row_sum, col_sum, row_max, col_max
+            )
+        )
+        print("Permutation Matrix\n", p_matrix.data.numpy().round(1))
+        print(
+            "Permuted Lower Triangular Matrix\n",
+            # output_lower.t().data.numpy().round(1),
+            output_lower.data.numpy().round(1),
+
+        )
+        print("Ideal Permutation Matrix\n", new_matrix.data)
+        print(
+            "Ideal Lower Triangular\
+                p_matrix\n",
+            torch.matmul(torch.matmul(new_matrix, lower), new_matrix.t()),
+        )
+        print("Causal Order\n", causal_order)
+
+        return causal_order
+        
 def model_train():
 
     gt_dkt = GroundTruthPermutedDKT(n_concepts=params.num_constructs)
@@ -182,22 +229,27 @@ def model_train():
     best_dkt = torch.load(f'./model/{params.file_name}_best_dkt.pt')
     last_dkt = torch.load(f'./model/{params.file_name}_final_dkt.pt')
     causal_order = []
+    trained_params = {}
     print("best_dkt parameters")
     print("-----" * 10)
     for name, param in best_dkt.named_parameters():
         print(name, param)
         if (name == "gru.permuted_matrix.matrix"):
-            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
+            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=False)
+            trained_params["P"] = param
         elif (name == "gru.permuted_matrix.explicit_p"):
-            print_lower(param)
-    print("last_dkt parameters")
-    print("-----" * 10)
-    for name, param in last_dkt.named_parameters():
-        print(name, param)
-        if (name == "gru.permuted_matrix.matrix"):
-            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
-        elif (name == "gru.permuted_matrix.explicit_p"):
-            print_lower(param)
+            trained_params["L"] = print_lower(param)
+    print("#####"*10)
+    # print(trained_params)
+    causal_order = sink_horn_(trained_params["P"], trained_params["L"], params.temperature, params.unroll, verbose=True)
+    # print("last_dkt parameters")
+    # print("-----" * 10)
+    # for name, param in last_dkt.named_parameters():
+    #     print(name, param)
+    #     if (name == "gru.permuted_matrix.matrix"):
+    #         causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
+    #     elif (name == "gru.permuted_matrix.explicit_p"):
+    #         print_lower(param)
     
     if params.permutation:
         print("====="*10)
