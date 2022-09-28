@@ -1,5 +1,5 @@
 import math
-from symbol import xor_expr
+from symbol import xor_expr, yield_expr
 import torch
 import torch.nn as nn
 import argparse
@@ -7,7 +7,6 @@ import numpy as np
 import math
 import torch
 import torch.nn as nn
-torch.manual_seed(20)
 import numpy as np
 
 def generate_labels(features: torch.tensor, params):
@@ -81,58 +80,57 @@ def generate_labels(features: torch.tensor, params):
 
     def pred(hidden, idx):
         y_hat = torch.sigmoid(hidden[idx] * w[idx] + b[idx])
-        # print("y_hat:", y_hat)
         return y_hat
 
     def generate_y_vals(x_vals):
         hidden = torch.randn(size, dtype = torch.double)
         # hidden = torch.zeros(size, dtype = torch.double)
         y_vals = torch.tensor([], dtype = torch.double)
+        y_hat_vals = torch.tensor([], dtype = torch.double)
         y_0 = pred(hidden, x_vals[0])
         if y_0.item() >= 0.5:
             y_vals = torch.concat((y_vals, torch.tensor([1.0])))
         else:
             y_vals = torch.concat((y_vals, torch.tensor([-1.0])))
-        
+        y_hat_vals = torch.concat((y_hat_vals, torch.tensor([y_0])))
         for idx, val in enumerate(x_vals):
-            # print("idx: ", idx)
             x = torch.zeros(size, dtype = torch.double)
             x[val] = y_vals[idx]
-            # print("x:", x)
-            # x[val] = 1.0
             hidden = calulate_hidden(x, hidden, val)
-            # print("hidden state:", hidden)
-            # print("x_vals len: ", len(x_vals))
+
             if idx + 1 == len(x_vals): break
             y_hat = pred(hidden, x_vals[idx+1])
+            y_hat_vals = torch.concat((y_hat_vals, torch.tensor([y_hat])))
             if y_hat.item() >= 0.5:
                 y_vals = torch.concat((y_vals, torch.tensor([1.0])))
             else:
                 y_vals = torch.concat((y_vals, torch.tensor([-1.0])))
-            # print(hidden)
-        return y_vals    
+        return y_vals, y_hat_vals
 
-    # number_students = 20
-    # number_questions = 10
-    # x_batch = np.random.randint(0, 5, size = (number_students, number_questions))
-    y_batch = torch.tensor([], dtype = torch.double)
+    def calculate_loss(y, y_hat):
+        cc_loss = nn.BCELoss()
+        loss = cc_loss(y.unsqueeze(2), y_hat.unsqueeze(2))
+        return loss  
+    
+    y = torch.tensor([], dtype = torch.double)
+    y_hat = torch.tensor([], dtype = torch.double)
     for idx, x_val in enumerate(features):
-        # print("-----------", idx)
-        # print("x_vals", x_val)
-        y_batch = torch.concat((y_batch, generate_y_vals(x_val)))
-        # y_batch = torch.concat((y_batch, generate_y_vals(features)))
+        _y, _y_hat = generate_y_vals(x_val)
+        y = torch.concat((y, _y))
+        y_hat = torch.concat((y_hat, _y_hat))
+    y = torch.reshape(y, (params.num_students, params.num_questions))
+    y_hat = torch.reshape(y_hat, (params.num_students, params.num_questions))
 
-    y_batch = torch.reshape(y_batch, (params.num_students, params.num_questions))
+    labels = torch.clamp(y, min=0)
+    loss = calculate_loss(labels, y_hat)
 
-    # for idx, val in enumerate(x_batch):
-    #     print("x:", val)
-    #     print("y:", y_batch[idx]) 
+    print("Ground truth loss: ", loss / (params.num_students / params.batch_size))
 
-    return y_batch
-        
+    explicit_p = torch.ones(int(size * (size + 1) / 2),)
+    ideal_params = [W_ir, W_hr, W_iz, W_hz, W_in, W_hn, p_matrix, explicit_p]
 
-# x = [0,1,2,3,4]
-# print(generate_y_vals(x))
+    return y, ideal_params
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='ML')

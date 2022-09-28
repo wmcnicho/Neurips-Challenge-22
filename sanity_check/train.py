@@ -146,7 +146,7 @@ def model_train():
     features = torch.randint(0, params.num_constructs, (params.num_students, params.num_questions))
     # tmp = [[i for i in range(C)], [i for i in range(C)]]
     # features = torch.tensor(tmp)
-    labels = generate_labels(features, params)
+    labels, ideal_params = generate_labels(features, params)
     # labels = gt_dkt(features)
 
     student_info = {}
@@ -169,7 +169,7 @@ def model_train():
 
     training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=params.learning_rate)
-   
+    # optimizer = torch.optim.Adam(ideal_params, lr=params.learning_rate)
     n_epochs = params.num_epochs
     best_loss = 100.0
     best_accuracy = 0.0
@@ -199,7 +199,7 @@ def model_train():
     for epoch in range(n_epochs): # loop over the dataset multiple times
         train_loss=[]
         train_accuracy=[]
-        for i, data in enumerate(training_loader, 0):
+        for i, data in enumerate(training_loader):
             b_construct = data['Features']
             b_label = data['Labels']
             optimizer.zero_grad()
@@ -208,11 +208,12 @@ def model_train():
             train_loss.append(loss.item())
             loss.backward(retain_graph=True)
             optimizer.step()
-            print("*****"*10)
-            print_lower(dkt.gru.permuted_matrix.explicit_p )
-            with torch.no_grad():
-                dkt.gru.permuted_matrix.explicit_p[:] = torch.clamp(dkt.gru.permuted_matrix.explicit_p, min=0, max=1)
-            print_lower(dkt.gru.permuted_matrix.explicit_p )
+            if params.objective == "L" or params.objective == "PL":
+                print("*****"*10)
+                print_lower(dkt.gru.permuted_matrix.explicit_p )
+                with torch.no_grad():
+                    dkt.gru.permuted_matrix.explicit_p[:] = torch.clamp(dkt.gru.permuted_matrix.explicit_p, min=0, max=1)
+                print_lower(dkt.gru.permuted_matrix.explicit_p)
         if (sum(train_loss)/len(train_loss) < best_loss):
             best_loss = sum(train_loss)/len(train_loss)
             best_accuracy = sum(train_accuracy)/len(train_accuracy)
