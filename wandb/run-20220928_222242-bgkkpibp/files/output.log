@@ -1,0 +1,23 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_control.py:409: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_control.py", line 457, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_control.py", line 442, in main
+    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_control.py", line 322, in train
+    loss, acc = model(b_input_ids, b_labels)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: PermutedDKT.forward() missing 1 required positional argument: 'epoch'
+PermutedDKT
+Number of questions:  807
+Number of students:  4
+Number of concepts: 636
+Using batch size: 64
+Using batch size: 64
+Successfull in data prepration!
+Successfully loaded the optimizer
+======== Epoch 1 / 100 ========
+Training...
+Step: 0

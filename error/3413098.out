@@ -1,0 +1,9 @@
+wandb: Currently logged in as: nashokkumar (ml4ed). Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.13.3
+wandb: Run data is saved locally in /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220928_150116-3jp4gn8a
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run dazzling-forest-7
+wandb: ⭐️ View project at https://wandb.ai/ml4ed/predict-graph
+wandb: 🚀 View run at https://wandb.ai/ml4ed/predict-graph/runs/3jp4gn8a
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py:405: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)

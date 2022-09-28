@@ -374,8 +374,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
     return model_copy, epochswise_train_losses, epochwise_val_losses
 
 def get_sinkhorn_output(matrix):
-    temperature=10
-    unroll=100
+    temperature=100
+    unroll=1000
 
     matrix_shape = matrix.shape[0]
 
@@ -421,9 +421,13 @@ def main():
 
     # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
-    model_load = torch.load('saved_models/nips.pt', map_location=torch.device('cpu'))
+    if device == 'cpu':
+        model_load = torch.load('nips_vanilla.pt', map_location=torch.device('cpu'))
+    else:
+        model_load = torch.load('nips_vanilla.pt')
     sinkhorn_output = get_sinkhorn_output(model_load.gru.permuted_matrix.matrix)
     np_matrix = sinkhorn_output.cpu().detach().numpy()
+    np.save('sinkhorn_matrix.npy', np_matrix)
     argmax_search = search_argmax(np_matrix)
     # argmax_list_row = np.argmax(np_matrix, axis=1)
     # argmax_list_col = np.argmax(np_matrix, axis=0)
@@ -432,7 +436,7 @@ def main():
     p_matrix = np.zeros(np_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
-    np.save('saved_models/p_matrix.npy', p_matrix)
+    np.save('p_matrix_vanilla.npy', p_matrix)
     # dkt_model.load('nips.pt')
     # for param in model_load.parameters():
     #     print(param)
