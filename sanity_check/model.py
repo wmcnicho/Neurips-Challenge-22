@@ -98,16 +98,9 @@ class PermutationMatrix(nn.Module):
             # 1) Permutation Matrix P
             # self.matrix = nn.Parameter(torch.empty(input_size, input_size))
             # nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-            if True:
-                self.matrix = nn.Parameter(torch.empty(input_size, input_size))
-                nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-            else:
-                # self.matrix = nn.Parameter(torch.empty(input_size, input_size))
-                init_matrix = torch.full((input_size, input_size), -1.0 * (input_size + 1))
-                init_matrix.fill_diagonal_(input_size + 1)
-                # self.matrix = init_matrix + torch.randn(input_size, input_size)
-                self.matrix = nn.Parameter(init_matrix + 0.1 * torch.randn(input_size, input_size))
-                print("Sanity check on P matrix:\n", self.matrix)
+            self.matrix = nn.Parameter(torch.empty(input_size, input_size))
+            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
+            print("Sanity check on P matrix:\n", self.matrix)
 
             # 2) Lower Triangular Matirx L
             self.lower = torch.tril(torch.ones(input_size, input_size))

@@ -49,6 +49,7 @@ def generate_labels(features: torch.tensor, params):
     W_hz = W_hz * lower
     W_in = W_in * lower
     W_hn = W_hn * lower
+    
     print("Ground Truth Ws.")
     print("=====" * 10)
     print("W_ir\n:", W_ir)

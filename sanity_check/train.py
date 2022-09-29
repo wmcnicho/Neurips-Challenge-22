@@ -166,7 +166,12 @@ def model_train():
     # Different seed number
     torch.manual_seed(seed_num-1)
     dkt = PermutedDKT(n_concepts=params.num_constructs, temperature=params.temperature, unroll=params.unroll, objective=params.objective).to(device)
-
+    if False:
+        dkt_dict = dkt.state_dict()
+        init_matrix = torch.full((params.num_constructs, params.num_constructs), 0.1 * (params.num_constructs + 1))
+        init_matrix.fill_diagonal_(params.num_constructs + 1)
+        tmp = init_matrix + 0.1 * torch.randn(params.num_constructs, params.num_constructs)
+        dkt_dict["gru.permuted_matrix.matrix"] = tmp
     training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=params.learning_rate)
     # optimizer = torch.optim.Adam(ideal_params, lr=params.learning_rate)
@@ -208,6 +213,7 @@ def model_train():
             train_loss.append(loss.item())
             loss.backward(retain_graph=True)
             optimizer.step()
+            print("Debug P matrix:\n", dkt.gru.permuted_matrix.matrix)
             if params.objective == "L" or params.objective == "PL":
                 print("*****"*10)
                 print_lower(dkt.gru.permuted_matrix.explicit_p )
@@ -245,14 +251,14 @@ def model_train():
     print("#####"*10)
     # print(trained_params)
     causal_order = sink_horn_(trained_params["P"], trained_params["L"], params.temperature, params.unroll, verbose=True)
-    # print("last_dkt parameters")
-    # print("-----" * 10)
-    # for name, param in last_dkt.named_parameters():
-    #     print(name, param)
-    #     if (name == "gru.permuted_matrix.matrix"):
-    #         causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
-    #     elif (name == "gru.permuted_matrix.explicit_p"):
-    #         print_lower(param)
+    print("last_dkt parameters")
+    print("-----" * 10)
+    for name, param in last_dkt.named_parameters():
+        print(name, param)
+        # if (name == "gru.permuted_matrix.matrix"):
+        #     causal_order = sink_horn(param, params.temperature, params.unroll, verbose=True)
+        # elif (name == "gru.permuted_matrix.explicit_p"):
+        #     print_lower(param)
     
     if params.permutation:
         print("====="*10)
