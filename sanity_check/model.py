@@ -66,7 +66,7 @@ class PermutedGruCell(nn.Module):
 
 
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature, unroll, objective):
+    def __init__(self, input_size, objective):
         super().__init__()
         train_permute, train_lower = False, False
         if objective == "PL":
@@ -77,8 +77,6 @@ class PermutationMatrix(nn.Module):
             train_lower = True
         else:
             assert 1 == 0, "You should train P or L"
-
-        self.unroll, self.temperature = unroll, temperature
         
         if train_permute and train_lower:
             # 1) Permutation Matrix P
@@ -100,6 +98,8 @@ class PermutationMatrix(nn.Module):
             # nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
             self.matrix = nn.Parameter(torch.empty(input_size, input_size))
             nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
+            with torch.no_grad():
+               self.matrix.fill_diagonal_(1)
             print("Sanity check on P matrix:\n", self.matrix)
 
             # 2) Lower Triangular Matirx L
@@ -145,9 +145,9 @@ class PermutationMatrix(nn.Module):
         #         idx += 1
         #     print("init lower:\n", self.lower)
 
-    def forward(self, verbose=False):
-        matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
-        for _ in range(self.unroll):
+    def forward(self, temperature, unroll, verbose=False):
+        matrix = torch.exp(temperature * (self.matrix - torch.max(self.matrix)))
+        for _ in range(unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
         # output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
@@ -191,8 +191,6 @@ class PermutedGru(nn.Module):
     def __init__(
         self,
         hidden_size,
-        temperature,
-        unroll,
         objective,
         bias=False,
         num_layers=1,
@@ -202,13 +200,13 @@ class PermutedGru(nn.Module):
         super().__init__()
         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
-        self.permuted_matrix = PermutationMatrix(hidden_size, temperature, unroll, objective)
+        self.permuted_matrix = PermutationMatrix(hidden_size, objective)
 
-    def forward(self, input_, lengths=None, hidden=None):
+    def forward(self, input_, temperature, unroll, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
-        lower = self.permuted_matrix(verbose=False)
+        lower = self.permuted_matrix(temperature, unroll, verbose=False)
         outputs = []
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
             hidden = self.cell(x, lower, hidden)
@@ -225,13 +223,17 @@ class PermutedGru(nn.Module):
         return hidden_states, last_states
 
 class PermutedDKT(nn.Module):
-    def __init__(self, n_concepts, temperature, unroll, objective):
+    def __init__(self, n_concepts,objective):
         super().__init__()
-        self.gru = PermutedGru(n_concepts, temperature, unroll, objective, batch_first=False)
+        self.gru = PermutedGru(n_concepts, objective, batch_first=False)
         self.n_concepts = n_concepts
-        self.output_layer = nn.Linear(1, 1)
+        self.w = nn.Parameter(torch.empty(n_concepts))
+        nn.init.normal_(self.w)
+        self.b = nn.Parameter(torch.empty(n_concepts))
+        nn.init.normal_(self.b)
+        # self.output_layer = nn.Linear(1, 1)
 
-    def forward(self, concept_input, labels):
+    def forward(self, concept_input, labels, temperature, unroll):
         # Input shape is T, B
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
@@ -245,12 +247,13 @@ class PermutedDKT(nn.Module):
         # print("labels_t shape: ", labels_t.shape)
         input.scatter_(2, concept_input_t.unsqueeze(2), labels_t.unsqueeze(2).float())
         labels = torch.clamp(labels, min=0)
-        hidden_states, _ = self.gru(input)
+        hidden_states, _ = self.gru(input, temperature, unroll)
 
         # init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         init_state = self.gru.cell.init_hidden
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1:, :, :]
-        output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
+        output = self.w * shifted_hidden_states + self.b
+        # output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
         output = torch.gather(output, 2, concept_input_t.unsqueeze(2)).squeeze(2).t()
         # print("output: \n", output)
         pred = (output > 0.0).float()

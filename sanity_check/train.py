@@ -165,13 +165,16 @@ def model_train():
     training_set = createDataset(features, labels)
     # Different seed number
     torch.manual_seed(seed_num-1)
-    dkt = PermutedDKT(n_concepts=params.num_constructs, temperature=params.temperature, unroll=params.unroll, objective=params.objective).to(device)
+    # dkt = PermutedDKT(n_concepts=params.num_constructs, temperature=params.temperature, unroll=params.unroll, objective=params.objective).to(device)
+    dkt = PermutedDKT(n_concepts=params.num_constructs, objective=params.objective).to(device)
+
     if False:
         dkt_dict = dkt.state_dict()
-        init_matrix = torch.full((params.num_constructs, params.num_constructs), 0.1 * (params.num_constructs + 1))
+        init_matrix = torch.full((params.num_constructs, params.num_constructs), -1 * (params.num_constructs + 1))
         init_matrix.fill_diagonal_(params.num_constructs + 1)
         tmp = init_matrix + 0.1 * torch.randn(params.num_constructs, params.num_constructs)
         dkt_dict["gru.permuted_matrix.matrix"] = tmp
+        print("Sanity check on P matrix:\n", dkt_dict["gru.permuted_matrix.matrix"])
     training_loader = DataLoader(training_set, batch_size=params.batch_size, shuffle=False)
     optimizer = torch.optim.Adam(dkt.parameters(), lr=params.learning_rate)
     # optimizer = torch.optim.Adam(ideal_params, lr=params.learning_rate)
@@ -200,20 +203,30 @@ def model_train():
 
     run["parameters"] = PARAMS
     run["student_info"] = student_info
-
+    temp_min, temp_max = tuple(params.temperature)
+    uroll_min, uroll_max = tuple(params.unroll)
     for epoch in range(n_epochs): # loop over the dataset multiple times
+        print(f"{epoch}th epoch")
         train_loss=[]
         train_accuracy=[]
+        temperature, unroll = 0, 0
         for i, data in enumerate(training_loader):
             b_construct = data['Features']
             b_label = data['Labels']
             optimizer.zero_grad()
-            loss, acc = dkt(b_construct, b_label)
+            temperature = int(temp_min + (temp_max - temp_min) / ((params.num_students / params.batch_size)- 1) * (i))
+            unroll = int(uroll_min + (uroll_max - uroll_min) / ((params.num_students / params.batch_size) - 1) * (i))
+            print(f"{i}th batch")
+            print("temperature: ", temperature)
+            print("unroll: ", unroll)
+            loss, acc = dkt(b_construct, b_label, temperature, unroll)
             train_accuracy.append(acc)
             train_loss.append(loss.item())
             loss.backward(retain_graph=True)
             optimizer.step()
             print("Debug P matrix:\n", dkt.gru.permuted_matrix.matrix)
+            print("Debug w:\n", dkt.w)
+            print("Debug b:\n", dkt.b)
             if params.objective == "L" or params.objective == "PL":
                 print("*****"*10)
                 print_lower(dkt.gru.permuted_matrix.explicit_p )
@@ -244,13 +257,13 @@ def model_train():
     for name, param in best_dkt.named_parameters():
         print(name, param)
         if (name == "gru.permuted_matrix.matrix"):
-            causal_order = sink_horn(param, params.temperature, params.unroll, verbose=False)
+            causal_order = sink_horn(param, params.temperature[1], params.unroll[1], verbose=False)
             trained_params["P"] = param
         elif (name == "gru.permuted_matrix.explicit_p"):
             trained_params["L"] = print_lower(param)
     print("#####"*10)
     # print(trained_params)
-    causal_order = sink_horn_(trained_params["P"], trained_params["L"], params.temperature, params.unroll, verbose=True)
+    causal_order = sink_horn_(trained_params["P"], trained_params["L"], params.temperature[1], params.unroll[1], verbose=True)
     print("last_dkt parameters")
     print("-----" * 10)
     for name, param in last_dkt.named_parameters():
@@ -276,20 +289,26 @@ if __name__ == "__main__":
     parser.add_argument('-C', '--num_constructs', type=int, default=5, help='number of constructs')
     parser.add_argument('-Q', '--num_questions', type=int, default=10, help='number of questions')
     parser.add_argument('-S', '--num_students', type=int, default=20, help='number of students')
-    parser.add_argument('-T', '--temperature', type=int ,default=100, help='temperature')
-    parser.add_argument('-U', '--unroll', type=int, default=100, help='unroll')
     parser.add_argument('-L', '--learning_rate', type=float, default=0.01, help='learning rate')
     parser.add_argument('-E', '--num_epochs', type=int, default=100, help='number of epochs')
     parser.add_argument('-P', '--permutation', action="store_true", help='permute construct order')
     parser.add_argument('-O', '--objective', default="P", choices=["P", "L", "PL"], help='training P/L/PL')
     parser.add_argument('-M', '--mask_lower', action="store_true", help='mask L matrix')
 
+    # parser.add_argument('-T', '--temperature', type=int ,default=100, help='temperature')
+    # parser.add_argument('-U', '--unroll', type=int, default=100, help='unroll')
+
+    parser.add_argument('-T', '--temperature', type=int, nargs='+', help='temperature, type min and max value')
+    parser.add_argument('-U', '--unroll', type=int, nargs='+', help='unroll, type min and max value')
+
     params = parser.parse_args()
 
     if params.objective == "P":
         assert not params.mask_lower, "Mask not implemented for objective P."
 
-    file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs, params.objective, params.mask_lower]
+    # file_name = [params.num_constructs, params.num_questions, params.num_students, params.temperature, params.unroll, params.learning_rate, params.num_epochs, params.objective, params.mask_lower]
+    file_name = [params.num_constructs, params.num_questions, params.num_students, params.learning_rate, params.num_epochs]
+
     file_name =  [str(d) for d in file_name]
     params.file_name = '_'.join(file_name)
     seed_num = 36

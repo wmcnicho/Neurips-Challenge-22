@@ -14,22 +14,22 @@ def generate_labels(features: torch.tensor, params):
 
     W_ir = torch.empty(size, size, dtype = torch.double)
     nn.init.kaiming_normal_(W_ir, a=math.sqrt(size), mode='fan_out')
-    b_ir = torch.randn(size, dtype = torch.double)
+    b_ir = 0.1 * torch.randn(size, dtype = torch.double)
     W_hr = torch.empty(size, size, dtype = torch.double)
     nn.init.kaiming_normal_(W_hr, a=math.sqrt(size), mode='fan_out')
-    b_hr = torch.randn(size, dtype = torch.double)
+    b_hr = 0.1 * torch.randn(size, dtype = torch.double)
     W_iz = torch.empty(size, size, dtype = torch.double)
     nn.init.kaiming_normal_(W_iz, a=math.sqrt(size), mode='fan_out')
-    b_iz = torch.randn(size, dtype = torch.double)
+    b_iz = 0.1 * torch.randn(size, dtype = torch.double)
     W_hz = torch.empty(size, size, dtype = torch.double)
     nn.init.kaiming_normal_(W_hz, a=math.sqrt(size), mode='fan_out')
-    b_hz = torch.randn(size, dtype = torch.double)
+    b_hz = 0.1 * torch.randn(size, dtype = torch.double)
     W_in = torch.empty(size, size, dtype = torch.double)
     nn.init.kaiming_normal_(W_in, a=math.sqrt(size), mode='fan_out')
-    b_in = torch.randn(size, dtype = torch.double)
+    b_in = 0.1 * torch.randn(size, dtype = torch.double)
     W_hn = torch.empty(size, size, dtype = torch.double)
     nn.init.kaiming_normal_(W_hn, a=math.sqrt(size), mode='fan_out')
-    b_hn = torch.randn(size, dtype = torch.double)
+    b_hn = 0.1 * torch.randn(size, dtype = torch.double)
 
     p_matrix = torch.eye(size, dtype = torch.double)
     lower = torch.tril(torch.ones(size, size))
@@ -60,39 +60,41 @@ def generate_labels(features: torch.tensor, params):
     print("W_hn\n:", W_hn)
     print("=====" * 10)
 
-    w = 10 * torch.randn(size)
-    b = 0.5 * torch.randn(size)
+    w = 10 * torch.randn(1) * torch.ones(size)
+    b = 0.1 * torch.randn(1)
 
     def calulate_hidden(x, hidden, construct_id):
         sigmoid = nn.Sigmoid()
         tanh = nn.Tanh()
         mask = torch.zeros(size, dtype = torch.double)
         mask[construct_id] = 1.0
-        r_t = sigmoid(torch.matmul(x, W_ir) + b_ir * mask + torch.matmul(hidden, W_hr) + b_hr * mask)
-        z_t = sigmoid(torch.matmul(x, W_iz) + b_iz * mask + torch.matmul(hidden, W_hz) + b_hz * mask)
-        n_t = tanh(torch.matmul(x, W_in) +  b_in * mask + r_t * (torch.matmul(hidden, W_hn) + b_hn * mask))
+        # r_t = sigmoid(torch.matmul(x, W_ir) + b_ir * mask + torch.matmul(hidden, W_hr) + b_hr * mask)
+        # z_t = sigmoid(torch.matmul(x, W_iz) + b_iz * mask + torch.matmul(hidden, W_hz) + b_hz * mask)
+        # n_t = tanh(torch.matmul(x, W_in) +  b_in * mask + r_t * (torch.matmul(hidden, W_hn) + b_hn * mask))
 
-        # r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
-        # z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
-        # n_t = tanh(torch.matmul(x, W_in) + r_t * (torch.matmul(hidden, W_hn)))
+        r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
+        z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
+        n_t = tanh(torch.matmul(x, W_in) + r_t * (torch.matmul(hidden, W_hn)))
 
         hy =  (1.0 - z_t) * n_t + z_t * hidden
         return hy
 
     def pred(hidden, idx):
-        y_hat = torch.sigmoid(hidden[idx] * w[idx] + b[idx])
+        y_hat = torch.sigmoid(hidden[idx] * w[idx] + b)
         return y_hat
 
     def generate_y_vals(x_vals):
-        hidden = torch.randn(size, dtype = torch.double)
+        hidden = 0.1 * torch.randn(size, dtype = torch.double)
         # hidden = torch.zeros(size, dtype = torch.double)
         y_vals = torch.tensor([], dtype = torch.double)
         y_hat_vals = torch.tensor([], dtype = torch.double)
         y_0 = pred(hidden, x_vals[0])
-        if y_0.item() >= 0.5:
+        ans = torch.bernoulli(y_0)
+        if ans == 1:
             y_vals = torch.concat((y_vals, torch.tensor([1.0])))
         else:
             y_vals = torch.concat((y_vals, torch.tensor([-1.0])))
+        
         y_hat_vals = torch.concat((y_hat_vals, torch.tensor([y_0])))
         for idx, val in enumerate(x_vals):
             x = torch.zeros(size, dtype = torch.double)
@@ -102,7 +104,8 @@ def generate_labels(features: torch.tensor, params):
             if idx + 1 == len(x_vals): break
             y_hat = pred(hidden, x_vals[idx+1])
             y_hat_vals = torch.concat((y_hat_vals, torch.tensor([y_hat])))
-            if y_hat.item() >= 0.5:
+            ans = torch.bernoulli(y_hat)
+            if ans == 1:
                 y_vals = torch.concat((y_vals, torch.tensor([1.0])))
             else:
                 y_vals = torch.concat((y_vals, torch.tensor([-1.0])))
