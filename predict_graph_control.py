@@ -24,7 +24,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
 # Start Wandb run
-wandb.init(project="predict-graph", entity="ml4ed", name='adaptive temp-unroll trial')
+wandb.init(project="predict-graph", entity="ml4ed", name='adaptive temp-unroll small')
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -73,17 +73,17 @@ class PermutedGruCell(nn.Module):
         return hy
         
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=1000):
+    def __init__(self, input_size, temperature, unroll):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
         self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
 
-    def forward(self, epoch, verbose=False, temperature=100, unroll=1000):
+    def forward(self, epoch, verbose=False):
         # TODO: update temperature and unroll
-        temperature = ((epoch//10)+1)*10
-        unroll = ((epoch//10)+1)*100
+        temperature = ((epoch//10)+1)*self.temperature
+        unroll = ((epoch//10)+1)*self.unroll
 
         # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
         print(self.matrix)
@@ -139,6 +139,8 @@ class PermutationMatrix(nn.Module):
 class PermutedGru(nn.Module):
     def __init__(
         self,
+        init_temp, 
+        init_unroll,
         hidden_size,
         bias=False,
         num_layers=1,
@@ -148,7 +150,7 @@ class PermutedGru(nn.Module):
         super().__init__()
         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
-        self.permuted_matrix = PermutationMatrix(hidden_size)
+        self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
 
     def forward(self, input_, epoch, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
@@ -177,9 +179,9 @@ class PermutedGru(nn.Module):
 
 
 class PermutedDKT(nn.Module):
-    def __init__(self, n_concepts):
+    def __init__(self, init_temp, init_unroll, n_concepts):
         super().__init__()
-        self.gru = PermutedGru(n_concepts, batch_first=False)
+        self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(1, 1) 
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
@@ -392,14 +394,14 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/tmp_training_data_tensor.pt')
+    with open("serialized_torch/tmp_training_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
 
     # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
-    dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
+    
     # concept_input = dataset_tensor[:, 0, :]
     # labels = dataset_tensor[:, 1, :]
     initial_concept_input = dataset_tensor[:, 0, :]
@@ -424,6 +426,12 @@ def main():
     epochs = 100
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
+
+    # TODO: Set init_temp and init_unroll
+    init_temp = 2
+    init_unroll = 5
+
+    dkt_model = PermutedDKT(init_temp, init_unroll, n_concepts=len(tot_construct_list)+1).to(device)
     
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
@@ -435,13 +443,15 @@ def main():
     wandb.config = {
     "learning_rate": lr,
     "epochs": epochs,
-    "batch_size": batch_size
+    "batch_size": batch_size,
+    "init_temp": init_temp,
+    "init_unroll": init_unroll
     }
 
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
     # TODO: Save the model
-    torch.save(model, 'saved_models/nips_trial_tmp_data.pt')
+    torch.save(model, 'saved_models/nips_adaptive_small.pt')
 
 
     with open('train_epochwise_loss.json', 'w') as infile:
