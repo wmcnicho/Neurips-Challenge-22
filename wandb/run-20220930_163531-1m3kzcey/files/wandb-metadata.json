@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.4.0-124-generic-x86_64-with-glibc2.31",
+    "python": "3.10.4",
+    "heartbeatAt": "2022-09-30T16:35:32.052074",
+    "startedAt": "2022-09-30T16:35:31.311925",
+    "docker": null,
+    "gpu": "Quadro RTX 8000",
+    "gpu_count": 5,
+    "cpu_count": 48,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_control.py",
+    "codePath": "predict_graph_control.py",
+    "git": {
+        "remote": "https://github.com/wmcnicho/Neurips-Challenge-22.git",
+        "commit": "c24c3c4445d5517b5804b57160274137e8a6f9c9"
+    },
+    "email": "nischalrokz19@gmail.com",
+    "root": "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22",
+    "host": "gypsum-gpu185",
+    "username": "nashokkumar_umass_edu",
+    "executable": "/work/nashokkumar_umass_edu/.conda/envs/nistorch/bin/python"
+}

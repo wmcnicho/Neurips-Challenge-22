@@ -1,0 +1,41 @@
+2022-09-30 20:46:16,239 INFO    StreamThr :3747263 [internal.py:wandb_internal():88] W&B internal server running at pid: 3747263, started at: 2022-09-30 20:46:16.236205
+2022-09-30 20:46:16,245 DEBUG   HandlerThread:3747263 [handler.py:handle_request():138] handle_request: status
+2022-09-30 20:46:16,253 DEBUG   SenderThread:3747263 [sender.py:send_request():315] send_request: status
+2022-09-30 20:46:16,289 DEBUG   SenderThread:3747263 [sender.py:send():301] send: header
+2022-09-30 20:46:16,290 INFO    WriterThread:3747263 [datastore.py:open_for_write():75] open: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/run-2oaqu5gn.wandb
+2022-09-30 20:46:16,309 DEBUG   SenderThread:3747263 [sender.py:send():301] send: run
+2022-09-30 20:46:16,623 DEBUG   HandlerThread:3747263 [handler.py:handle_request():138] handle_request: check_version
+2022-09-30 20:46:16,649 INFO    SenderThread:3747263 [dir_watcher.py:__init__():216] watching files in: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files
+2022-09-30 20:46:16,650 INFO    SenderThread:3747263 [sender.py:_start_run_threads():912] run started: 2oaqu5gn with start time 1664570776.237583
+2022-09-30 20:46:16,651 DEBUG   SenderThread:3747263 [sender.py:send():301] send: summary
+2022-09-30 20:46:16,657 INFO    SenderThread:3747263 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-09-30 20:46:16,658 DEBUG   SenderThread:3747263 [sender.py:send_request():315] send_request: check_version
+2022-09-30 20:46:16,816 DEBUG   HandlerThread:3747263 [handler.py:handle_request():138] handle_request: run_start
+2022-09-30 20:46:16,821 DEBUG   HandlerThread:3747263 [meta.py:__init__():34] meta init
+2022-09-30 20:46:16,822 DEBUG   HandlerThread:3747263 [meta.py:__init__():49] meta init done
+2022-09-30 20:46:16,823 DEBUG   HandlerThread:3747263 [meta.py:probe():215] probe
+2022-09-30 20:46:16,888 DEBUG   HandlerThread:3747263 [meta.py:_setup_git():205] setup git
+2022-09-30 20:46:16,913 DEBUG   HandlerThread:3747263 [meta.py:_setup_git():212] setup git done
+2022-09-30 20:46:16,913 DEBUG   HandlerThread:3747263 [meta.py:_save_pip():53] save pip
+2022-09-30 20:46:16,921 DEBUG   HandlerThread:3747263 [meta.py:_save_pip():67] save pip done
+2022-09-30 20:46:16,921 DEBUG   HandlerThread:3747263 [meta.py:_save_conda():74] save conda
+2022-09-30 20:46:17,694 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/wandb-summary.json
+2022-09-30 20:46:17,694 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/requirements.txt
+2022-09-30 20:46:17,696 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/conda-environment.yaml
+2022-09-30 20:46:20,732 DEBUG   HandlerThread:3747263 [meta.py:_save_conda():84] save conda done
+2022-09-30 20:46:20,733 DEBUG   HandlerThread:3747263 [meta.py:probe():253] probe done
+2022-09-30 20:46:20,804 DEBUG   SenderThread:3747263 [sender.py:send():301] send: files
+2022-09-30 20:46:20,805 INFO    SenderThread:3747263 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-09-30 20:46:20,894 DEBUG   HandlerThread:3747263 [handler.py:handle_request():138] handle_request: stop_status
+2022-09-30 20:46:20,894 DEBUG   SenderThread:3747263 [sender.py:send_request():315] send_request: stop_status
+2022-09-30 20:46:21,085 DEBUG   SenderThread:3747263 [sender.py:send():301] send: telemetry
+2022-09-30 20:46:21,544 INFO    Thread-23 :3747263 [upload_job.py:push():139] Uploaded file /scratch/login/tmpn5r6qtrowandb/2xf9ynje-wandb-metadata.json
+2022-09-30 20:46:21,698 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/wandb-metadata.json
+2022-09-30 20:46:31,714 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/output.log
+2022-09-30 20:46:33,717 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/output.log
+2022-09-30 20:46:36,092 DEBUG   HandlerThread:3747263 [handler.py:handle_request():138] handle_request: stop_status
+2022-09-30 20:46:36,092 DEBUG   SenderThread:3747263 [sender.py:send_request():315] send_request: stop_status
+2022-09-30 20:46:45,180 DEBUG   SenderThread:3747263 [sender.py:send():301] send: stats
+2022-09-30 20:46:47,737 INFO    Thread-19 :3747263 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20220930_204616-2oaqu5gn/files/config.yaml
+2022-09-30 20:46:51,202 DEBUG   HandlerThread:3747263 [handler.py:handle_request():138] handle_request: stop_status
+2022-09-30 20:46:51,202 DEBUG   SenderThread:3747263 [sender.py:send_request():315] send_request: stop_status

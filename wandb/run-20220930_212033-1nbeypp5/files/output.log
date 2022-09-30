@@ -1,0 +1,21 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py:435: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+PermutedDKT
+Number of questions:  20
+Number of students:  9
+Number of concepts: 52
+Using batch size: 64
+Using batch size: 64
+Successfull in data prepration!
+Successfully loaded the optimizer
+======== Epoch 1 / 200 ========
+Training...
+Step: 0
+Parameter containing:
+tensor([[-0.0599, -0.1026,  0.1382,  ...,  0.0937, -0.0305, -0.0280],
+        [-0.0910,  0.1102, -0.0584,  ...,  0.1294, -0.0179,  0.1107],
+        [-0.0350,  0.1119,  0.0144,  ..., -0.0136, -0.0163, -0.0535],
+        ...,
+        [ 0.0325,  0.0409,  0.1056,  ..., -0.1119,  0.0752,  0.0174],
+        [-0.0504, -0.0262, -0.0284,  ..., -0.0012,  0.1216,  0.1381],
+        [-0.0804,  0.0740, -0.1302,  ..., -0.0514,  0.0966, -0.0293]],
