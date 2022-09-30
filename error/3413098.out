@@ -7,3 +7,21 @@ wandb: ⭐️ View project at https://wandb.ai/ml4ed/predict-graph
 wandb: 🚀 View run at https://wandb.ai/ml4ed/predict-graph/runs/3jp4gn8a
 /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py:405: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
   labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+wandb: Waiting for W&B process to finish... (success).
+wandb: - 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: / 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: - 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: / 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: - 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: / 4.453 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: - 5.832 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: \ 5.832 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: | 5.832 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: / 5.832 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: - 5.832 MB of 5.832 MB uploaded (0.000 MB deduped)wandb: \ 5.832 MB of 5.832 MB uploaded (0.000 MB deduped)wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:   Average training loss █▇▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁
+wandb: Average validation loss █▄▃▄▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▂▁▁▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃
+wandb:                   Epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇███
+wandb:     Validation Accuracy ▁▄▅▂▇█▆▇█▇▇▇█▇█▇██▇▇▆▇▇▇▇▆▆▆▇▆▆▆▆▆▆▆▆▅▆▅
+wandb: 
+wandb: Run summary:
+wandb:   Average training loss 0.01298
+wandb: Average validation loss 0.01409
+wandb:                   Epoch 99
+wandb:     Validation Accuracy 0.01626
+wandb: 
+wandb: Synced dazzling-forest-7: https://wandb.ai/ml4ed/predict-graph/runs/3jp4gn8a
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20220928_150116-3jp4gn8a/logs
