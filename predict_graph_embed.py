@@ -192,7 +192,7 @@ class PermutedDKT(nn.Module):
 
         self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False)
         self.n_concepts = n_concepts
-        self.output_layer = nn.Linear(self.embed_dim+1, 1) 
+        self.output_layer = nn.Linear(self.embed_dim+self.n_concepts, 1) 
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
 
     def forward(self, concept_input, labels, epoch):
@@ -237,7 +237,8 @@ class PermutedDKT(nn.Module):
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) 
         # TODO: Add construct embeddings
-        relevant_hidden_states = torch.gather(shifted_hidden_states, 2, concept_input.unsqueeze(2)) # [num_questions, num_students, 1]
+        relevant_hidden_states = shifted_hidden_states * abs(input)
+        # relevant_hidden_states = torch.gather(shifted_hidden_states, 2, concept_input.unsqueeze(2)) # [num_questions, num_students, 1]
         preoutput = torch.cat((rawembed, relevant_hidden_states), dim=2)
 
         output = self.output_layer(preoutput).squeeze()

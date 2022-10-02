@@ -10,4 +10,4 @@
 #SBATCH -o /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/output/%j.out
 #SBATCH -e /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/error/%j.out
 
-python /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_control.py
+python /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py
