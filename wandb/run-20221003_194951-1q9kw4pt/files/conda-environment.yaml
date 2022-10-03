@@ -1,0 +1,4 @@
+name: nistorch
+channels:
+  - defaults
+prefix: /home/nashokkumar_umass_edu/.conda/envs/nistorch

@@ -1,0 +1,22 @@
+Using device: cuda
+PermutedDKT
+Number of questions:  1855
+Number of students:  6468
+Number of concepts: 1076
+Using batch size: 2
+Using batch size: 2
+Successfull in data prepration!
+Successfully loaded the optimizer
+
+======== Epoch 1 / 200 ========
+Training...
+Step: 0
+Parameter containing:
+tensor([[ 0.0176, -0.0043, -0.0069,  ...,  0.0078, -0.0162, -0.0071],
+        [ 0.0013, -0.0143,  0.0060,  ..., -0.0026, -0.0293,  0.0127],
+        [ 0.0211, -0.0170,  0.0166,  ...,  0.0090, -0.0208, -0.0270],
+        ...,
+        [ 0.0150,  0.0151, -0.0164,  ...,  0.0204, -0.0170,  0.0084],
+        [-0.0241,  0.0057, -0.0067,  ...,  0.0254,  0.0080, -0.0168],
+        [ 0.0233, -0.0070, -0.0070,  ..., -0.0066, -0.0253,  0.0031]],
+       device='cuda:0', requires_grad=True)

@@ -416,8 +416,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
+    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -444,7 +444,7 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 64
+    batch_size = 8
     epochs = 200
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
@@ -452,7 +452,7 @@ def main():
     # TODO: Set init_temp and init_unroll
     init_temp = 2
     init_unroll = 5
-    embed_dim = 300
+    embed_dim = 50
 
     dkt_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
     

@@ -1,0 +1,27 @@
+wandb: Currently logged in as: nashokkumar (ml4ed). Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.13.3
+wandb: Run data is saved locally in /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200739-6kv8ktrh
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run nips embed
+wandb: ⭐️ View project at https://wandb.ai/ml4ed/predict-graph
+wandb: 🚀 View run at https://wandb.ai/ml4ed/predict-graph/runs/6kv8ktrh
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py:433: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+wandb: Waiting for W&B process to finish... (success).
+wandb: - 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: / 0.001 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: - 0.110 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: \ 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: | 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: / 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: - 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: \ 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: | 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb: / 0.237 MB of 0.237 MB uploaded (0.000 MB deduped)wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:   Average training loss ████▇▇▇▇▇▆▆▆▆▅▅▅▅▄▄▄▄▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁
+wandb: Average validation loss ██▇▇▇▇▇▆▆▆▆▅▅▅▅▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁
+wandb:                   Epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇███
+wandb:     Validation Accuracy ▁▁▁▁▁▁▁▁▁▁██████████████████████████████
+wandb: 
+wandb: Run summary:
+wandb:   Average training loss 0.22102
+wandb: Average validation loss 0.10256
+wandb:                   Epoch 199
+wandb:     Validation Accuracy 0.05
+wandb: 
+wandb: Synced nips embed: https://wandb.ai/ml4ed/predict-graph/runs/6kv8ktrh
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20221003_200739-6kv8ktrh/logs

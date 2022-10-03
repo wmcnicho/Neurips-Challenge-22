@@ -1,0 +1,164 @@
+2022-10-03 20:03:56,393 INFO    StreamThr :188349 [internal.py:wandb_internal():88] W&B internal server running at pid: 188349, started at: 2022-10-03 20:03:56.387896
+2022-10-03 20:03:56,395 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: status
+2022-10-03 20:03:56,411 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: status
+2022-10-03 20:03:56,632 DEBUG   SenderThread:188349 [sender.py:send():301] send: header
+2022-10-03 20:03:56,633 INFO    WriterThread:188349 [datastore.py:open_for_write():75] open: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/run-1so1c41g.wandb
+2022-10-03 20:03:56,729 DEBUG   SenderThread:188349 [sender.py:send():301] send: run
+2022-10-03 20:03:58,180 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: check_version
+2022-10-03 20:03:58,206 INFO    SenderThread:188349 [dir_watcher.py:__init__():216] watching files in: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files
+2022-10-03 20:03:58,206 INFO    SenderThread:188349 [sender.py:_start_run_threads():912] run started: 1so1c41g with start time 1664827436.39426
+2022-10-03 20:03:58,206 DEBUG   SenderThread:188349 [sender.py:send():301] send: summary
+2022-10-03 20:03:58,233 INFO    SenderThread:188349 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-03 20:03:58,234 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: check_version
+2022-10-03 20:03:58,381 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: run_start
+2022-10-03 20:03:58,398 DEBUG   HandlerThread:188349 [meta.py:__init__():34] meta init
+2022-10-03 20:03:58,398 DEBUG   HandlerThread:188349 [meta.py:__init__():49] meta init done
+2022-10-03 20:03:58,398 DEBUG   HandlerThread:188349 [meta.py:probe():215] probe
+2022-10-03 20:03:58,409 DEBUG   HandlerThread:188349 [meta.py:_setup_git():205] setup git
+2022-10-03 20:03:58,500 DEBUG   HandlerThread:188349 [meta.py:_setup_git():212] setup git done
+2022-10-03 20:03:58,501 DEBUG   HandlerThread:188349 [meta.py:_save_pip():53] save pip
+2022-10-03 20:03:58,513 DEBUG   HandlerThread:188349 [meta.py:_save_pip():67] save pip done
+2022-10-03 20:03:58,515 DEBUG   HandlerThread:188349 [meta.py:_save_conda():74] save conda
+2022-10-03 20:03:59,213 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/requirements.txt
+2022-10-03 20:03:59,214 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/conda-environment.yaml
+2022-10-03 20:03:59,214 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/wandb-summary.json
+2022-10-03 20:04:02,064 DEBUG   HandlerThread:188349 [meta.py:_save_conda():84] save conda done
+2022-10-03 20:04:02,064 DEBUG   HandlerThread:188349 [meta.py:probe():253] probe done
+2022-10-03 20:04:02,100 DEBUG   SenderThread:188349 [sender.py:send():301] send: files
+2022-10-03 20:04:02,100 INFO    SenderThread:188349 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-10-03 20:04:02,124 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-03 20:04:02,125 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: stop_status
+2022-10-03 20:04:02,220 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/conda-environment.yaml
+2022-10-03 20:04:02,221 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/wandb-metadata.json
+2022-10-03 20:04:02,594 INFO    Thread-17 :188349 [upload_job.py:push():139] Uploaded file /scratch/gypsum-gpu189/3472443/tmpjux8t_zowandb/139rfqva-wandb-metadata.json
+2022-10-03 20:04:03,264 DEBUG   SenderThread:188349 [sender.py:send():301] send: telemetry
+2022-10-03 20:04:18,353 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-03 20:04:18,357 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: stop_status
+2022-10-03 20:04:27,132 DEBUG   SenderThread:188349 [sender.py:send():301] send: stats
+2022-10-03 20:04:27,318 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/config.yaml
+2022-10-03 20:04:33,477 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-03 20:04:33,478 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: stop_status
+2022-10-03 20:04:34,332 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log
+2022-10-03 20:04:36,339 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log
+2022-10-03 20:04:38,349 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log
+2022-10-03 20:04:39,999 DEBUG   SenderThread:188349 [sender.py:send():301] send: exit
+2022-10-03 20:04:40,000 INFO    SenderThread:188349 [sender.py:send_exit():437] handling exit code: 1
+2022-10-03 20:04:40,000 INFO    SenderThread:188349 [sender.py:send_exit():439] handling runtime: 41
+2022-10-03 20:04:40,000 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:40,004 INFO    SenderThread:188349 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-03 20:04:40,005 INFO    SenderThread:188349 [sender.py:send_exit():445] send defer
+2022-10-03 20:04:40,005 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:40,006 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,006 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 0
+2022-10-03 20:04:40,006 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,006 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 0
+2022-10-03 20:04:40,007 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 1
+2022-10-03 20:04:40,007 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,007 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 1
+2022-10-03 20:04:40,047 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,047 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 1
+2022-10-03 20:04:40,048 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 2
+2022-10-03 20:04:40,048 DEBUG   SenderThread:188349 [sender.py:send():301] send: stats
+2022-10-03 20:04:40,049 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,049 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 2
+2022-10-03 20:04:40,050 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,050 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 2
+2022-10-03 20:04:40,050 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 3
+2022-10-03 20:04:40,050 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,050 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 3
+2022-10-03 20:04:40,051 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,051 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 3
+2022-10-03 20:04:40,051 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 4
+2022-10-03 20:04:40,051 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,051 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 4
+2022-10-03 20:04:40,051 DEBUG   SenderThread:188349 [sender.py:send():301] send: summary
+2022-10-03 20:04:40,056 INFO    SenderThread:188349 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-03 20:04:40,057 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,057 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 4
+2022-10-03 20:04:40,057 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 5
+2022-10-03 20:04:40,057 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,057 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 5
+2022-10-03 20:04:40,058 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,058 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 5
+2022-10-03 20:04:40,058 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 6
+2022-10-03 20:04:40,058 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:40,058 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 6
+2022-10-03 20:04:40,058 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:40,058 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 6
+2022-10-03 20:04:40,107 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:40,353 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log
+2022-10-03 20:04:40,354 INFO    Thread-13 :188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/wandb-summary.json
+2022-10-03 20:04:41,662 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 7
+2022-10-03 20:04:41,662 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:41,663 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:41,664 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 7
+2022-10-03 20:04:41,665 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:41,665 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 7
+2022-10-03 20:04:41,665 INFO    SenderThread:188349 [dir_watcher.py:finish():362] shutting down directory watcher
+2022-10-03 20:04:41,766 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:42,360 INFO    SenderThread:188349 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log
+2022-10-03 20:04:42,364 INFO    SenderThread:188349 [dir_watcher.py:finish():392] scan: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files
+2022-10-03 20:04:42,367 INFO    SenderThread:188349 [dir_watcher.py:finish():406] scan save: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/conda-environment.yaml conda-environment.yaml
+2022-10-03 20:04:42,367 INFO    SenderThread:188349 [dir_watcher.py:finish():406] scan save: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/config.yaml config.yaml
+2022-10-03 20:04:42,368 INFO    SenderThread:188349 [dir_watcher.py:finish():406] scan save: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log output.log
+2022-10-03 20:04:42,381 INFO    SenderThread:188349 [dir_watcher.py:finish():406] scan save: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/requirements.txt requirements.txt
+2022-10-03 20:04:42,385 INFO    SenderThread:188349 [dir_watcher.py:finish():406] scan save: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/wandb-metadata.json wandb-metadata.json
+2022-10-03 20:04:42,386 INFO    SenderThread:188349 [dir_watcher.py:finish():406] scan save: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/wandb-summary.json wandb-summary.json
+2022-10-03 20:04:42,390 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 8
+2022-10-03 20:04:42,391 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:42,397 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:42,398 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 8
+2022-10-03 20:04:42,398 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:42,399 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 8
+2022-10-03 20:04:42,400 INFO    SenderThread:188349 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-03 20:04:42,511 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:42,511 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:42,614 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:42,615 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:42,717 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:42,717 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:42,820 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:42,820 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:42,825 INFO    Thread-21 :188349 [upload_job.py:push():139] Uploaded file /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/requirements.txt
+2022-10-03 20:04:42,844 INFO    Thread-22 :188349 [upload_job.py:push():139] Uploaded file /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/wandb-summary.json
+2022-10-03 20:04:42,849 INFO    Thread-19 :188349 [upload_job.py:push():139] Uploaded file /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/config.yaml
+2022-10-03 20:04:42,850 INFO    Thread-20 :188349 [upload_job.py:push():139] Uploaded file /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/output.log
+2022-10-03 20:04:42,885 INFO    Thread-18 :188349 [upload_job.py:push():139] Uploaded file /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/files/conda-environment.yaml
+2022-10-03 20:04:42,931 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:42,932 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:43,034 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:43,034 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:43,086 INFO    Thread-12 (_thread_body):188349 [sender.py:transition_state():458] send defer: 9
+2022-10-03 20:04:43,087 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:43,087 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 9
+2022-10-03 20:04:43,088 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:43,088 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 9
+2022-10-03 20:04:43,137 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:43,163 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 10
+2022-10-03 20:04:43,164 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:43,165 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:43,165 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 10
+2022-10-03 20:04:43,166 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:43,167 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 10
+2022-10-03 20:04:43,167 INFO    SenderThread:188349 [sender.py:transition_state():458] send defer: 11
+2022-10-03 20:04:43,168 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: defer
+2022-10-03 20:04:43,168 DEBUG   SenderThread:188349 [sender.py:send():301] send: final
+2022-10-03 20:04:43,169 INFO    HandlerThread:188349 [handler.py:handle_request_defer():161] handle defer: 11
+2022-10-03 20:04:43,169 DEBUG   SenderThread:188349 [sender.py:send():301] send: footer
+2022-10-03 20:04:43,169 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: defer
+2022-10-03 20:04:43,170 INFO    SenderThread:188349 [sender.py:send_request_defer():454] handle sender defer: 11
+2022-10-03 20:04:43,268 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-03 20:04:43,268 DEBUG   SenderThread:188349 [sender.py:send_request():315] send_request: poll_exit
+2022-10-03 20:04:43,269 INFO    SenderThread:188349 [file_pusher.py:join():173] waiting for file pusher
+2022-10-03 20:04:43,589 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: sampled_history
+2022-10-03 20:04:43,591 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: get_summary
+2022-10-03 20:04:43,592 INFO    MainThread:188349 [wandb_run.py:_footer_history_summary_info():3321] rendering history
+2022-10-03 20:04:43,592 INFO    MainThread:188349 [wandb_run.py:_footer_history_summary_info():3353] rendering summary
+2022-10-03 20:04:43,592 INFO    MainThread:188349 [wandb_run.py:_footer_sync_info():3277] logging synced files
+2022-10-03 20:04:43,593 DEBUG   HandlerThread:188349 [handler.py:handle_request():138] handle_request: shutdown
+2022-10-03 20:04:43,594 INFO    HandlerThread:188349 [handler.py:finish():807] shutting down handler
+2022-10-03 20:04:44,169 INFO    WriterThread:188349 [datastore.py:close():279] close: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221003_200355-1so1c41g/run-1so1c41g.wandb
+2022-10-03 20:04:44,487 INFO    SenderThread:188349 [sender.py:finish():1315] shutting down sender
+2022-10-03 20:04:44,488 INFO    SenderThread:188349 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-03 20:04:44,488 INFO    SenderThread:188349 [file_pusher.py:join():173] waiting for file pusher
+2022-10-03 20:04:44,598 INFO    MainThread:188349 [internal.py:handle_exit():78] Internal process exited

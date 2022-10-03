@@ -69,7 +69,7 @@ class PermutedGruCell(nn.Module):
         return hy
         
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature=100, unroll=1000):
+    def __init__(self, input_size, temperature=40, unroll=100):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
@@ -421,13 +421,13 @@ def main():
 
     # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
-    if device == 'cpu':
-        model_load = torch.load('nips_adaptive_temp_unroll.pt', map_location=torch.device('cpu'))
+    if device == torch.device('cpu'):
+        model_load = torch.load('nips_adaptive_small.pt', map_location=torch.device('cpu'))
     else:
-        model_load = torch.load('nips_adaptive_temp_unroll.pt')
+        model_load = torch.load('nips_adaptive_small.pt')
     sinkhorn_output = get_sinkhorn_output(model_load.gru.permuted_matrix.matrix)
     np_matrix = sinkhorn_output.cpu().detach().numpy()
-    np.save('sinkhorn_matrix_adaptive.npy', np_matrix)
+    np.save('sinkhorn_matrix_adaptive_small.npy', np_matrix)
     argmax_search = search_argmax(np_matrix)
     # argmax_list_row = np.argmax(np_matrix, axis=1)
     # argmax_list_col = np.argmax(np_matrix, axis=0)
@@ -436,7 +436,7 @@ def main():
     p_matrix = np.zeros(np_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
-    np.save('p_matrix_adaptive.npy', p_matrix)
+    np.save('p_matrix_adaptive_small.npy', p_matrix)
     # dkt_model.load('nips.pt')
     # for param in model_load.parameters():
     #     print(param)

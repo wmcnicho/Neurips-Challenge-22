@@ -1,0 +1,42 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py:433: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+PermutedDKT
+Number of questions:  1855
+Number of students:  6468
+Number of concepts: 1076
+Using batch size: 64
+Using batch size: 64
+Successfull in data prepration!
+Successfully loaded the optimizer
+======== Epoch 1 / 200 ========
+Training...
+Step: 0
+Parameter containing:
+tensor([[ 0.0175, -0.0046, -0.0012,  ..., -0.0100,  0.0239, -0.0273],
+        [-0.0265,  0.0188,  0.0179,  ...,  0.0295,  0.0167, -0.0190],
+        [ 0.0248, -0.0124, -0.0046,  ...,  0.0001,  0.0107,  0.0065],
+        ...,
+        [-0.0257,  0.0084, -0.0284,  ..., -0.0296, -0.0007, -0.0252],
+        [ 0.0004,  0.0232,  0.0189,  ...,  0.0131, -0.0070,  0.0143],
+        [ 0.0168, -0.0115,  0.0002,  ...,  0.0163, -0.0140,  0.0154]],
+       device='cuda:0', requires_grad=True)
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py", line 490, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py", line 475, in main
+    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py", line 346, in train
+    loss, acc = model(b_input_ids, b_labels, epoch_i+1)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py", line 235, in forward
+    hidden_states, _ = self.gru(input_embed, epoch)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py", line 168, in forward
+    hidden = self.cell(x, lower, hidden)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py", line 63, in forward
+    W_iz = self.W_iz * lower
+RuntimeError: CUDA out of memory. Tried to allocate 20.00 MiB (GPU 0; 47.46 GiB total capacity; 41.48 GiB already allocated; 17.44 MiB free; 46.60 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF

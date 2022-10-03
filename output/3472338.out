@@ -1,0 +1,13 @@
+Using device: cuda
+PermutedDKT
+Number of questions:  1855
+Number of students:  6468
+Number of concepts: 1076
+Using batch size: 4
+Using batch size: 4
+Successfull in data prepration!
+Successfully loaded the optimizer
+
+======== Epoch 1 / 200 ========
+Training...
+Step: 0

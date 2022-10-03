@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --gres gpu:5
+#SBATCH --gres gpu:2
 #SBATCH --cpus-per-task=3
 #SBATCH --mem=100000
 #SBATCH --mail-type=END
@@ -10,4 +10,4 @@
 #SBATCH -o /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/output/%j.out
 #SBATCH -e /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/error/%j.out
 
-python /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed.py
+python /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py
