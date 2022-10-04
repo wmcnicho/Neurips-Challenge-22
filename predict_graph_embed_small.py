@@ -19,12 +19,13 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
+run_name = 'nips embed'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
 # Start Wandb run
-wandb.init(project="predict-graph", entity="ml4ed", name='nips embed')
+wandb.init(project="predict-graph", entity="ml4ed", name=run_name)
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -407,6 +408,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         if avg_val_loss < least_val_loss:
             model_copy = copy.deepcopy(model)
             least_val_loss = avg_val_loss
+            torch.save(model_copy, os.path.join('saved_models', run_name+'.pt'))
 
         prev_val_loss = avg_val_loss
 
@@ -484,7 +486,7 @@ def main():
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
     # TODO: Save the model
-    torch.save(model, 'saved_models/nips_embed.pt')
+    torch.save(model, os.path.join('saved_models', run_name+'.pt'))
 
 
     with open('train_epochwise_loss.json', 'w') as infile:
