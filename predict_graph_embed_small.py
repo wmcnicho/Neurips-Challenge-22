@@ -51,7 +51,7 @@ class PermutedGruCell(nn.Module):
 
     def reset_parameters(self):
         for w in self.parameters():
-            nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+            nn.init.kaiming_uniform_(w, a=math.sqrt(self.hidden_size))
 
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
@@ -77,7 +77,7 @@ class PermutationMatrix(nn.Module):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
-        nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
+        nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
         self.lower = nn.Parameter(torch.tril(torch.ones(input_size, input_size)), requires_grad=False)
         # self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
 
@@ -184,10 +184,10 @@ class PermutedDKT(nn.Module):
         super().__init__()
         self.embed_dim = embed_dim
         self.embed_matrix = nn.Parameter(torch.empty(n_concepts, self.embed_dim, device=device))
-        nn.init.kaiming_uniform_(self.embed_matrix, a=math.sqrt(5))
+        nn.init.kaiming_uniform_(self.embed_matrix, a=math.sqrt(self.embed_dim))
         
         self.delta_matrix = nn.Parameter(torch.empty(n_concepts, self.embed_dim, device=device))
-        nn.init.kaiming_uniform_(self.delta_matrix, a=math.sqrt(5))
+        nn.init.kaiming_uniform_(self.delta_matrix, a=math.sqrt(self.embed_dim))
 
         self.embed_input = nn.Linear(self.embed_dim, n_concepts)
 
