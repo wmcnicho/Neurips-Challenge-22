@@ -9,3 +9,21 @@ wandb: 🚀 View run at https://wandb.ai/ml4ed/predict-graph/runs/1mama5g1
   labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
 /work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
   warnings.warn('Was asked to gather along dimension 0, but all '
+wandb: Waiting for W&B process to finish... (success).
+wandb: - 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: / 0.001 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: - 0.003 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: \ 2.104 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: | 8.307 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: / 15.675 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: - 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: \ 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: | 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: / 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: - 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: \ 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb: | 20.704 MB of 20.704 MB uploaded (0.000 MB deduped)wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:   Average training loss ███▇▇▆▆▅▅▄▄▄▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: Average validation loss ▂▂▁▁▁▁▁▁▂▂▂▂▃▃▄▄▄▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇████████
+wandb:                   Epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇███
+wandb:     Validation Accuracy ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb:   Average training loss 0.00545
+wandb: Average validation loss 0.02042
+wandb:                   Epoch 199
+wandb:     Validation Accuracy 0
+wandb: 
+wandb: Synced nips embed: https://wandb.ai/ml4ed/predict-graph/runs/1mama5g1
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20221003_204838-1mama5g1/logs

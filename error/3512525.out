@@ -1,0 +1,29 @@
+wandb: Currently logged in as: nashokkumar (ml4ed). Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.13.3
+wandb: Run data is saved locally in /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221005_024147-1l313t0l
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run nips embed 300
+wandb: ⭐️ View project at https://wandb.ai/ml4ed/predict-graph
+wandb: 🚀 View run at https://wandb.ai/ml4ed/predict-graph/runs/1l313t0l
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py:441: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+wandb: Waiting for W&B process to finish... (success).
+wandb: - 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: / 0.001 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: - 0.001 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: \ 0.211 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: | 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: / 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: - 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: \ 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: | 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: / 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: - 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb: \ 5.867 MB of 5.867 MB uploaded (0.000 MB deduped)wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:   Average training loss █▅▅▅▅▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁
+wandb: Average validation loss █▄▄▄▄▄▄▄▃▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                   Epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇███
+wandb:     Validation Accuracy ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: 
+wandb: Run summary:
+wandb:   Average training loss 0.01354
+wandb: Average validation loss 0.0135
+wandb:                   Epoch 49
+wandb:     Validation Accuracy 0
+wandb: 
+wandb: Synced nips embed 300: https://wandb.ai/ml4ed/predict-graph/runs/1l313t0l
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20221005_024147-1l313t0l/logs

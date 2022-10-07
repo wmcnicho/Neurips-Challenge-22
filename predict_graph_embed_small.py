@@ -19,7 +19,7 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
-run_name = 'nips embed'
+run_name = 'nips_embed_300_debug'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
@@ -198,7 +198,13 @@ class PermutedDKT(nn.Module):
         self.output_layer = nn.Linear(self.embed_dim+1, 1) 
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
 
-    def forward(self, concept_input, labels, epoch):
+    def forward(self, concept_input_untrans, labels_untrans, epoch):
+
+        print("batch input size:", labels_untrans.size(), 'Device:', labels_untrans.get_device())
+
+        concept_input = torch.transpose(concept_input_untrans, 0, 1).to(device)
+        labels = torch.transpose(labels_untrans, 0, 1).to(device)
+
         # Input shape is T (timestep - questions), B (batch size - num of students) 
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
@@ -244,14 +250,15 @@ class PermutedDKT(nn.Module):
         relevant_hidden_states = torch.gather(shifted_hidden_states, 2, concept_input.unsqueeze(2)) # [num_questions, num_students, 1]
         preoutput = torch.cat((rawembed, relevant_hidden_states), dim=2)
 
-        output = self.output_layer(preoutput)
+        output = (self.output_layer(preoutput)).squeeze()
+        print(output.shape, labels.squeeze().shape)
 
         # pred = (output > 0.0).float()
         # acc_raw = torch.mean((pred*mask == labels*mask).float())
         # acc_corrrection = len((mask==0).nonzero())/(mask.shape[0]*mask.shape[1])
         # acc = acc_raw - acc_corrrection
         acc = 0 
-        raw_loss = self.ce_loss(output.squeeze(), labels.float())
+        raw_loss = self.ce_loss(output, labels.squeeze().float()) # output.squeeze()
         loss_masked = (raw_loss * mask).mean()
         return loss_masked
 
@@ -296,7 +303,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
     train_file = open('train_debug_new.txt', 'w')
     epochswise_train_losses, epochwise_val_losses = [], []
     prev_val_loss, early_stop_ctr, early_stop_threshold, early_stop_patience = 0, 0, 5, 0.0001
-    least_val_loss = math.inf
+    least_val_loss, cur_least_epoch = math.inf, 0
 
     # For each epoch...
     for epoch_i in range(0, epochs):
@@ -332,9 +339,17 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             #   [0]: input ids 
             #   [1]: attention masks
             #   [2]: labels 
-            # TODO: Re-transpose to make the dimension (Q, S)
-            b_input_ids = torch.transpose(batch[0], 0, 1).to(device)
-            b_labels = torch.transpose(batch[1], 0, 1).to(device)
+
+            # TODO: Re-transpose to make the dimension (Q, S) (Don't do there) - Affects nn.DataParallel
+            # b_input_ids = torch.transpose(batch[0], 0, 1).to(device)
+            # b_labels = torch.transpose(batch[1], 0, 1).to(device)
+
+            b_input_ids = batch[0].to(device)
+            b_labels = batch[1].to(device)
+
+            # print('After loading data'.upper())
+            # for id in range(torch.cuda.device_count()):
+            #     print(torch.cuda.memory_summary(device=id))
 
             # Always clear any previously calculated gradients before performing a
             # backward pass. PyTorch doesn't do this automatically because 
@@ -347,8 +362,15 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             # have provided the `labels`.
             # The documentation for this `model` function is here: 
             # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
+
+            # NOTE: Before forward pass
             loss = model(b_input_ids, b_labels, epoch_i+1)
             print('step loss:', loss)
+
+            # NOTE: Right after forward pass 
+            print('After Forward Pass'.upper())
+            for id in range(torch.cuda.device_count()):
+                print(torch.cuda.memory_summary(device=id))
 
             # Accumulate the training loss over all of the batches so that we can
             # calculate the average loss at the end. `loss` is a Tensor containing a
@@ -361,6 +383,12 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
                 loss.mean().backward() # When using dataparallel
             else:
                 loss.backward()
+
+            # # NOTE: After backward gradient propogation
+            # print('After Backprop step'.upper())
+            # for id in range(torch.cuda.device_count()):
+            #     print(torch.cuda.memory_summary(device=id))
+            
 
             # Clip the norm of the gradients to 1.0.
             # This is to help prevent the "exploding gradients" problem.
@@ -384,8 +412,11 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         ############### Validation ###############
         tot_val_loss, tot_val_acc = 0, 0
         for valstep, valbatch in enumerate(val_dataloader):
-            b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
-            b_labels_val = torch.transpose(valbatch[1], 0, 1).to(device)
+            # b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
+            # b_labels_val = torch.transpose(valbatch[1], 0, 1).to(device)
+
+            b_input_ids_val = valbatch[0].to(device)
+            b_labels_val = valbatch[1].to(device)
             
             with torch.no_grad():
                 valloss = model(b_input_ids_val, b_labels_val, epoch_i+1)
@@ -406,6 +437,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         #         break 
         
         if avg_val_loss < least_val_loss:
+            cur_least_epoch = epoch_i
             model_copy = copy.deepcopy(model)
             least_val_loss = avg_val_loss
             torch.save(model_copy, os.path.join('saved_models', run_name+'.pt'))
@@ -416,6 +448,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         wandb.log({"Epoch": epoch_i,
             "Average training loss": avg_train_loss,
             "Average validation loss":avg_val_loss,
+            "cur_least_epoch":cur_least_epoch,
             "Validation Accuracy": 0})
     
     print('Least Validation loss:', least_val_loss)
@@ -424,8 +457,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/tmp_training_data_tensor.pt')
+    with open("serialized_torch/tmp_training_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -444,7 +477,7 @@ def main():
     labels_transpose = torch.transpose(labels, 0, 1)
     # TODO: Get train-validation set
     train_input, valid_input, train_label, valid_label = train_test_split(concept_inp_transpose, labels_transpose, 
-                                                            train_size=0.8, random_state=seed_val)
+                                                            train_size=0.5, random_state=seed_val)
     
     print("PermutedDKT")
     print("Number of questions: ", num_of_questions)
@@ -452,20 +485,23 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 64
-    epochs = 200
+    batch_size = 32
+    epochs = 10
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
 
     # TODO: Set init_temp and init_unroll
     init_temp = 2
     init_unroll = 5
-    embed_dim = 200
+    embed_dim = 300
 
     # dkt_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
     # TODO: Check DataParallel
     dkt_base_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
     dkt_model = nn.DataParallel(dkt_base_model)
+    print('After loading the model'.upper())
+    for id in range(torch.cuda.device_count()):
+        print(torch.cuda.memory_summary(device=id))
     # dkt_model = nn.DataParallel(PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim), device_ids = [0, 1]) # removing to(device)
     
     print("Successfull in data prepration!")

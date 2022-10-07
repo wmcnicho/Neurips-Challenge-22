@@ -1,0 +1,1 @@
+{"Epoch": 99, "Average training loss": 0.0127037939411111, "Average validation loss": 0.013789345340972597, "cur_least_epoch": 42, "Validation Accuracy": 0, "_timestamp": 1665002581.2138774, "_runtime": 27326.133253335953, "_step": 99, "_wandb": {"runtime": 27326}}

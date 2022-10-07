@@ -1,0 +1,66 @@
+2022-10-06 21:36:39,604 INFO    StreamThr :1307120 [internal.py:wandb_internal():88] W&B internal server running at pid: 1307120, started at: 2022-10-06 21:36:39.600558
+2022-10-06 21:36:39,606 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: status
+2022-10-06 21:36:39,610 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: status
+2022-10-06 21:36:39,611 DEBUG   SenderThread:1307120 [sender.py:send():301] send: header
+2022-10-06 21:36:39,612 INFO    WriterThread:1307120 [datastore.py:open_for_write():75] open: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/run-14bn76d8.wandb
+2022-10-06 21:36:39,680 DEBUG   SenderThread:1307120 [sender.py:send():301] send: run
+2022-10-06 21:36:39,960 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: check_version
+2022-10-06 21:36:39,982 INFO    SenderThread:1307120 [dir_watcher.py:__init__():216] watching files in: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files
+2022-10-06 21:36:39,982 INFO    SenderThread:1307120 [sender.py:_start_run_threads():912] run started: 14bn76d8 with start time 1665092199.596899
+2022-10-06 21:36:39,982 DEBUG   SenderThread:1307120 [sender.py:send():301] send: summary
+2022-10-06 21:36:39,990 INFO    SenderThread:1307120 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-06 21:36:39,991 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: check_version
+2022-10-06 21:36:40,092 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: run_start
+2022-10-06 21:36:40,104 DEBUG   HandlerThread:1307120 [meta.py:__init__():34] meta init
+2022-10-06 21:36:40,105 DEBUG   HandlerThread:1307120 [meta.py:__init__():49] meta init done
+2022-10-06 21:36:40,105 DEBUG   HandlerThread:1307120 [meta.py:probe():215] probe
+2022-10-06 21:36:40,112 DEBUG   HandlerThread:1307120 [meta.py:_setup_git():205] setup git
+2022-10-06 21:36:40,139 DEBUG   HandlerThread:1307120 [meta.py:_setup_git():212] setup git done
+2022-10-06 21:36:40,139 DEBUG   HandlerThread:1307120 [meta.py:_save_pip():53] save pip
+2022-10-06 21:36:40,144 DEBUG   HandlerThread:1307120 [meta.py:_save_pip():67] save pip done
+2022-10-06 21:36:40,145 DEBUG   HandlerThread:1307120 [meta.py:_save_conda():74] save conda
+2022-10-06 21:36:40,988 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/requirements.txt
+2022-10-06 21:36:40,989 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/wandb-summary.json
+2022-10-06 21:36:40,989 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/conda-environment.yaml
+2022-10-06 21:36:44,820 DEBUG   HandlerThread:1307120 [meta.py:_save_conda():84] save conda done
+2022-10-06 21:36:44,823 DEBUG   HandlerThread:1307120 [meta.py:probe():253] probe done
+2022-10-06 21:36:44,853 DEBUG   SenderThread:1307120 [sender.py:send():301] send: files
+2022-10-06 21:36:44,854 INFO    SenderThread:1307120 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-10-06 21:36:44,870 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:36:44,870 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:36:44,976 DEBUG   SenderThread:1307120 [sender.py:send():301] send: telemetry
+2022-10-06 21:36:44,995 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/conda-environment.yaml
+2022-10-06 21:36:44,995 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/wandb-metadata.json
+2022-10-06 21:36:45,321 INFO    Thread-17 :1307120 [upload_job.py:push():139] Uploaded file /scratch/gypsum-gpu183/3517513/tmpu_8w3yiswandb/1431slia-wandb-metadata.json
+2022-10-06 21:36:59,984 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:36:59,985 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:37:08,867 DEBUG   SenderThread:1307120 [sender.py:send():301] send: stats
+2022-10-06 21:37:10,055 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/config.yaml
+2022-10-06 21:37:14,063 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/output.log
+2022-10-06 21:37:15,096 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:37:15,097 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:37:16,066 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/output.log
+2022-10-06 21:37:17,070 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/output.log
+2022-10-06 21:37:19,078 INFO    Thread-13 :1307120 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221006_213639-14bn76d8/files/output.log
+2022-10-06 21:37:30,203 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:37:30,203 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:37:39,612 DEBUG   SenderThread:1307120 [sender.py:send():301] send: stats
+2022-10-06 21:37:45,335 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:37:45,336 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:38:00,445 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:38:00,446 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:38:10,307 DEBUG   SenderThread:1307120 [sender.py:send():301] send: stats
+2022-10-06 21:38:15,544 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:38:15,544 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:38:30,670 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:38:30,671 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:38:41,013 DEBUG   SenderThread:1307120 [sender.py:send():301] send: stats
+2022-10-06 21:38:45,792 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:38:45,793 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:39:00,891 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:39:00,892 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:39:12,166 DEBUG   SenderThread:1307120 [sender.py:send():301] send: stats
+2022-10-06 21:39:16,005 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:39:16,005 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
+2022-10-06 21:39:31,131 DEBUG   HandlerThread:1307120 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-06 21:39:31,131 DEBUG   SenderThread:1307120 [sender.py:send_request():315] send_request: stop_status
