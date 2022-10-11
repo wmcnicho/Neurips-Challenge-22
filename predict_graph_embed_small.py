@@ -19,7 +19,7 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
-run_name = 'nips_embed_300_debug'
+run_name = 'nips_embed_300_proper'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
@@ -137,7 +137,6 @@ class PermutationMatrix(nn.Module):
 
         return output_lower
 
-
 class PermutedGru(nn.Module):
     def __init__(
         self,
@@ -150,9 +149,24 @@ class PermutedGru(nn.Module):
         dropout=0.0,
     ):
         super().__init__()
-        self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
+        # self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
         self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
+        self.hidden_size = hidden_size
+        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        
+        nn.init.kaiming_normal_(self.W_ir, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_hr, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_iz, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_hz, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_in, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_hn, a=math.sqrt(hidden_size), mode='fan_out')
+
 
     def forward(self, input_, epoch, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
@@ -161,23 +175,76 @@ class PermutedGru(nn.Module):
         # lower = self.permuted_matrix(verbose=True)
         lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
         outputs = []
-        # print("Forwarding PermutedGru")
-        # print("input_: ", input_)
+        W_ir = self.W_ir * lower
+        W_hr = self.W_hr * lower
+        W_iz = self.W_iz * lower
+        W_hz = self.W_hz * lower
+        W_in = self.W_in * lower
+        W_hn = self.W_hn * lower
+        sigmoid = nn.Sigmoid()
+        tanh = nn.Tanh()
+        i = 0
         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-            # print("x: ", x.shape) #[2, 5]
-            # print("lower: ", lower)
-            hidden = self.cell(x, lower, hidden)
+            if hidden is None:
+                hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
+            z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
+            n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
+            hidden = hidden * z_t + (1.0 - z_t) * n_t
+            i = i + 1
+            # if (i % 400 == 0):
+            #     print("hidden state:" + str(i))
+            #     for deviceid in range(torch.cuda.device_count()):
+            #         print("memory :", str(deviceid), torch.cuda.memory_summary(device=deviceid, abbreviated=True))
             outputs.append(hidden.clone())
+            # hidden = self.cell(x, lower, hidden)
+            # outputs.append(hidden.clone().detach())
 
         hidden_states = torch.stack(outputs)  # T, B, H
-        last_states = []
-        if lengths is None:
-            lengths = [len(input_)] * len(input_[0])
-        for idx, l in enumerate(lengths):
-            last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
-        last_states = torch.stack(last_states) # [num_students, num_constructs]
-        return hidden_states, last_states
+        return hidden_states
+
+
+# class PermutedGru(nn.Module):
+#     def __init__(
+#         self,
+#         init_temp, 
+#         init_unroll,
+#         hidden_size,
+#         bias=False,
+#         num_layers=1,
+#         batch_first=False,
+#         dropout=0.0,
+#     ):
+#         super().__init__()
+#         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
+#         self.batch_first = batch_first
+#         self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
+
+#     def forward(self, input_, epoch, lengths=None, hidden=None):
+#         # input_ is of dimensionalty (T, B, hidden_size, ...)
+#         # lenghths is B,
+#         dim = 1 if self.batch_first else 0
+#         # lower = self.permuted_matrix(verbose=True)
+#         lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
+#         outputs = []
+#         # print("Forwarding PermutedGru")
+#         # print("input_: ", input_)
+#         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
+#         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
+#             # print("x: ", x.shape) #[2, 5]
+#             # print("lower: ", lower)
+#             hidden = self.cell(x, lower, hidden)
+#             outputs.append(hidden.clone())
+
+#         hidden_states = torch.stack(outputs)  # T, B, H
+#         last_states = []
+#         if lengths is None:
+#             lengths = [len(input_)] * len(input_[0])
+#         for idx, l in enumerate(lengths):
+#             last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
+#         last_states = torch.stack(last_states) # [num_students, num_constructs]
+#         return hidden_states, last_states
 
 
 class PermutedDKT(nn.Module):
@@ -232,7 +299,7 @@ class PermutedDKT(nn.Module):
 
 
         # TODO: Create a mask (0 when the input is 0)
-        mask = torch.ones(T, B, device=device)
+        mask = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
         zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
         zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
         for r, c in zip(zero_index_row, zero_index_col):
@@ -241,7 +308,7 @@ class PermutedDKT(nn.Module):
 
 
         labels = torch.clamp(labels, min=0)
-        hidden_states, _ = self.gru(input_embed, epoch)
+        hidden_states = self.gru(input_embed, epoch) # initially hidden_states, _
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) 
@@ -251,7 +318,6 @@ class PermutedDKT(nn.Module):
         preoutput = torch.cat((rawembed, relevant_hidden_states), dim=2)
 
         output = (self.output_layer(preoutput)).squeeze()
-        print(output.shape, labels.squeeze().shape)
 
         # pred = (output > 0.0).float()
         # acc_raw = torch.mean((pred*mask == labels*mask).float())
@@ -457,8 +523,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/tmp_training_data_tensor.pt')
-    with open("serialized_torch/tmp_training_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
+    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -477,7 +543,7 @@ def main():
     labels_transpose = torch.transpose(labels, 0, 1)
     # TODO: Get train-validation set
     train_input, valid_input, train_label, valid_label = train_test_split(concept_inp_transpose, labels_transpose, 
-                                                            train_size=0.5, random_state=seed_val)
+                                                            train_size=0.8, random_state=seed_val)
     
     print("PermutedDKT")
     print("Number of questions: ", num_of_questions)
@@ -485,8 +551,8 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 32
-    epochs = 10
+    batch_size = 64
+    epochs = 100
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
 

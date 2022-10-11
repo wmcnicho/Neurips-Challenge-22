@@ -1,0 +1,43 @@
+wandb: Currently logged in as: nashokkumar (ml4ed). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.13.4 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.13.3
+wandb: Run data is saved locally in /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221010_000741-4zv51g42
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run nips_embed_300_proper
+wandb: ⭐️ View project at https://wandb.ai/ml4ed/predict-graph
+wandb: 🚀 View run at https://wandb.ai/ml4ed/predict-graph/runs/4zv51g42
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py:540: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 604, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 589, in main
+    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 433, in train
+    loss = model(b_input_ids, b_labels, epoch_i+1)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 168, in forward
+    outputs = self.parallel_apply(replicas, inputs, kwargs)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 178, in parallel_apply
+    return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py", line 86, in parallel_apply
+    output.reraise()
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/_utils.py", line 461, in reraise
+    raise exception
+TypeError: Caught TypeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py", line 61, in _worker
+    output = module(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 302, in forward
+    mask = nn.Parameter(torch.tril(torch.ones(T, B), requires_grad=False))
+TypeError: tril() got an unexpected keyword argument 'requires_grad'
+
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: - 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: \ 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: | 0.001 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: / 0.001 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: - 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: \ 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: | 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: / 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: - 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: \ 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: | 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb:                                                                                
+wandb: Synced nips_embed_300_proper: https://wandb.ai/ml4ed/predict-graph/runs/4zv51g42
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20221010_000741-4zv51g42/logs

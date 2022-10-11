@@ -1,0 +1,16 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py:542: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+PermutedDKT
+Number of questions:  807
+Number of students:  4
+Number of concepts: 636
+Using batch size: 32
+Using batch size: 32
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 606, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 568, in main
+    dkt_base_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 263, in __init__
+    self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False)
+TypeError: PermutedGru.__init__() missing 1 required positional argument: 'alpha'

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import json 
 
-p_matrix = np.load('p_matrix_embed_300_new.npy') # NOTE: assuming perfect p-matrix
+p_matrix = np.load('p_matrix_embed_300_proper.npy') # NOTE: assuming perfect p-matrix
 
 # TODO: change the p-matrix to be ideal (row-wise argmax until the index has not been encountered)
 
@@ -38,4 +38,4 @@ for i, row_cons in enumerate(test_constructs):
             solution_adj_matrix[i][j] = 1 # construct j depends on construct i
 
 solution_adj_matrix_arr = np.array(solution_adj_matrix).astype(int)
-np.save('adj_matrix_embed_300_new.npy', solution_adj_matrix_arr)
+np.save('adj_matrix_embed_300_proper.npy', solution_adj_matrix_arr)

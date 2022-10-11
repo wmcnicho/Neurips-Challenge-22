@@ -1,0 +1,238 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py:540: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+PermutedDKT
+Number of questions:  1855
+Number of students:  6468
+Number of concepts: 1076
+Using batch size: 64
+Using batch size: 64
+AFTER LOADING THE MODEL
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 0                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |   39973 KB |   39973 KB |   39973 KB |       0 B  |
+|       from large pool |   39967 KB |   39967 KB |   39967 KB |       0 B  |
+|       from small pool |       6 KB |       6 KB |       6 KB |       0 B  |
+|---------------------------------------------------------------------------|
+| Active memory         |   39973 KB |   39973 KB |   39973 KB |       0 B  |
+|       from large pool |   39967 KB |   39967 KB |   39967 KB |       0 B  |
+|       from small pool |       6 KB |       6 KB |       6 KB |       0 B  |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |   63488 KB |   63488 KB |   63488 KB |       0 B  |
+|       from large pool |   61440 KB |   61440 KB |   61440 KB |       0 B  |
+|       from small pool |    2048 KB |    2048 KB |    2048 KB |       0 B  |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |   23514 KB |   23516 KB |   53176 KB |   29662 KB |
+|       from large pool |   21473 KB |   21473 KB |   51133 KB |   29660 KB |
+|       from small pool |    2041 KB |    2043 KB |    2043 KB |       2 KB |
+|---------------------------------------------------------------------------|
+| Allocations           |      14    |      14    |      14    |       0    |
+|       from large pool |      11    |      11    |      11    |       0    |
+|       from small pool |       3    |       3    |       3    |       0    |
+|---------------------------------------------------------------------------|
+| Active allocs         |      14    |      14    |      14    |       0    |
+|       from large pool |      11    |      11    |      11    |       0    |
+|       from small pool |       3    |       3    |       3    |       0    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |       4    |       4    |       4    |       0    |
+|       from large pool |       3    |       3    |       3    |       0    |
+|       from small pool |       1    |       1    |       1    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |       4    |       4    |       4    |       0    |
+|       from large pool |       3    |       3    |       3    |       0    |
+|       from small pool |       1    |       1    |       1    |       0    |
+|---------------------------------------------------------------------------|
+| Oversize allocations  |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Oversize GPU segments |       0    |       0    |       0    |       0    |
+|===========================================================================|
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 1                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from large pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from small pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|---------------------------------------------------------------------------|
+| Active memory         |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from large pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from small pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from large pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from small pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from large pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|       from small pool |       0 B  |       0 B  |       0 B  |       0 B  |
+|---------------------------------------------------------------------------|
+| Allocations           |       0    |       0    |       0    |       0    |
+|       from large pool |       0    |       0    |       0    |       0    |
+|       from small pool |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Active allocs         |       0    |       0    |       0    |       0    |
+|       from large pool |       0    |       0    |       0    |       0    |
+|       from small pool |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |       0    |       0    |       0    |       0    |
+|       from large pool |       0    |       0    |       0    |       0    |
+|       from small pool |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |       0    |       0    |       0    |       0    |
+|       from large pool |       0    |       0    |       0    |       0    |
+|       from small pool |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Oversize allocations  |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Oversize GPU segments |       0    |       0    |       0    |       0    |
+|===========================================================================|
+Successfull in data prepration!
+Successfully loaded the optimizer
+======== Epoch 1 / 10 ========
+Training...
+Step: 0
+batch input size:batch input size:  torch.Size([32, 1855])torch.Size([32, 1855])  Device:Device:  01
+tensor([[ 0.0017, -0.0003,  0.0018,  ..., -0.0019, -0.0019,  0.0009],
+        [ 0.0001, -0.0014, -0.0009,  ..., -0.0007,  0.0002,  0.0012],
+        [ 0.0010, -0.0005,  0.0022,  ..., -0.0010, -0.0009, -0.0017],
+        ...,
+        [ 0.0022, -0.0012, -0.0018,  ..., -0.0013,  0.0007, -0.0019],
+        [ 0.0021, -0.0010,  0.0016,  ..., -0.0002,  0.0019,  0.0018],
+        [-0.0016, -0.0019, -0.0018,  ...,  0.0016, -0.0013, -0.0004]],
+       device='cuda:1', grad_fn=<BroadcastBackward>)
+tensor([[ 0.0017, -0.0003,  0.0018,  ..., -0.0019, -0.0019,  0.0009],
+        [ 0.0001, -0.0014, -0.0009,  ..., -0.0007,  0.0002,  0.0012],
+        [ 0.0010, -0.0005,  0.0022,  ..., -0.0010, -0.0009, -0.0017],
+        ...,
+        [ 0.0022, -0.0012, -0.0018,  ..., -0.0013,  0.0007, -0.0019],
+        [ 0.0021, -0.0010,  0.0016,  ..., -0.0002,  0.0019,  0.0018],
+        [-0.0016, -0.0019, -0.0018,  ...,  0.0016, -0.0013, -0.0004]],
+       device='cuda:0', grad_fn=<BroadcastBackward>)
+/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
+  warnings.warn('Was asked to gather along dimension 0, but all '
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 604, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 589, in main
+    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 433, in train
+    loss = model(b_input_ids, b_labels, epoch_i+1)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 168, in forward
+    outputs = self.parallel_apply(replicas, inputs, kwargs)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 178, in parallel_apply
+    return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py", line 86, in parallel_apply
+    output.reraise()
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/_utils.py", line 461, in reraise
+    raise exception
+RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py", line 61, in _worker
+    output = module(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_small.py", line 303, in forward
+    zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+step loss: tensor([0.0314, 0.0023], device='cuda:0', grad_fn=<GatherBackward>)
+AFTER FORWARD PASS
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 0                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |    2943 MB |    3325 MB |    6108 MB |    3165 MB |
+|       from large pool |    1235 MB |    1615 MB |    1716 MB |     481 MB |
+|       from small pool |    1708 MB |    1710 MB |    4391 MB |    2683 MB |
+|---------------------------------------------------------------------------|
+| Active memory         |    2943 MB |    3325 MB |    6108 MB |    3165 MB |
+|       from large pool |    1235 MB |    1615 MB |    1716 MB |     481 MB |
+|       from small pool |    1708 MB |    1710 MB |    4391 MB |    2683 MB |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |    3370 MB |    3370 MB |    3370 MB |       0 B  |
+|       from large pool |    1634 MB |    1634 MB |    1634 MB |       0 B  |
+|       from small pool |    1736 MB |    1736 MB |    1736 MB |       0 B  |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |   47907 KB |   47907 KB |    5175 MB |    5128 MB |
+|       from large pool |   19341 KB |   31025 KB |     221 MB |     202 MB |
+|       from small pool |   28565 KB |   28670 KB |    4953 MB |    4925 MB |
+|---------------------------------------------------------------------------|
+| Allocations           |   13042    |   13052    |   33539    |   20497    |
+|       from large pool |      36    |      39    |      51    |      15    |
+|       from small pool |   13006    |   13013    |   33488    |   20482    |
+|---------------------------------------------------------------------------|
+| Active allocs         |   13042    |   13052    |   33539    |   20497    |
+|       from large pool |      36    |      39    |      51    |      15    |
+|       from small pool |   13006    |   13013    |   33488    |   20482    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |     884    |     884    |     884    |       0    |
+|       from large pool |      16    |      16    |      16    |       0    |
+|       from small pool |     868    |     868    |     868    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |     880    |     881    |    8209    |    7329    |
+|       from large pool |       8    |       8    |      13    |       5    |
+|       from small pool |     872    |     873    |    8196    |    7324    |
+|---------------------------------------------------------------------------|
+| Oversize allocations  |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Oversize GPU segments |       0    |       0    |       0    |       0    |
+|===========================================================================|
+|===========================================================================|
+|                  PyTorch CUDA memory summary, device ID 1                 |
+|---------------------------------------------------------------------------|
+|            CUDA OOMs: 0            |        cudaMalloc retries: 0         |
+|===========================================================================|
+|        Metric         | Cur Usage  | Peak Usage | Tot Alloc  | Tot Freed  |
+|---------------------------------------------------------------------------|
+| Allocated memory      |    2943 MB |    3325 MB |    6069 MB |    3126 MB |
+|       from large pool |    1236 MB |    1616 MB |    1678 MB |     442 MB |
+|       from small pool |    1706 MB |    1709 MB |    4390 MB |    2684 MB |
+|---------------------------------------------------------------------------|
+| Active memory         |    2943 MB |    3325 MB |    6069 MB |    3126 MB |
+|       from large pool |    1236 MB |    1616 MB |    1678 MB |     442 MB |
+|       from small pool |    1706 MB |    1709 MB |    4390 MB |    2684 MB |
+|---------------------------------------------------------------------------|
+| GPU reserved memory   |    3372 MB |    3372 MB |    3372 MB |       0 B  |
+|       from large pool |    1636 MB |    1636 MB |    1636 MB |       0 B  |
+|       from small pool |    1736 MB |    1736 MB |    1736 MB |       0 B  |
+|---------------------------------------------------------------------------|
+| Non-releasable memory |   47766 KB |   49117 KB |    5099 MB |    5053 MB |
+|       from large pool |   19852 KB |   27012 KB |     147 MB |     128 MB |
+|       from small pool |   27914 KB |   29265 KB |    4952 MB |    4924 MB |
+|---------------------------------------------------------------------------|
+| Allocations           |   13030    |   13042    |   33503    |   20473    |
+|       from large pool |      28    |      31    |      40    |      12    |
+|       from small pool |   13002    |   13011    |   33463    |   20461    |
+|---------------------------------------------------------------------------|
+| Active allocs         |   13030    |   13042    |   33503    |   20473    |
+|       from large pool |      28    |      31    |      40    |      12    |
+|       from small pool |   13002    |   13011    |   33463    |   20461    |
+|---------------------------------------------------------------------------|
+| GPU reserved segments |     885    |     885    |     885    |       0    |
+|       from large pool |      17    |      17    |      17    |       0    |
+|       from small pool |     868    |     868    |     868    |       0    |
+|---------------------------------------------------------------------------|
+| Non-releasable allocs |     877    |     879    |    8194    |    7317    |
+|       from large pool |       7    |       7    |      11    |       4    |
+|       from small pool |     870    |     872    |    8183    |    7313    |
+|---------------------------------------------------------------------------|
+| Oversize allocations  |       0    |       0    |       0    |       0    |
+|---------------------------------------------------------------------------|
+| Oversize GPU segments |       0    |       0    |       0    |       0    |
+|===========================================================================|
+Step: 1
+batch input size: torch.Size([32, 1855]) Device: 0
+batch input size: torch.Size([32, 1855]) Device: 1
