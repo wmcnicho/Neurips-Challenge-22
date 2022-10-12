@@ -1,0 +1,132 @@
+2022-10-12 03:09:13,980 INFO    StreamThr :2027029 [internal.py:wandb_internal():88] W&B internal server running at pid: 2027029, started at: 2022-10-12 03:09:13.976670
+2022-10-12 03:09:13,987 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: status
+2022-10-12 03:09:14,013 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: status
+2022-10-12 03:09:14,017 DEBUG   SenderThread:2027029 [sender.py:send():301] send: header
+2022-10-12 03:09:14,018 INFO    WriterThread:2027029 [datastore.py:open_for_write():75] open: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/run-got0kkru.wandb
+2022-10-12 03:09:14,032 DEBUG   SenderThread:2027029 [sender.py:send():301] send: run
+2022-10-12 03:09:14,333 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: check_version
+2022-10-12 03:09:14,346 INFO    SenderThread:2027029 [dir_watcher.py:__init__():216] watching files in: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files
+2022-10-12 03:09:14,346 INFO    SenderThread:2027029 [sender.py:_start_run_threads():912] run started: got0kkru with start time 1665544153.971599
+2022-10-12 03:09:14,348 DEBUG   SenderThread:2027029 [sender.py:send():301] send: summary
+2022-10-12 03:09:14,353 INFO    SenderThread:2027029 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-12 03:09:14,364 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: check_version
+2022-10-12 03:09:14,483 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: run_start
+2022-10-12 03:09:14,506 DEBUG   HandlerThread:2027029 [meta.py:__init__():34] meta init
+2022-10-12 03:09:14,507 DEBUG   HandlerThread:2027029 [meta.py:__init__():49] meta init done
+2022-10-12 03:09:14,508 DEBUG   HandlerThread:2027029 [meta.py:probe():215] probe
+2022-10-12 03:09:14,515 DEBUG   HandlerThread:2027029 [meta.py:_setup_git():205] setup git
+2022-10-12 03:09:14,544 DEBUG   HandlerThread:2027029 [meta.py:_setup_git():212] setup git done
+2022-10-12 03:09:14,545 DEBUG   HandlerThread:2027029 [meta.py:_save_pip():53] save pip
+2022-10-12 03:09:14,550 DEBUG   HandlerThread:2027029 [meta.py:_save_pip():67] save pip done
+2022-10-12 03:09:14,550 DEBUG   HandlerThread:2027029 [meta.py:_save_conda():74] save conda
+2022-10-12 03:09:15,361 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/requirements.txt
+2022-10-12 03:09:15,362 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/conda-environment.yaml
+2022-10-12 03:09:15,363 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/wandb-summary.json
+2022-10-12 03:09:17,229 DEBUG   HandlerThread:2027029 [meta.py:_save_conda():84] save conda done
+2022-10-12 03:09:17,229 DEBUG   HandlerThread:2027029 [meta.py:probe():253] probe done
+2022-10-12 03:09:17,318 DEBUG   SenderThread:2027029 [sender.py:send():301] send: files
+2022-10-12 03:09:17,318 INFO    SenderThread:2027029 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-10-12 03:09:17,517 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:09:17,520 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:09:17,532 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/conda-environment.yaml
+2022-10-12 03:09:17,533 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/wandb-metadata.json
+2022-10-12 03:09:18,106 DEBUG   SenderThread:2027029 [sender.py:send():301] send: telemetry
+2022-10-12 03:09:18,533 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_created():275] file/dir created: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/output.log
+2022-10-12 03:09:18,624 INFO    Thread-23 :2027029 [upload_job.py:push():139] Uploaded file /scratch/login/tmp6gpq8tilwandb/1l7q1hvd-wandb-metadata.json
+2022-10-12 03:09:20,606 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/output.log
+2022-10-12 03:09:33,213 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:09:33,214 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:09:42,830 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:09:44,577 INFO    Thread-19 :2027029 [dir_watcher.py:_on_file_modified():292] file/dir modified: /work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/wandb/run-20221012_030913-got0kkru/files/config.yaml
+2022-10-12 03:09:48,323 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:09:48,323 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:10:03,424 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:10:03,425 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:10:13,016 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:10:18,560 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:10:18,560 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:10:33,682 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:10:33,682 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:10:43,240 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:10:48,796 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:10:48,797 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:11:03,908 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:11:03,908 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:11:13,378 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:11:19,020 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:11:19,021 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:11:34,140 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:11:34,141 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:11:43,516 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:11:49,246 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:11:49,247 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:12:04,354 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:12:04,354 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:12:13,677 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:12:19,462 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:12:19,462 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:12:34,576 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:12:34,576 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:12:43,808 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:12:49,700 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:12:49,700 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:13:04,830 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:13:04,831 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:13:13,945 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:13:19,942 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:13:19,942 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:13:35,048 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:13:35,049 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:13:44,093 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:13:50,157 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:13:50,157 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:14:05,288 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:14:05,289 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:14:14,240 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:14:20,410 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:14:20,411 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:14:35,521 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:14:35,522 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:14:44,371 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:14:50,635 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:14:50,636 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:15:05,768 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:15:05,769 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:15:14,509 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:15:20,950 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:15:20,950 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:15:36,056 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:15:36,056 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:15:44,654 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:15:51,171 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:15:51,172 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:16:06,298 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:16:06,298 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:16:14,797 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:16:21,414 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:16:21,414 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:16:36,524 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:16:36,525 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:16:44,924 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:16:51,627 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:16:51,627 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:17:06,728 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:17:06,729 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:17:15,051 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:17:21,841 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:17:21,842 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:17:36,961 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:17:36,962 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:17:45,176 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:17:52,073 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:17:52,073 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:18:07,178 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:18:07,179 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:18:15,315 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:18:22,289 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:18:22,290 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:18:37,409 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:18:37,410 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status
+2022-10-12 03:18:45,451 DEBUG   SenderThread:2027029 [sender.py:send():301] send: stats
+2022-10-12 03:18:52,529 DEBUG   HandlerThread:2027029 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-12 03:18:52,529 DEBUG   SenderThread:2027029 [sender.py:send_request():315] send_request: stop_status

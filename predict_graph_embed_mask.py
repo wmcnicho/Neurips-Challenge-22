@@ -19,12 +19,13 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
+run_name = 'nips_embed_300_mask_debug'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
 # Start Wandb run
-wandb.init(project="predict-graph", entity="ml4ed", name='adaptive temp-unroll small')
+wandb.init(project="predict-graph", entity="ml4ed", name=run_name)
 
 class PermutedGruCell(nn.Module):
     def __init__(self, hidden_size, bias):
@@ -51,7 +52,7 @@ class PermutedGruCell(nn.Module):
 
     def reset_parameters(self):
         for w in self.parameters():
-            nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+            nn.init.kaiming_uniform_(w, a=math.sqrt(self.hidden_size))
 
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
@@ -77,8 +78,9 @@ class PermutationMatrix(nn.Module):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
-        nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-        self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
+        nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
+        self.lower = nn.Parameter(torch.tril(torch.ones(input_size, input_size)), requires_grad=False)
+        # self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
 
     def forward(self, epoch, verbose=False):
         # TODO: update temperature and unroll
@@ -135,7 +137,6 @@ class PermutationMatrix(nn.Module):
 
         return output_lower
 
-
 class PermutedGru(nn.Module):
     def __init__(
         self,
@@ -148,9 +149,24 @@ class PermutedGru(nn.Module):
         dropout=0.0,
     ):
         super().__init__()
-        self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
+        # self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
         self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
+        self.hidden_size = hidden_size
+        self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
+        
+        nn.init.kaiming_normal_(self.W_ir, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_hr, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_iz, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_hz, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_in, a=math.sqrt(hidden_size), mode='fan_out')
+        nn.init.kaiming_normal_(self.W_hn, a=math.sqrt(hidden_size), mode='fan_out')
+
 
     def forward(self, input_, epoch, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
@@ -159,34 +175,103 @@ class PermutedGru(nn.Module):
         # lower = self.permuted_matrix(verbose=True)
         lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
         outputs = []
-        # print("Forwarding PermutedGru")
-        # print("input_: ", input_)
+        W_ir = self.W_ir * lower
+        W_hr = self.W_hr * lower
+        W_iz = self.W_iz * lower
+        W_hz = self.W_hz * lower
+        W_in = self.W_in * lower
+        W_hn = self.W_hn * lower
+        sigmoid = nn.Sigmoid()
+        tanh = nn.Tanh()
+        i = 0
         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-            # print("x: ", x.shape) #[2, 5]
-            # print("lower: ", lower)
-            hidden = self.cell(x, lower, hidden)
+            if hidden is None:
+                hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
+            r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
+            z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
+            n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
+            hidden = hidden * z_t + (1.0 - z_t) * n_t
+            i = i + 1
+            # if (i % 400 == 0):
+            #     print("hidden state:" + str(i))
+            #     for deviceid in range(torch.cuda.device_count()):
+            #         print("memory :", str(deviceid), torch.cuda.memory_summary(device=deviceid, abbreviated=True))
             outputs.append(hidden.clone())
+            # hidden = self.cell(x, lower, hidden)
+            # outputs.append(hidden.clone().detach())
 
         hidden_states = torch.stack(outputs)  # T, B, H
-        last_states = []
-        if lengths is None:
-            lengths = [len(input_)] * len(input_[0])
-        for idx, l in enumerate(lengths):
-            last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
-        last_states = torch.stack(last_states) # [num_students, num_constructs]
-        return hidden_states, last_states
+        return hidden_states
+
+
+# class PermutedGru(nn.Module):
+#     def __init__(
+#         self,
+#         init_temp, 
+#         init_unroll,
+#         hidden_size,
+#         bias=False,
+#         num_layers=1,
+#         batch_first=False,
+#         dropout=0.0,
+#     ):
+#         super().__init__()
+#         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
+#         self.batch_first = batch_first
+#         self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
+
+#     def forward(self, input_, epoch, lengths=None, hidden=None):
+#         # input_ is of dimensionalty (T, B, hidden_size, ...)
+#         # lenghths is B,
+#         dim = 1 if self.batch_first else 0
+#         # lower = self.permuted_matrix(verbose=True)
+#         lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
+#         outputs = []
+#         # print("Forwarding PermutedGru")
+#         # print("input_: ", input_)
+#         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
+#         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
+#             # print("x: ", x.shape) #[2, 5]
+#             # print("lower: ", lower)
+#             hidden = self.cell(x, lower, hidden)
+#             outputs.append(hidden.clone())
+
+#         hidden_states = torch.stack(outputs)  # T, B, H
+#         last_states = []
+#         if lengths is None:
+#             lengths = [len(input_)] * len(input_[0])
+#         for idx, l in enumerate(lengths):
+#             last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
+#         last_states = torch.stack(last_states) # [num_students, num_constructs]
+#         return hidden_states, last_states
 
 
 class PermutedDKT(nn.Module):
-    def __init__(self, init_temp, init_unroll, n_concepts):
+    def __init__(self, init_temp, init_unroll, n_concepts, embed_dim):
         super().__init__()
+        self.embed_dim = embed_dim
+        self.embed_matrix = nn.Parameter(torch.empty(n_concepts, self.embed_dim, device=device))
+        nn.init.kaiming_uniform_(self.embed_matrix, a=math.sqrt(self.embed_dim))
+        
+        self.delta_matrix = nn.Parameter(torch.empty(n_concepts, self.embed_dim, device=device))
+        nn.init.kaiming_uniform_(self.delta_matrix, a=math.sqrt(self.embed_dim))
+
+        self.embed_input = nn.Linear(self.embed_dim, n_concepts)
+
         self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False)
         self.n_concepts = n_concepts
-        self.output_layer = nn.Linear(1, 1) 
+        # self.output_layer = nn.Linear(self.embed_dim+self.n_concepts, 1) 
+        self.output_layer = nn.Linear(self.embed_dim+1, 1) 
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
 
-    def forward(self, concept_input, labels, epoch):
+    def forward(self, concept_input_untrans, labels_untrans, epoch):
+
+        print("batch input size:", labels_untrans.size(), 'Device:', labels_untrans.get_device())
+
+        concept_input = torch.transpose(concept_input_untrans, 0, 1).to(device)
+        labels = torch.transpose(labels_untrans, 0, 1).to(device)
+
         # Input shape is T (timestep - questions), B (batch size - num of students) 
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
@@ -197,6 +282,7 @@ class PermutedDKT(nn.Module):
         # print("Number of concepts:", self.n_concepts)
         # print("Concept input: ", concept_input)
         input = torch.zeros(T, B, self.n_concepts, device=device)
+
         # print("Before input\n: ", input)
         # Unsqueeze concept_input & lables
         # [T,B] -> [T,B,1], Put 1 at index 2
@@ -205,10 +291,16 @@ class PermutedDKT(nn.Module):
 
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
 
+        # TODO: Transform input to account for construct embeddings
+        rawembed = torch.matmul(abs(input), self.embed_matrix)
+        rawdelta = torch.matmul(input, self.delta_matrix)
+        preembed = rawembed + rawdelta
+        input_embed = self.embed_input(preembed)
+
+
         # TODO: Create a mask (0 when the input is 0)
         mask_ones = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
         mask = mask_ones - (labels==0).long()
-        # mask = torch.ones(T, B, device=device)
         # zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
         # zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
         # for r, c in zip(zero_index_row, zero_index_col):
@@ -217,19 +309,25 @@ class PermutedDKT(nn.Module):
 
 
         labels = torch.clamp(labels, min=0)
-        hidden_states, _ = self.gru(input, epoch)
+        hidden_states = self.gru(input_embed, epoch) # initially hidden_states, _
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
-        shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) # NOTE: Why this?
-        output = self.output_layer(shifted_hidden_states.unsqueeze(3)).squeeze(3)
-        output = torch.gather(output, 2, concept_input.unsqueeze(2)).squeeze(2) # [num_questions, num_students]
-        pred = (output > 0.0).float()
-        acc_raw = torch.mean((pred*mask == labels*mask).float())
-        acc_corrrection = len((mask==0).nonzero())/(mask.shape[0]*mask.shape[1])
-        acc = acc_raw - acc_corrrection
-        raw_loss = self.ce_loss(output, labels.float())
+        shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) 
+        # TODO: Add construct embeddings
+        # relevant_hidden_states = shifted_hidden_states * abs(input)
+        relevant_hidden_states = torch.gather(shifted_hidden_states, 2, concept_input.unsqueeze(2)) # [num_questions, num_students, 1]
+        preoutput = torch.cat((rawembed, relevant_hidden_states), dim=2)
+
+        output = (self.output_layer(preoutput)).squeeze()
+
+        # pred = (output > 0.0).float()
+        # acc_raw = torch.mean((pred*mask == labels*mask).float())
+        # acc_corrrection = len((mask==0).nonzero())/(mask.shape[0]*mask.shape[1])
+        # acc = acc_raw - acc_corrrection
+        acc = 0 
+        raw_loss = self.ce_loss(output, labels.squeeze().float()) # output.squeeze()
         loss_masked = (raw_loss * mask).mean()
-        return loss_masked, acc
+        return loss_masked
 
 def get_mapped_concept_input(initial_concept_input, tot_construct_list):
     map = {k:i for i, k in enumerate(tot_construct_list)}
@@ -272,7 +370,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
     train_file = open('train_debug_new.txt', 'w')
     epochswise_train_losses, epochwise_val_losses = [], []
     prev_val_loss, early_stop_ctr, early_stop_threshold, early_stop_patience = 0, 0, 5, 0.0001
-    least_val_loss = math.inf
+    least_val_loss, cur_least_epoch = math.inf, 0
 
     # For each epoch...
     for epoch_i in range(0, epochs):
@@ -308,9 +406,17 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             #   [0]: input ids 
             #   [1]: attention masks
             #   [2]: labels 
-            # TODO: Re-transpose to make the dimension (Q, S)
-            b_input_ids = torch.transpose(batch[0], 0, 1).to(device)
-            b_labels = torch.transpose(batch[1], 0, 1).to(device)
+
+            # TODO: Re-transpose to make the dimension (Q, S) (Don't do there) - Affects nn.DataParallel
+            # b_input_ids = torch.transpose(batch[0], 0, 1).to(device)
+            # b_labels = torch.transpose(batch[1], 0, 1).to(device)
+
+            b_input_ids = batch[0].to(device)
+            b_labels = batch[1].to(device)
+
+            # print('After loading data'.upper())
+            # for id in range(torch.cuda.device_count()):
+            #     print(torch.cuda.memory_summary(device=id))
 
             # Always clear any previously calculated gradients before performing a
             # backward pass. PyTorch doesn't do this automatically because 
@@ -323,17 +429,33 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             # have provided the `labels`.
             # The documentation for this `model` function is here: 
             # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
-            loss, acc = model(b_input_ids, b_labels, epoch_i+1)
+
+            # NOTE: Before forward pass
+            loss = model(b_input_ids, b_labels, epoch_i+1)
             print('step loss:', loss)
+
+            # NOTE: Right after forward pass 
+            print('After Forward Pass'.upper())
+            for id in range(torch.cuda.device_count()):
+                print(torch.cuda.memory_summary(device=id))
 
             # Accumulate the training loss over all of the batches so that we can
             # calculate the average loss at the end. `loss` is a Tensor containing a
             # single value; the `.item()` function just returns the Python value 
             # from the tensor.
-            total_loss += loss.item()
+            total_loss += loss.mean().item()
 
             # Perform a backward pass to calculate the gradients.
-            loss.backward()
+            if(torch.cuda.device_count() > 1):
+                loss.mean().backward() # When using dataparallel
+            else:
+                loss.backward()
+
+            # # NOTE: After backward gradient propogation
+            # print('After Backprop step'.upper())
+            # for id in range(torch.cuda.device_count()):
+            #     print(torch.cuda.memory_summary(device=id))
+            
 
             # Clip the norm of the gradients to 1.0.
             # This is to help prevent the "exploding gradients" problem.
@@ -357,17 +479,20 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         ############### Validation ###############
         tot_val_loss, tot_val_acc = 0, 0
         for valstep, valbatch in enumerate(val_dataloader):
-            b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
-            b_labels_val = torch.transpose(valbatch[1], 0, 1).to(device)
+            # b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
+            # b_labels_val = torch.transpose(valbatch[1], 0, 1).to(device)
+
+            b_input_ids_val = valbatch[0].to(device)
+            b_labels_val = valbatch[1].to(device)
             
             with torch.no_grad():
-                valloss, valacc = model(b_input_ids_val, b_labels_val, epoch_i+1)
-                tot_val_loss += valloss.item()
-                tot_val_acc += valacc
+                valloss = model(b_input_ids_val, b_labels_val, epoch_i+1)
+                tot_val_loss += valloss.mean().item()
+                # tot_val_acc += valacc
         avg_val_loss = tot_val_loss / len(val_dataloader)
-        avg_acc = tot_val_acc/ len(val_dataloader)
+        # avg_acc = tot_val_acc/ len(val_dataloader)
         print("  Average validation loss: {0:.2f}".format(avg_val_loss))
-        print("  Average vakidation accuracy: {0:.2f}".format(avg_acc))
+        # print("  Average vakidation accuracy: {0:.2f}".format(avg_acc))
         epochwise_val_losses.append(avg_val_loss)
         
         # # NOTE: Early stopping
@@ -379,8 +504,10 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         #         break 
         
         if avg_val_loss < least_val_loss:
+            cur_least_epoch = epoch_i
             model_copy = copy.deepcopy(model)
             least_val_loss = avg_val_loss
+            torch.save(model_copy, os.path.join('saved_models', run_name+'.pt'))
 
         prev_val_loss = avg_val_loss
 
@@ -388,7 +515,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         wandb.log({"Epoch": epoch_i,
             "Average training loss": avg_train_loss,
             "Average validation loss":avg_val_loss,
-            "Validation Accuracy": avg_acc})
+            "cur_least_epoch":cur_least_epoch,
+            "Validation Accuracy": 0})
     
     print('Least Validation loss:', least_val_loss)
     return model_copy, epochswise_train_losses, epochwise_val_losses
@@ -396,8 +524,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
+    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
@@ -425,15 +553,23 @@ def main():
 
     # TODO: construct a tensor dataset
     batch_size = 64
-    epochs = 200
+    epochs = 100
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
 
     # TODO: Set init_temp and init_unroll
     init_temp = 2
     init_unroll = 5
+    embed_dim = 300
 
-    dkt_model = PermutedDKT(init_temp, init_unroll, n_concepts=len(tot_construct_list)+1).to(device)
+    # dkt_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
+    # TODO: Check DataParallel
+    dkt_base_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
+    dkt_model = nn.DataParallel(dkt_base_model)
+    print('After loading the model'.upper())
+    for id in range(torch.cuda.device_count()):
+        print(torch.cuda.memory_summary(device=id))
+    # dkt_model = nn.DataParallel(PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim), device_ids = [0, 1]) # removing to(device)
     
     print("Successfull in data prepration!")
     # TODO: Getting optimzer and scheduler
@@ -453,7 +589,7 @@ def main():
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
     # TODO: Save the model
-    torch.save(model, 'saved_models/nips_adaptive_small.pt')
+    torch.save(model, os.path.join('saved_models', run_name+'.pt'))
 
 
     with open('train_epochwise_loss.json', 'w') as infile:

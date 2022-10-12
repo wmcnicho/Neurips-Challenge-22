@@ -223,12 +223,13 @@ class PermutedDKT(nn.Module):
 
 
         # TODO: Create a mask (0 when the input is 0)
-        mask = torch.ones(T, B, device=device)
-        zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
-        zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
-        for r, c in zip(zero_index_row, zero_index_col):
-            r_num, c_num = r.item(), c.item()
-            mask[r_num][c_num] = 0
+        mask_ones = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
+        mask = mask_ones - (labels==0).long()
+        # zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
+        # zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
+        # for r, c in zip(zero_index_row, zero_index_col):
+        #     r_num, c_num = r.item(), c.item()
+        #     mask[r_num][c_num] = 0
 
 
         labels = torch.clamp(labels, min=0)

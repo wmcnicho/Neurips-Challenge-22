@@ -1,0 +1,14 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_mask.py:540: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+PermutedDKT
+Number of questions:  20
+Number of students:  9
+Number of concepts: 52
+Using batch size: 64
+Using batch size: 64
+AFTER LOADING THE MODEL
+Successfull in data prepration!
+Successfully loaded the optimizer
+======== Epoch 1 / 100 ========
+Training...
+Step: 0
