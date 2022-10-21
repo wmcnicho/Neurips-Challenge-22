@@ -1,0 +1,18 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py:546: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py", line 610, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py", line 572, in main
+    dkt_base_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py", line 254, in __init__
+    self.embed_matrix = nn.Parameter(torch.empty(n_concepts, self.embed_dim, device=device))
+RuntimeError: CUDA error: out of memory
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+PermutedDKT
+Number of questions:  20
+Number of students:  9
+Number of concepts: 52
+Using batch size: 64
+Using batch size: 64

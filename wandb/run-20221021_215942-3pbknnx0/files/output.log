@@ -1,0 +1,52 @@
+/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py:546: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
+Traceback (most recent call last):
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py", line 610, in <module>
+    main()
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py", line 595, in main
+    model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
+  File "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph.py", line 515, in train
+    torch.save(model_copy, os.path.join('saved_models', run_name+'.pt'))
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/serialization.py", line 376, in save
+    with _open_file_like(f, 'wb') as opened_file:
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/work/nashokkumar_umass_edu/.conda/envs/nistorch/lib/python3.10/site-packages/torch/serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: 'saved_models/nips_embed_300_newmask_loss.pt'
+PermutedDKT
+Number of questions:  20
+Number of students:  9
+Number of concepts: 52
+Using batch size: 64
+Using batch size: 64
+AFTER LOADING THE MODEL
+Successfull in data prepration!
+Successfully loaded the optimizer
+======== Epoch 1 / 100 ========
+Training...
+Step: 0
+batch input size: torch.Size([7, 20]) Device: -1
+Parameter containing:
+tensor([[ 0.0015,  0.0246,  0.0059,  ...,  0.0107,  0.0326, -0.0274],
+        [ 0.0304, -0.0397,  0.0289,  ..., -0.0355,  0.0102,  0.0254],
+        [ 0.0031,  0.0096,  0.0165,  ...,  0.0402,  0.0446,  0.0445],
+        ...,
+        [-0.0099,  0.0074, -0.0230,  ..., -0.0272,  0.0290,  0.0250],
+        [ 0.0198,  0.0214, -0.0435,  ...,  0.0156,  0.0108, -0.0012],
+        [-0.0146, -0.0339, -0.0197,  ..., -0.0167,  0.0153, -0.0006]],
+       requires_grad=True)
+step loss: tensor(0.6898, grad_fn=<DivBackward0>)
+AFTER FORWARD PASS
+  Average training loss: 0.69
+batch input size: torch.Size([2, 20]) Device: -1
+Parameter containing:
+tensor([[ 0.0019,  0.0250,  0.0063,  ...,  0.0103,  0.0322, -0.0278],
+        [ 0.0300, -0.0402,  0.0285,  ..., -0.0351,  0.0106,  0.0258],
+        [ 0.0027,  0.0092,  0.0161,  ...,  0.0407,  0.0450,  0.0450],
+        ...,
+        [-0.0096,  0.0077, -0.0227,  ..., -0.0274,  0.0287,  0.0247],
+        [ 0.0202,  0.0218, -0.0431,  ...,  0.0152,  0.0104, -0.0016],
+        [-0.0150, -0.0344, -0.0201,  ..., -0.0162,  0.0157, -0.0002]],
+       requires_grad=True)
+  Average validation loss: 0.69
