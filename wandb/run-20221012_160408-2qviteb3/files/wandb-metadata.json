@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.4.0-126-generic-x86_64-with-glibc2.31",
+    "python": "3.10.4",
+    "heartbeatAt": "2022-10-12T16:04:09.181565",
+    "startedAt": "2022-10-12T16:04:08.590963",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "gpu_count": 1,
+    "cpu_count": 48,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22/predict_graph_embed_mask.py",
+    "codePath": "predict_graph_embed_mask.py",
+    "git": {
+        "remote": "https://github.com/wmcnicho/Neurips-Challenge-22.git",
+        "commit": "593532c767fc72850c31dcd9fbc20b897a47ed69"
+    },
+    "email": "nischalrokz19@gmail.com",
+    "root": "/work/nashokkumar_umass_edu/nipschal/Neurips-Challenge-22",
+    "host": "ials-gpu024",
+    "username": "nashokkumar_umass_edu",
+    "executable": "/work/nashokkumar_umass_edu/.conda/envs/nistorch/bin/python"
+}

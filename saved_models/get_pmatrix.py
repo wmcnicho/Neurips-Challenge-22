@@ -422,16 +422,16 @@ def main():
     # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
     if device == torch.device('cpu'):
-        model_load = torch.load('nips_embed_300_proper.pt', map_location=torch.device('cpu'))
+        model_load = torch.load('nips_embed_300_newmask_loss.pt', map_location=torch.device('cpu'))
     else:
-        model_load = torch.load('nips_embed_300_proper.pt')
+        model_load = torch.load('nips_embed_300_newmask_loss.pt')
     try:
         p_matrix = model_load.gru.permuted_matrix.matrix
     except:
         p_matrix = model_load.module.gru.permuted_matrix.matrix
     sinkhorn_output = get_sinkhorn_output(p_matrix)
     np_matrix = sinkhorn_output.cpu().detach().numpy()
-    np.save('sinkhorn_matrix_embed_300_proper.npy', np_matrix)
+    np.save('sinkhorn_matrix_embed_300_newmask_loss.npy', np_matrix)
     argmax_search = search_argmax(np_matrix)
     # argmax_list_row = np.argmax(np_matrix, axis=1)
     # argmax_list_col = np.argmax(np_matrix, axis=0)
@@ -440,7 +440,7 @@ def main():
     p_matrix = np.zeros(np_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
-    np.save('p_matrix_embed_300_proper.npy', p_matrix)
+    np.save('p_matrix_embed_300_newmask_loss.npy', p_matrix)
     # dkt_model.load('nips.pt')
     # for param in model_load.parameters():
     #     print(param)

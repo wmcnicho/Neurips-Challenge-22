@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import json 
 
-p_matrix = np.load('p_matrix_embed_300_proper.npy') # NOTE: assuming perfect p-matrix
+p_matrix = np.load('p_matrix_embed_300_newmask_loss.npy') # NOTE: assuming perfect p-matrix
+# p_matrix_2 = np.load('p_matrix_learned_compressed.npy') # p_matrix_learned_compressed
 
 # TODO: change the p-matrix to be ideal (row-wise argmax until the index has not been encountered)
 
@@ -11,14 +12,22 @@ with open("../serialized_torch/student_data_construct_list.json", 'rb') as fp:
     tot_construct_list = json.load(fp)
 
 tot_construct_list.append(0) # 0 is the padding construct
-print('Original construct list', tot_construct_list)
+# print('Original construct list', tot_construct_list)
 
 construct_arr = np.array(tot_construct_list)
 
 # get construct ordering
 construct_order = np.dot(p_matrix, construct_arr)
-print(construct_order)
 construct_order_lst = construct_order.tolist()
+print(construct_order_lst)
+
+# # get construct ordering 2
+# construct_order2 = np.dot(p_matrix_2, construct_arr)
+# construct_order_lst2 = construct_order2.tolist()
+# print(construct_order_lst2)
+
+# print(construct_order_lst == construct_order_lst2)
+
 
 # #sanity check
 # # identity_p_matrix = np.identity(len(tot_construct_list))
@@ -38,4 +47,4 @@ for i, row_cons in enumerate(test_constructs):
             solution_adj_matrix[i][j] = 1 # construct j depends on construct i
 
 solution_adj_matrix_arr = np.array(solution_adj_matrix).astype(int)
-np.save('adj_matrix_embed_300_proper.npy', solution_adj_matrix_arr)
+np.save('adj_matrix_embed_300_newmask_loss.npy', solution_adj_matrix_arr)

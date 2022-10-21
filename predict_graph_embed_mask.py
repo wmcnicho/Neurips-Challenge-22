@@ -19,7 +19,7 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
-run_name = 'nips_embed_300_mask_debug'
+run_name = 'nips_embed_300_newmask_loss'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
@@ -300,7 +300,7 @@ class PermutedDKT(nn.Module):
 
         # TODO: Create a mask (0 when the input is 0)
         mask_ones = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
-        mask = mask_ones - (labels==0).long()
+        mask = mask_ones - (labels==0).long().to(device)
         # zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
         # zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
         # for r, c in zip(zero_index_row, zero_index_col):
@@ -326,7 +326,7 @@ class PermutedDKT(nn.Module):
         # acc = acc_raw - acc_corrrection
         acc = 0 
         raw_loss = self.ce_loss(output, labels.squeeze().float()) # output.squeeze()
-        loss_masked = (raw_loss * mask).mean()
+        loss_masked = (raw_loss * mask).sum()/mask.sum().item()
         return loss_masked
 
 def get_mapped_concept_input(initial_concept_input, tot_construct_list):
@@ -443,12 +443,14 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             # calculate the average loss at the end. `loss` is a Tensor containing a
             # single value; the `.item()` function just returns the Python value 
             # from the tensor.
-            total_loss += loss.mean().item()
+            
 
             # Perform a backward pass to calculate the gradients.
             if(torch.cuda.device_count() > 1):
+                total_loss += loss.mean().item()
                 loss.mean().backward() # When using dataparallel
             else:
+                total_loss += loss.item()
                 loss.backward()
 
             # # NOTE: After backward gradient propogation
@@ -487,7 +489,10 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             
             with torch.no_grad():
                 valloss = model(b_input_ids_val, b_labels_val, epoch_i+1)
-                tot_val_loss += valloss.mean().item()
+                if(torch.cuda.device_count() > 1):
+                    tot_val_loss += valloss.mean().item()
+                else:
+                    tot_val_loss += valloss.item()
                 # tot_val_acc += valacc
         avg_val_loss = tot_val_loss / len(val_dataloader)
         # avg_acc = tot_val_acc/ len(val_dataloader)
@@ -524,8 +529,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
-    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
+    dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
+    with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
