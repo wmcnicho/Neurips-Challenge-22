@@ -11,6 +11,8 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup
+import argparse
+from datetime import datetime
 
 # setting the seed
 seed_val = 37
@@ -19,59 +21,13 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
-run_name = 'nips_embed_300_newmask_loss'
+# run_name = 'nips_embed_300_newmask_loss'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
-# Start Wandb run
-wandb.init(project="predict-graph", entity="ml4ed", name=run_name)
-
-# class PermutedGruCell(nn.Module):
-#     def __init__(self, hidden_size, bias):
-#         super().__init__()
-#         """
-#         For each element in the input sequence, each layer computes the following
-#         function:
-#         Gru Math
-#         \begin{array}{ll}
-#             r_t = \sigma(W_{ir} x_t + b_{ir} + W_{hr} h_{(t-1)} + b_{hr}) \\
-#             z_t = \sigma(W_{iz} x_t + b_{iz} + W_{hz} h_{(t-1)} + b_{hz}) \\
-#             n_t = \tanh(W_{in} x_t + b_{in} +  (W_{hn}(r_t*  h_{(t-1)})+ b_{hn})) \\
-#             h_t = (1 - z_t) * n_t + z_t * h_{(t-1)}
-#         \end{array}
-#         """
-#         self.hidden_size = hidden_size
-#         self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
-#         self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
-#         self.W_iz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
-#         self.W_hz = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
-#         self.W_in = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
-#         self.W_hn = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
-#         self.reset_parameters()
-
-#     def reset_parameters(self):
-#         for w in self.parameters():
-#             nn.init.kaiming_uniform_(w, a=math.sqrt(self.hidden_size))
-
-#     def forward(self, x, lower, hidden=None):
-#         # x is B, input_size
-#         # Question: Why isn't self.W_ir being updated for every timestep?
-#         if hidden is None:
-#             hidden = torch.zeros(x.size(0), self.hidden_size).to(device)
-#         W_ir = self.W_ir * lower
-#         W_hr = self.W_hr * lower
-#         W_iz = self.W_iz * lower
-#         W_hz = self.W_hz * lower
-#         W_in = self.W_in * lower
-#         W_hn = self.W_hn * lower
-#         sigmoid = nn.Sigmoid()
-#         tanh = nn.Tanh()
-#         r_t = sigmoid(torch.matmul(x, W_ir) + torch.matmul(hidden, W_hr))
-#         z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
-#         n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
-#         hy = hidden * z_t + (1.0 - z_t) * n_t
-#         return hy
+# # Start Wandb run
+# wandb.init(project="predict-graph", entity="ml4ed", name=run_name)
         
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature, unroll):
@@ -167,7 +123,6 @@ class PermutedGru(nn.Module):
         nn.init.kaiming_normal_(self.W_in, a=math.sqrt(hidden_size), mode='fan_out')
         nn.init.kaiming_normal_(self.W_hn, a=math.sqrt(hidden_size), mode='fan_out')
 
-
     def forward(self, input_, epoch, lengths=None, hidden=None):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
@@ -203,49 +158,6 @@ class PermutedGru(nn.Module):
 
         hidden_states = torch.stack(outputs)  # T, B, H
         return hidden_states
-
-
-# class PermutedGru(nn.Module):
-#     def __init__(
-#         self,
-#         init_temp, 
-#         init_unroll,
-#         hidden_size,
-#         bias=False,
-#         num_layers=1,
-#         batch_first=False,
-#         dropout=0.0,
-#     ):
-#         super().__init__()
-#         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
-#         self.batch_first = batch_first
-#         self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
-
-#     def forward(self, input_, epoch, lengths=None, hidden=None):
-#         # input_ is of dimensionalty (T, B, hidden_size, ...)
-#         # lenghths is B,
-#         dim = 1 if self.batch_first else 0
-#         # lower = self.permuted_matrix(verbose=True)
-#         lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
-#         outputs = []
-#         # print("Forwarding PermutedGru")
-#         # print("input_: ", input_)
-#         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
-#         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-#             # print("x: ", x.shape) #[2, 5]
-#             # print("lower: ", lower)
-#             hidden = self.cell(x, lower, hidden)
-#             outputs.append(hidden.clone())
-
-#         hidden_states = torch.stack(outputs)  # T, B, H
-#         last_states = []
-#         if lengths is None:
-#             lengths = [len(input_)] * len(input_[0])
-#         for idx, l in enumerate(lengths):
-#             last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
-#         last_states = torch.stack(last_states) # [num_students, num_constructs]
-#         return hidden_states, last_states
-
 
 class PermutedDKT(nn.Module):
     def __init__(self, init_temp, init_unroll, n_concepts, embed_dim):
@@ -510,7 +422,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             cur_least_epoch = epoch_i
             model_copy = copy.deepcopy(model)
             least_val_loss = avg_val_loss
-            torch.save(model_copy, os.path.join('saved_models', run_name+'.pt'))
+            date = datetime.now().strftime('%m_%d_%H_%M_%S')
+            torch.save(model_copy, os.path.join('saved_models', date + '_' + hyper_params.file_name +'.pt'))
 
         prev_val_loss = avg_val_loss
 
@@ -526,17 +439,20 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 
 def main():
-    # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
-    dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
-    with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
-        tot_construct_list = json.load(fp)
+    # Make sure what you are running: sample or real dataset.
+    test_sample = True
+
+    if test_sample:
+        dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
+        with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
+            tot_construct_list = json.load(fp)
+    else:
+        dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
+        with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
+            tot_construct_list = json.load(fp)
     
     num_of_questions, _, num_of_students = dataset_tensor.shape
 
-    # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
-    
-    # concept_input = dataset_tensor[:, 0, :]
-    # labels = dataset_tensor[:, 1, :]
     initial_concept_input = dataset_tensor[:, 0, :]
     map_concept_input = get_mapped_concept_input(initial_concept_input, tot_construct_list)
     concept_input = torch.tensor(map_concept_input, dtype=torch.long)
@@ -555,15 +471,15 @@ def main():
     print("Number of concepts:", len(tot_construct_list)+1)
 
     # TODO: construct a tensor dataset
-    batch_size = 64
-    epochs = 100
+    batch_size = hyper_params.batch_size
+    epochs = hyper_params.epochs
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
 
     # TODO: Set init_temp and init_unroll
     init_temp = 2
     init_unroll = 5
-    embed_dim = 300
+    embed_dim = hyper_params.embed_dim
 
     # dkt_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
     # TODO: Check DataParallel
@@ -592,17 +508,34 @@ def main():
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
     # TODO: Save the model
-    torch.save(model, os.path.join('saved_models', run_name+'.pt'))
+    date = datetime.now().strftime('%m_%d_%H_%M_%S')
+    torch.save(model, os.path.join('saved_models', "final_" + date + '_' + hyper_params.file_name + '.pt'))
 
-
-    with open('train_epochwise_loss.json', 'w') as infile:
+    with open(hyper_params.file_name + '_train_epochwise_loss.json', 'w') as infile:
         json.dump(epoch_train_loss, infile)
 
-    with open('val_epochwise_loss.json', 'w') as infile:
+    with open(hyper_params.file_name + '_val_epochwise_loss.json', 'w') as infile:
         json.dump(epoch_val_loss, infile)
 
     # loss, acc = dkt_model(concept_input, labels)
     # print(loss, acc)
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='ML')
+
+    parser.add_argument('-B', '--batch_size', type=int ,default=64, help='batch size')
+    parser.add_argument('-E', '--epochs', type=int, default=100, help='number of epochs')
+    parser.add_argument('-D', '--embed_dim', type=int, default=300, help='embedding dimension')
+
+    hyper_params = parser.parse_args()
+
+    file_name = [hyper_params.batch_size, hyper_params.epochs, hyper_params.embed_dim]
+    file_name = [f"batch_{hyper_params.batch_size}", f"epoch_{hyper_params.epochs}", f"embed_{hyper_params.embed_dim}"]
+    file_name =  [str(d) for d in file_name]
+    hyper_params.file_name = '_'.join(file_name)
+
+    # Start Wandb run
+    wandb.init(project="predict-graph", entity="ml4ed", name= hyper_params.file_name)
+
     main()
