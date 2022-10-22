@@ -21,25 +21,20 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
-# run_name = 'nips_embed_300_newmask_loss'
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
-
-# # Start Wandb run
-# wandb.init(project="predict-graph", entity="ml4ed", name=run_name)
         
 class PermutationMatrix(nn.Module):
-    def __init__(self, input_size, temperature, unroll):
+    def __init__(self, input_size, temperature, unroll, verbose=False):
         super().__init__()
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
         self.lower = nn.Parameter(torch.tril(torch.ones(input_size, input_size)), requires_grad=False)
-        # self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
+        self.verbose
 
-    def forward(self, epoch, verbose=False):
-        # TODO: update temperature and unroll
+    def forward(self, epoch):
+        # TODO: update temperature and unroll, Is this done?
         temperature = ((epoch//10)+1)*self.temperature
         unroll = ((epoch//10)+1)*self.unroll
 
@@ -52,9 +47,6 @@ class PermutationMatrix(nn.Module):
         ones = torch.ones(matrix_shape, device=device).reshape(1, matrix_shape)
 
         matrix = torch.exp(temperature * (self.matrix - torch.matmul(max_row, ones)))
-        
-        # # NOTE. Aritra's implementation
-        # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         
         for _ in range(unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
@@ -103,11 +95,12 @@ class PermutedGru(nn.Module):
         num_layers=1,
         batch_first=False,
         dropout=0.0,
+        verbose=False
     ):
         super().__init__()
-        # self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
         self.batch_first = batch_first
-        self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
+        self.verbose = verbose
+        self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll, verbose=verbose)
         self.hidden_size = hidden_size
         self.W_ir = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
         self.W_hr = nn.Parameter(torch.empty(hidden_size, hidden_size, device=device))
@@ -127,8 +120,7 @@ class PermutedGru(nn.Module):
         # input_ is of dimensionalty (T, B, hidden_size, ...)
         # lenghths is B,
         dim = 1 if self.batch_first else 0
-        # lower = self.permuted_matrix(verbose=True)
-        lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
+        lower = self.permuted_matrix(epoch) # (PLP')'
         outputs = []
         W_ir = self.W_ir * lower
         W_hr = self.W_hr * lower
@@ -147,21 +139,21 @@ class PermutedGru(nn.Module):
             z_t = sigmoid(torch.matmul(x, W_iz) + torch.matmul(hidden, W_hz))
             n_t = tanh(torch.matmul(x, W_in) + torch.matmul(r_t * hidden, W_hn))
             hidden = hidden * z_t + (1.0 - z_t) * n_t
-            i = i + 1
-            # if (i % 400 == 0):
-            #     print("hidden state:" + str(i))
-            #     for deviceid in range(torch.cuda.device_count()):
-            #         print("memory :", str(deviceid), torch.cuda.memory_summary(device=deviceid, abbreviated=True))
             outputs.append(hidden.clone())
-            # hidden = self.cell(x, lower, hidden)
-            # outputs.append(hidden.clone().detach())
+            i = i + 1
+            if self.verbose:
+                if (i % 400 == 0):
+                    print("hidden state:" + str(i))
+                    for deviceid in range(torch.cuda.device_count()):
+                        print("memory :", str(deviceid), torch.cuda.memory_summary(device=deviceid, abbreviated=True))
 
         hidden_states = torch.stack(outputs)  # T, B, H
         return hidden_states
 
 class PermutedDKT(nn.Module):
-    def __init__(self, init_temp, init_unroll, n_concepts, embed_dim):
+    def __init__(self, init_temp, init_unroll, n_concepts, embed_dim, verbose=False):
         super().__init__()
+        self.verbose = verbose
         self.embed_dim = embed_dim
         self.embed_matrix = nn.Parameter(torch.empty(n_concepts, self.embed_dim, device=device))
         nn.init.kaiming_uniform_(self.embed_matrix, a=math.sqrt(self.embed_dim))
@@ -173,7 +165,6 @@ class PermutedDKT(nn.Module):
 
         self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False)
         self.n_concepts = n_concepts
-        # self.output_layer = nn.Linear(self.embed_dim+self.n_concepts, 1) 
         self.output_layer = nn.Linear(self.embed_dim+1, 1) 
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
 
@@ -188,55 +179,39 @@ class PermutedDKT(nn.Module):
         # Input[i,j]=k at time i, for student j, concept k is attended
         # label is T,B 0/1
         T, B = concept_input.shape
-        # print("PermutedDKT")
-        # print("Number of questions: ", T)
-        # print("Number of students: ", B)
-        # print("Number of concepts:", self.n_concepts)
-        # print("Concept input: ", concept_input)
+        if self.verbose:
+            print("PermutedDKT")
+            print("Number of questions: ", T)
+            print("Number of students: ", B)
+            print("Number of concepts:", self.n_concepts)
+            print("Concept input: ", concept_input)
         input = torch.zeros(T, B, self.n_concepts, device=device)
 
-        # print("Before input\n: ", input)
         # Unsqueeze concept_input & lables
-        # [T,B] -> [T,B,1], Put 1 at index 2
-        # Scatter input
-        # scatter_(dim, index, src)
-
+        # [T,B] -> [T,B,1]
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
 
-        # TODO: Transform input to account for construct embeddings
+        # TODO: Transform input to account for construct embeddings, is this done?
         rawembed = torch.matmul(abs(input), self.embed_matrix)
         rawdelta = torch.matmul(input, self.delta_matrix)
         preembed = rawembed + rawdelta
         input_embed = self.embed_input(preembed)
 
 
-        # TODO: Create a mask (0 when the input is 0)
+        # TODO: Create a mask (0 when the input is 0), is this done?
         mask_ones = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
         mask = mask_ones - (labels==0).long().to(device)
-        # zero_index_row, zero_index_col = (labels==0).nonzero(as_tuple=True)
-        # zero_index_row, zero_index_col = list(zero_index_row.cpu()), list(zero_index_col.cpu())
-        # for r, c in zip(zero_index_row, zero_index_col):
-        #     r_num, c_num = r.item(), c.item()
-        #     mask[r_num][c_num] = 0
-
 
         labels = torch.clamp(labels, min=0)
-        hidden_states = self.gru(input_embed, epoch) # initially hidden_states, _
+        hidden_states = self.gru(input_embed, epoch)
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) 
         # TODO: Add construct embeddings
-        # relevant_hidden_states = shifted_hidden_states * abs(input)
         relevant_hidden_states = torch.gather(shifted_hidden_states, 2, concept_input.unsqueeze(2)) # [num_questions, num_students, 1]
         preoutput = torch.cat((rawembed, relevant_hidden_states), dim=2)
 
         output = (self.output_layer(preoutput)).squeeze()
-
-        # pred = (output > 0.0).float()
-        # acc_raw = torch.mean((pred*mask == labels*mask).float())
-        # acc_corrrection = len((mask==0).nonzero())/(mask.shape[0]*mask.shape[1])
-        # acc = acc_raw - acc_corrrection
-        acc = 0 
         raw_loss = self.ce_loss(output, labels.squeeze().float()) # output.squeeze()
         loss_masked = (raw_loss * mask).sum()/mask.sum().item()
         return loss_masked
@@ -276,13 +251,12 @@ def get_optimizer_scheduler(name, model, lr, train_dataloader_len, epochs):
                                                     num_training_steps = total_steps)
     return optimizer, scheduler
 
-def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler):
+def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler, verbose=False):
 
     epochswise_train_losses, epochwise_val_losses = [], []
     prev_val_loss, early_stop_ctr, early_stop_threshold, early_stop_patience = 0, 0, 5, 0.0001
     least_val_loss, cur_least_epoch = math.inf, 0
 
-    # For each epoch...
     for epoch_i in range(0, epochs):
 
         # ========================================
@@ -317,10 +291,6 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             #   [1]: attention masks
             #   [2]: labels 
 
-            # TODO: Re-transpose to make the dimension (Q, S) (Don't do there) - Affects nn.DataParallel
-            # b_input_ids = torch.transpose(batch[0], 0, 1).to(device)
-            # b_labels = torch.transpose(batch[1], 0, 1).to(device)
-
             b_input_ids = batch[0].to(device)
             b_labels = batch[1].to(device)
 
@@ -340,12 +310,12 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
             # The documentation for this `model` function is here: 
             # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
 
-            # NOTE: Before forward pass
+            # NOTE: Forward pass
             loss = model(b_input_ids, b_labels, epoch_i+1)
-            print('step loss:', loss)
+            print(f'Step {step} loss: {loss}')
 
-            # NOTE: Right after forward pass 
-            print('After Forward Pass'.upper())
+            if verbose:
+                print('After Forward Pass'.upper())
             for id in range(torch.cuda.device_count()):
                 print(torch.cuda.memory_summary(device=id))
 
@@ -363,10 +333,10 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
                 total_loss += loss.item()
                 loss.backward()
 
-            # # NOTE: After backward gradient propogation
-            # print('After Backprop step'.upper())
-            # for id in range(torch.cuda.device_count()):
-            #     print(torch.cuda.memory_summary(device=id))
+            if verbose:
+                print('After Backprop step'.upper())
+                for id in range(torch.cuda.device_count()):
+                    print(torch.cuda.memory_summary(device=id))
             
 
             # Clip the norm of the gradients to 1.0.
@@ -388,7 +358,9 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         print("")
         print("  Average training loss: {0:.2f}".format(avg_train_loss))
 
-        ############### Validation ###############
+        # ========================================
+        #               Validation
+        # ========================================
         tot_val_loss, tot_val_acc = 0, 0
         for valstep, valbatch in enumerate(val_dataloader):
             # b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
@@ -407,9 +379,11 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         avg_val_loss = tot_val_loss / len(val_dataloader)
         # avg_acc = tot_val_acc/ len(val_dataloader)
         print("  Average validation loss: {0:.2f}".format(avg_val_loss))
-        # print("  Average vakidation accuracy: {0:.2f}".format(avg_acc))
+        # TODO fix our accuracy calculation
+        # print("  Average validation accuracy: {0:.2f}".format(avg_acc))
         epochwise_val_losses.append(avg_val_loss)
         
+        # TODO put under feature flag
         # # NOTE: Early stopping
         # if abs(avg_val_loss-prev_val_loss) < early_stop_patience:
         #     if early_stop_ctr < early_stop_threshold:
@@ -428,29 +402,23 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
         prev_val_loss = avg_val_loss
 
         # Wandb Log Metrics
-        wandb.log({"Epoch": epoch_i,
-            "Average training loss": avg_train_loss,
-            "Average validation loss":avg_val_loss,
-            "cur_least_epoch":cur_least_epoch,
-            "Validation Accuracy": 0})
+        if "wandb" in hyper_params:
+            wandb.log({"Epoch": epoch_i,
+                    "Average training loss": avg_train_loss,
+                    "Average validation loss":avg_val_loss,
+                    "cur_least_epoch":cur_least_epoch,
+                    "Validation Accuracy": 0})
     
     print('Least Validation loss:', least_val_loss)
     return model_copy, epochswise_train_losses, epochwise_val_losses
 
 
-def main():
-    # Make sure what you are running: sample or real dataset.
-    test_sample = True
-
-    if test_sample:
-        dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')
-        with open("serialized_torch/sample_student_data_construct_list.json", 'rb') as fp:
-            tot_construct_list = json.load(fp)
-    else:
-        dataset_tensor = torch.load('serialized_torch/student_data_tensor.pt')
-        with open("serialized_torch/student_data_construct_list.json", 'rb') as fp:
-            tot_construct_list = json.load(fp)
-    
+def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_data', verbose=False):
+    if data_name is 'sample_student_data':
+        print("Sanity check, you're running on sample data")
+    dataset_tensor = torch.load(file_path + data_name + '_tensor.pt')
+    with open(file_path + data_name + '_construct_list.json', 'rb') as fp:
+        tot_construct_list = json.load(fp)    
     num_of_questions, _, num_of_students = dataset_tensor.shape
 
     initial_concept_input = dataset_tensor[:, 0, :]
@@ -458,84 +426,70 @@ def main():
     concept_input = torch.tensor(map_concept_input, dtype=torch.long)
     
     labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
-    # TODO: Batch student-wise not question-wise (dim-1 must be student)
+    # TODO: Batch student-wise not question-wise (dim-1 must be student), is this addressed?
     concept_inp_transpose = torch.transpose(concept_input, 0, 1)
     labels_transpose = torch.transpose(labels, 0, 1)
-    # TODO: Get train-validation set
     train_input, valid_input, train_label, valid_label = train_test_split(concept_inp_transpose, labels_transpose, 
                                                             train_size=0.8, random_state=seed_val)
     
-    print("PermutedDKT")
-    print("Number of questions: ", num_of_questions)
-    print("Number of students: ", num_of_students)
-    print("Number of concepts:", len(tot_construct_list)+1)
+    if verbose:
+        print("Number of questions: ", num_of_questions)
+        print("Number of students: ", num_of_students)
+        print("Number of concepts:", len(tot_construct_list)+1)
 
-    # TODO: construct a tensor dataset
     batch_size = hyper_params.batch_size
     epochs = hyper_params.epochs
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
 
-    # TODO: Set init_temp and init_unroll
-    init_temp = 2
-    init_unroll = 5
-    embed_dim = hyper_params.embed_dim
-
-    # dkt_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
-    # TODO: Check DataParallel
-    dkt_base_model = PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim).to(device)
-    dkt_model = nn.DataParallel(dkt_base_model)
-    print('After loading the model'.upper())
-    for id in range(torch.cuda.device_count()):
-        print(torch.cuda.memory_summary(device=id))
-    # dkt_model = nn.DataParallel(PermutedDKT(init_temp, init_unroll, len(tot_construct_list)+1, embed_dim), device_ids = [0, 1]) # removing to(device)
-    
-    print("Successfull in data prepration!")
-    # TODO: Getting optimzer and scheduler
-    lr = 5e-4
-    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, lr, len(train_dataloader), epochs)
-    print("Successfully loaded the optimizer")
 
     # Log Hyperparameters
-    wandb.config = {
-    "learning_rate": lr,
-    "epochs": epochs,
-    "batch_size": batch_size,
-    "init_temp": init_temp,
-    "init_unroll": init_unroll
-    }
+    if "wandb" in hyper_params:
+        wandb.config = hyper_params
+    # TODO: Check DataParallel, is this addressed?
+    dkt_base_model = PermutedDKT(hyper_params.init_temp, hyper_params.init_unroll, len(tot_construct_list)+1, hyper_params.embed_dim, verbose=verbose).to(device)
+    dkt_model = nn.DataParallel(dkt_base_model)
+    if verbose:
+        print('After loading the model'.upper())
+        for id in range(torch.cuda.device_count()):
+            print(torch.cuda.memory_summary(device=id))
+        print("Successfull in data prepration!")
+
+    optimizer, scheduler = get_optimizer_scheduler("Adam", dkt_model, hyper_params.lr, len(train_dataloader), epochs)
+    if verbose:
+        print("Successfully loaded the optimizer")
 
     # Main Traning
     model, epoch_train_loss, epoch_val_loss = train(epochs, dkt_model, train_dataloader, val_dataloader, optimizer, scheduler) # add val_dataloader later
-    # TODO: Save the model
     date = datetime.now().strftime('%m_%d_%H_%M_%S')
     torch.save(model, os.path.join('saved_models', "final_" + date + '_' + hyper_params.file_name + '.pt'))
 
-    with open(hyper_params.file_name + '_train_epochwise_loss.json', 'w') as infile:
-        json.dump(epoch_train_loss, infile)
+    if hyper_params.debug:
+        with open(hyper_params.file_name + '_train_epochwise_loss.json', 'w') as infile:
+            json.dump(epoch_train_loss, infile)
 
-    with open(hyper_params.file_name + '_val_epochwise_loss.json', 'w') as infile:
-        json.dump(epoch_val_loss, infile)
-
-    # loss, acc = dkt_model(concept_input, labels)
-    # print(loss, acc)
+        with open(hyper_params.file_name + '_val_epochwise_loss.json', 'w') as infile:
+            json.dump(epoch_val_loss, infile)
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description='ML')
-
+    parser = argparse.ArgumentParser(description='UMass 2022 casual ordering project')
     parser.add_argument('-B', '--batch_size', type=int ,default=64, help='batch size')
-    parser.add_argument('-E', '--epochs', type=int, default=100, help='number of epochs')
+    parser.add_argument('-E', '--epochs', type=int, default=50, help='number of epochs')
     parser.add_argument('-D', '--embed_dim', type=int, default=300, help='embedding dimension')
-
+    parser.add_argument('-IT', '--init_temp', type=int, default=2, help='initial temperature')
+    parser.add_argument('-IU', '--init_unroll', type=int, default=5, help='initial unroll')
+    parser.add_argument('-L', '--learning_rate', type=float, default=5e-4, help='learning_rate')
+    parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
+    parser.add_argument('-d', '--debug', action=argparse.BooleanOptionalAction, help='Writes additional debug files for debugging')
+    parser.add_argument('-WAB', '--wandb', type=str, default="ml4ed", help='Write to weights and biases, optionally provide a custom name')
     hyper_params = parser.parse_args()
 
-    file_name = [hyper_params.batch_size, hyper_params.epochs, hyper_params.embed_dim]
-    file_name = [f"batch_{hyper_params.batch_size}", f"epoch_{hyper_params.epochs}", f"embed_{hyper_params.embed_dim}"]
-    file_name =  [str(d) for d in file_name]
-    hyper_params.file_name = '_'.join(file_name)
 
-    # Start Wandb run
-    wandb.init(project="predict-graph", entity="ml4ed", name= hyper_params.file_name)
+    hyper_params.file_name = f"batch_{hyper_params.batch_size}_epoch_{hyper_params.epochs}_embed_{hyper_params.embed_dim}"
+    if "wandb" in hyper_params:
+        if hyper_params.wand is not "ml4ed":
+            hyper_params.file_name = hyper_params.wandb
+        # Start Wandb run
+        wandb.init(project="predict-graph", entity="ml4ed", name=hyper_params.file_name)
 
-    main()
+    main(hyper_params, verbose=hyper_params.verbose)
