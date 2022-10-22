@@ -16,3 +16,4 @@ sanity_check/error/*.out
 sanity_check/model/*.pt
 sanity_check/__pycache__/
 sanity_check/*.log
+patch/

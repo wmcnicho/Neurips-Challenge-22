@@ -36,7 +36,7 @@ class PermutedGruCell(nn.Module):
 
     def reset_parameters(self):
         for w in self.parameters():
-            nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+            nn.init.kaiming_uniform_(w, a=math.sqrt(self.hidden_size))
 
     def forward(self, x, lower, hidden=None):
         # x is B, input_size
@@ -81,7 +81,7 @@ class PermutationMatrix(nn.Module):
         if train_permute and train_lower:
             # 1) Permutation Matrix P
             self.matrix = nn.Parameter(torch.empty(input_size, input_size))
-            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
+            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
             # 2) Lower Triangular Matirx L
             self.explicit_p = nn.Parameter(torch.randn(int(input_size * (input_size - 1) / 2),))
             row, col = torch.tril_indices(input_size, input_size, -1)
@@ -97,10 +97,10 @@ class PermutationMatrix(nn.Module):
             # self.matrix = nn.Parameter(torch.empty(input_size, input_size))
             # nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
             self.matrix = nn.Parameter(torch.empty(input_size, input_size))
-            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(5))
-            with torch.no_grad():
-               self.matrix.fill_diagonal_(1)
-            print("Sanity check on P matrix:\n", self.matrix)
+            nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
+            # with torch.no_grad():
+            #    self.matrix.fill_diagonal_(1)
+            # print("Sanity check on P matrix:\n", self.matrix)
 
             # 2) Lower Triangular Matirx L
             self.lower = torch.tril(torch.ones(input_size, input_size))

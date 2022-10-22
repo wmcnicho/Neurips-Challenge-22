@@ -126,7 +126,8 @@ def generate_labels(features: torch.tensor, params):
     y_hat = torch.reshape(y_hat, (params.num_students, params.num_questions))
 
     labels = torch.clamp(y, min=0)
-    loss = calculate_loss(labels, y_hat)
+    # loss = calculate_loss(labels, y_hat)
+    loss = calculate_loss(y_hat, labels)
 
     print("Ground truth loss: ", loss / (params.num_students / params.batch_size))
 

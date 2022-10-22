@@ -205,17 +205,19 @@ def model_train():
     run["student_info"] = student_info
     temp_min, temp_max = tuple(params.temperature)
     uroll_min, uroll_max = tuple(params.unroll)
+    temperature, unroll = 0, 0
     for epoch in range(n_epochs): # loop over the dataset multiple times
         print(f"{epoch}th epoch")
         train_loss=[]
         train_accuracy=[]
-        temperature, unroll = 0, 0
+        temperature = int(temp_min + (temp_max - temp_min) / ((params.num_epochs)- 1) * (epoch))
+        unroll = int(uroll_min + (uroll_max - uroll_min) / ((params.num_epochs) - 1) * (epoch))        
         for i, data in enumerate(training_loader):
             b_construct = data['Features']
             b_label = data['Labels']
             optimizer.zero_grad()
-            temperature = int(temp_min + (temp_max - temp_min) / ((params.num_students / params.batch_size)- 1) * (i))
-            unroll = int(uroll_min + (uroll_max - uroll_min) / ((params.num_students / params.batch_size) - 1) * (i))
+            # temperature = int(temp_min + (temp_max - temp_min) / ((params.num_students / params.batch_size)- 1) * (i))
+            # unroll = int(uroll_min + (uroll_max - uroll_min) / ((params.num_students / params.batch_size) - 1) * (i))
             print(f"{i}th batch")
             print("temperature: ", temperature)
             print("unroll: ", unroll)
@@ -242,7 +244,7 @@ def model_train():
             run['best_epoch'] = best_epoch
             # torch.save(dkt.state_dict(), f'./model/{params.file_name}_best_dkt.pt') 
             torch.save(dkt, f'./model/{params.file_name}_best_dkt.pt')
-        print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {loss.item():.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
+        print(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {sum(train_loss)/len(train_loss):.4f}, Train Accuracy: {sum(train_accuracy)/len(train_accuracy):.2f}")
         run['loss'].log(sum(train_loss)/len(train_loss))
         run['accuracy'].log(sum(train_accuracy)/len(train_accuracy))
 
