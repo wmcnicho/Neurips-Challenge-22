@@ -1,0 +1,22 @@
+{
+    "os": "Linux-5.15.39-1-pve-x86_64-with-glibc2.29",
+    "python": "3.8.10",
+    "heartbeatAt": "2022-10-01T15:38:28.384058",
+    "startedAt": "2022-10-01T15:38:28.238384",
+    "docker": null,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "train.py",
+    "codePath": "real_data/train.py",
+    "git": {
+        "remote": "https://github.com/wmcnicho/Neurips-Challenge-22.git",
+        "commit": "dfba6a667430edd1bebc56b6d5777dc34c988d23"
+    },
+    "email": null,
+    "root": "/work/jaewooklee_umass_edu/neurips_2022",
+    "host": "login1",
+    "username": "jaewooklee_umass_edu",
+    "executable": "/usr/bin/python3"
+}

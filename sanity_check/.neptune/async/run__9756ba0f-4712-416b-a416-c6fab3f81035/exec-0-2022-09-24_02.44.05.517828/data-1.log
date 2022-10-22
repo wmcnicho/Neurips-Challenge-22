@@ -1,0 +1,40 @@
+{"obj": {"type": "AssignString", "path": ["sys", "name"], "value": "Untitled"}, "version": 1}
+{"obj": {"type": "AssignString", "path": ["sys", "description"], "value": ""}, "version": 2}
+{"obj": {"type": "AssignString", "path": ["sys", "hostname"], "value": "login2"}, "version": 3}
+{"obj": {"type": "AssignBool", "path": ["sys", "failed"], "value": false}, "version": 4}
+{"obj": {"type": "ClearStringLog", "path": ["monitoring", "stdout"]}, "version": 5}
+{"obj": {"type": "ClearStringLog", "path": ["monitoring", "stderr"]}, "version": 6}
+{"obj": {"type": "AssignString", "path": ["source_code", "entrypoint"], "value": "train.py"}, "version": 7}
+{"obj": {"type": "UploadFileSet", "path": ["source_code", "files"], "file_globs": ["/work/jaewooklee_umass_edu/neurips_2022/sanity_check/train.py"], "reset": "False"}, "version": 8}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "Info (NVML): NVML Shared Library Not Found. GPU usage metrics may not be reported. For more information, see https://docs.neptune.ai/you-should-know/what-can-you-log-and-display#hardware-consumption\n", "step": null, "ts": 1663987445.710769}]}, "version": 9}
+{"obj": {"type": "ConfigFloatSeries", "path": ["monitoring", "cpu"], "min": 0.0, "max": 100.0, "unit": "%"}, "version": 10}
+{"obj": {"type": "ClearFloatLog", "path": ["monitoring", "cpu"]}, "version": 11}
+{"obj": {"type": "ConfigFloatSeries", "path": ["monitoring", "memory"], "min": 0.0, "max": 159.96484375, "unit": "GB"}, "version": 12}
+{"obj": {"type": "ClearFloatLog", "path": ["monitoring", "memory"]}, "version": 13}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "num_constructs"], "value": 5}, "version": 14}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "num_questions"], "value": 10}, "version": 15}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "num_students"], "value": 20}, "version": 16}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "batch_size"], "value": 1}, "version": 17}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "temperature"], "value": 100}, "version": 18}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "unroll"], "value": 100}, "version": 19}
+{"obj": {"type": "AssignFloat", "path": ["model", "parameters", "learning_rate"], "value": 0.01}, "version": 20}
+{"obj": {"type": "AssignInt", "path": ["model", "parameters", "num_epochs"], "value": 100}, "version": 21}
+{"obj": {"type": "LogFloats", "path": ["num_constructs"], "values": [{"value": 5.0, "step": null, "ts": 1663987445.7465553}]}, "version": 22}
+{"obj": {"type": "LogFloats", "path": ["monitoring", "cpu"], "values": [{"value": 3.9, "step": null, "ts": 1663987445.72457}]}, "version": 23}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "traceback"], "values": [{"value": "An uncaught exception occurred while run was active on worker login2.", "step": null, "ts": 1663987445.751897}, {"value": "Marking run as failed", "step": null, "ts": 1663987445.751897}, {"value": "Traceback:", "step": null, "ts": 1663987445.751897}, {"value": "  File \"train.py\", line 223, in <module>\n    test()\n", "step": null, "ts": 1663987445.751897}, {"value": "  File \"train.py\", line 153, in test\n    run[\"num_questions\"].log(num_questions)\n", "step": null, "ts": 1663987445.751897}, {"value": "name 'num_questions' is not defined", "step": null, "ts": 1663987445.751897}]}, "version": 24}
+{"obj": {"type": "AssignBool", "path": ["sys", "failed"], "value": true}, "version": 25}
+{"obj": {"type": "LogFloats", "path": ["monitoring", "memory"], "values": [{"value": 32.28330993652344, "step": null, "ts": 1663987445.72457}]}, "version": 26}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "Traceback (most recent call last):\n", "step": null, "ts": 1663987445.7837777}]}, "version": 27}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"train.py\", line 223, in <module>\n", "step": null, "ts": 1663987445.7857347}]}, "version": 28}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663987445.8008091}]}, "version": 29}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "test()", "step": null, "ts": 1663987445.8031855}]}, "version": 30}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663987445.8052447}]}, "version": 31}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "  File \"train.py\", line 153, in test\n", "step": null, "ts": 1663987445.807464}]}, "version": 32}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "    ", "step": null, "ts": 1663987445.810394}]}, "version": 33}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "run[\"num_questions\"].log(num_questions)", "step": null, "ts": 1663987445.8137782}]}, "version": 34}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663987445.8159335}]}, "version": 35}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "NameError", "step": null, "ts": 1663987445.8182275}]}, "version": 36}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": ": ", "step": null, "ts": 1663987445.8200533}]}, "version": 37}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "name 'num_questions' is not defined", "step": null, "ts": 1663987445.8223627}]}, "version": 38}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stderr"], "values": [{"value": "\n", "step": null, "ts": 1663987445.8240085}]}, "version": 39}
+{"obj": {"type": "LogStrings", "path": ["monitoring", "stdout"], "values": [{"value": "Shutting down background jobs, please wait a moment...\n", "step": null, "ts": 1663987445.8262105}]}, "version": 40}

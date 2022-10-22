@@ -1,0 +1,16 @@
+predict_graph.py:243: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+  num_of_questions = stats.mode(simple_df["UserId"]).count[0]
+Traceback (most recent call last):
+  File "predict_graph.py", line 332, in <module>
+    main()
+  File "predict_graph.py", line 307, in main
+    loss, acc = dkt(torch.stack(constructs).to(device), torch.stack(labels).to(device))
+  File "/home/jaewooklee_umass_edu/.local/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "predict_graph.py", line 196, in forward
+    hidden_states, _ = self.gru(input)
+  File "/home/jaewooklee_umass_edu/.local/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "predict_graph.py", line 164, in forward
+    hidden_states = torch.stack(outputs)  # T, B, H
+RuntimeError: CUDA out of memory. Tried to allocate 976.00 MiB (GPU 0; 47.46 GiB total capacity; 40.30 GiB already allocated; 67.44 MiB free; 46.43 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
