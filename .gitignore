@@ -1,7 +1,11 @@
 .DS_Store
+*.pyc
 wandb/*
 saved_models/*.pt
 *.json
 output/*
 error/*
 run_script.sh
+*epochwise_loss.json
+submissions/*.npy
+submissions/byproducts/*.npy
