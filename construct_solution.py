@@ -9,7 +9,6 @@ from predict_graph import PermutedDKT, PermutationMatrix, PermutedGru
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print('Using device:', device)
 
 def get_sinkhorn_output(matrix, temperature, unroll):
     matrix_shape = matrix.shape[0]
@@ -90,7 +89,8 @@ def main():
     # get construct ordering
     construct_order = np.dot(p_matrix, construct_arr)
     construct_order_lst = construct_order.tolist()
-    print(construct_order_lst)
+    if options.verbose:
+        print(construct_order_lst)
 
     # read test data
     test_constructs = pd.read_csv('./data/Task_3_dataset/constructs_input_test.csv')['ConstructId'].tolist()
