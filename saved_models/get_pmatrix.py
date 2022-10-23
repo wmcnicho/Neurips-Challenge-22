@@ -10,6 +10,7 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup
+import argparse
 
 # setting the seed
 seed_val = 37
@@ -200,48 +201,6 @@ class PermutedGru(nn.Module):
         return hidden_states
 
 
-# class PermutedGru(nn.Module):
-#     def __init__(
-#         self,
-#         init_temp, 
-#         init_unroll,
-#         hidden_size,
-#         bias=False,
-#         num_layers=1,
-#         batch_first=False,
-#         dropout=0.0,
-#     ):
-#         super().__init__()
-#         self.cell = PermutedGruCell(hidden_size=hidden_size, bias=False)
-#         self.batch_first = batch_first
-#         self.permuted_matrix = PermutationMatrix(hidden_size, init_temp, init_unroll)
-
-#     def forward(self, input_, epoch, lengths=None, hidden=None):
-#         # input_ is of dimensionalty (T, B, hidden_size, ...)
-#         # lenghths is B,
-#         dim = 1 if self.batch_first else 0
-#         # lower = self.permuted_matrix(verbose=True)
-#         lower = self.permuted_matrix(epoch, verbose=False) # (PLP')'
-#         outputs = []
-#         # print("Forwarding PermutedGru")
-#         # print("input_: ", input_)
-#         # NOTE: Pass for every question at a time for all students x -> (num_students, num_constructs)
-#         for x in torch.unbind(input_, dim=dim):  # x dim is B, I
-#             # print("x: ", x.shape) #[2, 5]
-#             # print("lower: ", lower)
-#             hidden = self.cell(x, lower, hidden)
-#             outputs.append(hidden.clone())
-
-#         hidden_states = torch.stack(outputs)  # T, B, H
-#         last_states = []
-#         if lengths is None:
-#             lengths = [len(input_)] * len(input_[0])
-#         for idx, l in enumerate(lengths):
-#             last_states.append(hidden_states[l - 1, idx, :]) # last hidden states for all students 
-#         last_states = torch.stack(last_states) # [num_students, num_constructs]
-#         return hidden_states, last_states
-
-
 class PermutedDKT(nn.Module):
     def __init__(self, init_temp, init_unroll, n_concepts, embed_dim):
         super().__init__()
@@ -359,6 +318,8 @@ def get_optimizer_scheduler(name, model, train_dataloader_len, epochs):
                                                     num_training_steps = total_steps)
     return optimizer, scheduler
 
+# TODO condense this into construct_solution.py
+### Utility functions
 def get_sinkhorn_output(matrix):
     temperature=40
     unroll=100
@@ -394,10 +355,10 @@ def search_argmax(matrix):
                 break
     return index_lst
 
-
-
-
 def main():
+    parser = argparse.ArgumentParser(description='UMass 2022 casual ordering submission script')
+    parser.add_argument('-f', '--file_name', type=str, help='Model file from training without file extension')
+    options = parser.parse_args()
     # # dataset = torch.load('serialized_torch/student_data_tensor.pt')
     # dataset_tensor = torch.load('../serialized_torch/student_data_tensor.pt')
     # with open("../serialized_torch/student_data_construct_list.json", 'rb') as fp:
@@ -408,16 +369,16 @@ def main():
     # # dkt_model = nn.DataParallel(PermutedDKT(n_concepts=len(tot_construct_list)+1)).to(device) # using dataparallel
     # dkt_model = PermutedDKT(n_concepts=len(tot_construct_list)+1).to(device)
     if device == torch.device('cpu'):
-        model_load = torch.load('nips_embed_300_newmask_loss.pt', map_location=torch.device('cpu'))
+        model_load = torch.load(f'nips_{options.filiename}.pt', map_location=torch.device('cpu'))
     else:
-        model_load = torch.load('nips_embed_300_newmask_loss.pt')
+        model_load = torch.load(f'nips_{options.filiename}.pt')
     try:
         p_matrix = model_load.gru.permuted_matrix.matrix
     except:
         p_matrix = model_load.module.gru.permuted_matrix.matrix
     sinkhorn_output = get_sinkhorn_output(p_matrix)
     np_matrix = sinkhorn_output.cpu().detach().numpy()
-    np.save('sinkhorn_matrix_embed_300_newmask_loss.npy', np_matrix)
+    np.save(f'sinkhorn_matrix_{options.filiename}.npy', np_matrix)
     argmax_search = search_argmax(np_matrix)
     # argmax_list_row = np.argmax(np_matrix, axis=1)
     # argmax_list_col = np.argmax(np_matrix, axis=0)
@@ -426,7 +387,7 @@ def main():
     p_matrix = np.zeros(np_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
-    np.save('p_matrix_embed_300_newmask_loss.npy', p_matrix)
+    np.save(f'p_matrix_{options.filiename}.npy', p_matrix)
     # dkt_model.load('nips.pt')
     # for param in model_load.parameters():
     #     print(param)

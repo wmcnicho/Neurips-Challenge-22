@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import torch
 import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
+from torch.utils.data import TensorDataset, DataLoader,  SequentialSampler
 from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup
 import argparse
@@ -61,7 +61,7 @@ class PermutationMatrix(nn.Module):
         causal_order = [(idx, int(d[0])) for idx, d in enumerate(ideal_matrix_order)]
         causal_order.sort(key=lambda x: x[1])
         causal_order = [d[0] for d in causal_order]
-        if verbose:
+        if self.verbose:
             row_sum = round(float(torch.median(torch.sum(matrix, dim=1)[0])), 2)
             col_sum = round(float(torch.median(torch.sum(matrix, dim=0)[0])), 2)
             row_max = round(float(torch.median(torch.max(matrix, dim=1)[0])), 2)
@@ -472,7 +472,7 @@ def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_dat
             json.dump(epoch_val_loss, infile)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='UMass 2022 casual ordering project')
+    parser = argparse.ArgumentParser(description='UMass 2022 casual ordering model training')
     parser.add_argument('-B', '--batch_size', type=int ,default=64, help='batch size')
     parser.add_argument('-E', '--epochs', type=int, default=50, help='number of epochs')
     parser.add_argument('-D', '--embed_dim', type=int, default=300, help='embedding dimension')
