@@ -411,7 +411,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
     return model_copy, epochswise_train_losses, epochwise_val_losses
 
 
-def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_data', verbose=False):
+def main(hyper_params, file_path='serialized_torch/', data_name='student_data', verbose=False):
     if data_name == 'sample_student_data':
         print("Sanity check, you're running on sample data")
     dataset_tensor = torch.load(file_path + data_name + '_tensor.pt')
@@ -444,7 +444,7 @@ def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_dat
     # Log Hyperparameters
     if hyper_params.wandb is not None:
         wandb.config = hyper_params
-        
+
     dkt_base_model = PermutedDKT(hyper_params.init_temp, hyper_params.init_unroll, len(tot_construct_list)+1, hyper_params.embed_dim, verbose=verbose).to(device)
     dkt_model = nn.DataParallel(dkt_base_model)
     if verbose:
@@ -480,7 +480,9 @@ if __name__ == "__main__":
     parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
     parser.add_argument('-d', '--debug', action=argparse.BooleanOptionalAction, help='Writes additional debug files for debugging')
     parser.add_argument('-WAB', '--wandb', action=argparse.BooleanOptionalAction, help='Write to weights and biases, optionally provide a custom name')
-    parser.add_argument('-F', '--file_prefix', type=str, default="student_data", help='Write to weights and biases, optionally provide a custom name')
+    parser.add_argument('-F', '--file_prefix', type=str, default="student_data", help='The prefix for the dataset tensor/construct list')
+    parser.add_argument('-P', '--file_path', type=str, default="serialized_torch/", help='The directory containing the the constructs and dataset tensor')
+
     hyper_params = parser.parse_args()
 
     hyper_params.file_name = f"final_stretch_batch_{hyper_params.batch_size}_epoch_{hyper_params.epochs}_embed_{hyper_params.embed_dim}"
@@ -489,4 +491,4 @@ if __name__ == "__main__":
         # Start Wandb run
         wandb.init(project="predict-graph", entity="ml4ed", name=hyper_params.file_name)
 
-    main(hyper_params, data_name=hyper_params.file_prefix, verbose=hyper_params.verbose)
+    main(hyper_params, file_path=hyper_params.file_path, data_name=hyper_params.file_prefix, verbose=hyper_params.verbose)
