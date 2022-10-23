@@ -294,9 +294,10 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
             b_input_ids = batch[0].to(device)
             b_labels = batch[1].to(device)
 
-            # print('After loading data'.upper())
-            # for id in range(torch.cuda.device_count()):
-            #     print(torch.cuda.memory_summary(device=id))
+            if verbose:
+                print('After loading data'.upper())
+                for id in range(torch.cuda.device_count()):
+                    print(torch.cuda.memory_summary(device=id))
 
             # Always clear any previously calculated gradients before performing a
             # backward pass. PyTorch doesn't do this automatically because 
@@ -316,8 +317,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
 
             if verbose:
                 print('After Forward Pass'.upper())
-            for id in range(torch.cuda.device_count()):
-                print(torch.cuda.memory_summary(device=id))
+                for id in range(torch.cuda.device_count()):
+                    print(torch.cuda.memory_summary(device=id))
 
             # Accumulate the training loss over all of the batches so that we can
             # calculate the average loss at the end. `loss` is a Tensor containing a
@@ -363,9 +364,6 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
         # ========================================
         tot_val_loss, tot_val_acc = 0, 0
         for valstep, valbatch in enumerate(val_dataloader):
-            # b_input_ids_val = torch.transpose(valbatch[0], 0, 1).to(device)
-            # b_labels_val = torch.transpose(valbatch[1], 0, 1).to(device)
-
             b_input_ids_val = valbatch[0].to(device)
             b_labels_val = valbatch[1].to(device)
             
@@ -484,8 +482,6 @@ if __name__ == "__main__":
     parser.add_argument('-WAB', '--wandb', action=argparse.BooleanOptionalAction, help='Write to weights and biases, optionally provide a custom name')
     parser.add_argument('-F', '--file_prefix', type=str, default="student_data", help='Write to weights and biases, optionally provide a custom name')
     hyper_params = parser.parse_args()
-
-    #print(f'Sanity checking: {hyper_params}')
 
     hyper_params.file_name = f"final_stretch_batch_{hyper_params.batch_size}_epoch_{hyper_params.epochs}_embed_{hyper_params.embed_dim}"
     
