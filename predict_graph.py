@@ -191,14 +191,14 @@ class PermutedDKT(nn.Module):
         # [T,B] -> [T,B,1]
         input.scatter_(2, concept_input.unsqueeze(2), labels.unsqueeze(2).float())
 
-        # TODO: Transform input to account for construct embeddings, is this done?
+        # Transform input to account for construct embeddings
         rawembed = torch.matmul(abs(input), self.embed_matrix)
         rawdelta = torch.matmul(input, self.delta_matrix)
         preembed = rawembed + rawdelta
         input_embed = self.embed_input(preembed)
 
 
-        # TODO: Create a mask (0 when the input is 0), is this done?
+        # Create a mask (0 when the input is 0)
         mask_ones = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
         mask = mask_ones - (labels==0).long().to(device)
 
@@ -424,7 +424,7 @@ def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_dat
     concept_input = torch.tensor(map_concept_input, dtype=torch.long)
     
     labels = torch.tensor(dataset_tensor[:, 1, :].clone().detach(), dtype=torch.long)
-    # TODO: Batch student-wise not question-wise (dim-1 must be student), is this addressed?
+    # Batch student-wise not question-wise (dim-1 must be student)
     concept_inp_transpose = torch.transpose(concept_input, 0, 1)
     labels_transpose = torch.transpose(labels, 0, 1)
     train_input, valid_input, train_label, valid_label = train_test_split(concept_inp_transpose, labels_transpose, 
@@ -444,7 +444,7 @@ def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_dat
     # Log Hyperparameters
     if hyper_params.wandb is not None:
         wandb.config = hyper_params
-    # TODO: Check DataParallel, is this addressed?
+        
     dkt_base_model = PermutedDKT(hyper_params.init_temp, hyper_params.init_unroll, len(tot_construct_list)+1, hyper_params.embed_dim, verbose=verbose).to(device)
     dkt_model = nn.DataParallel(dkt_base_model)
     if verbose:
