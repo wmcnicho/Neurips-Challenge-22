@@ -35,8 +35,10 @@ class PermutationMatrix(nn.Module):
         self.unroll, self.temperature = unroll, temperature
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
-        self.lower = nn.Parameter(torch.tril(torch.ones(input_size, input_size)), requires_grad=False)
-        # self.lower = torch.tril(torch.ones(input_size, input_size, device=device))
+
+        # NOTE: Trainable L.
+        self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device))
+        self.l_matrix = None
 
     def forward(self, epoch, verbose=False):
         # TODO: update temperature and unroll
@@ -52,7 +54,14 @@ class PermutationMatrix(nn.Module):
         ones = torch.ones(matrix_shape, device=device).reshape(1, matrix_shape)
 
         matrix = torch.exp(temperature * (self.matrix - torch.matmul(max_row, ones)))
-        
+        # NOTE: Trainable L.
+        lower = torch.empty(matrix_shape, matrix_shape, device = device)
+        if self.l_matrix is None:
+            self.l_mask = torch.tril(torch.ones(matrix_shape, matrix_shape, device = device)) 
+            lower = torch.sigmoid(self.lower * 5) * self.l_mask
+        else:
+            lower = torch.sigmoid(self.lower) * self.l_mask
+
         # # NOTE. Aritra's implementation
         # matrix = torch.exp(self.temperature * (self.matrix - torch.max(self.matrix)))
         
@@ -60,7 +69,7 @@ class PermutationMatrix(nn.Module):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
         # ((P x L) x P^T)^T
-        output_lower = torch.matmul(torch.matmul(matrix, self.lower), matrix.t()).t()
+        output_lower = torch.matmul(torch.matmul(matrix, lower), matrix.t()).t()
         ideal_matrix_order = matrix.data.argmax(dim=1, keepdim=True) # gives the ideal order of the constructs
         new_matrix = torch.zeros_like(matrix)
         new_matrix.scatter_(
@@ -440,7 +449,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler)
 
 def main():
     # Make sure what you are running: sample or real dataset.
-    test_sample = True
+    test_sample = False
 
     if test_sample:
         dataset_tensor = torch.load('serialized_torch/sample_student_data_tensor.pt')

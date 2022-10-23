@@ -2,3 +2,6 @@
 wandb/*
 saved_models/*.pt
 *.json
+output/*
+error/*
+run_script.sh
