@@ -31,7 +31,7 @@ class PermutationMatrix(nn.Module):
         self.matrix = nn.Parameter(torch.empty(input_size, input_size, device=device))
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
         self.lower = nn.Parameter(torch.tril(torch.ones(input_size, input_size)), requires_grad=False)
-        self.verbose
+        self.verbose = verbose
 
     def forward(self, epoch):
         # TODO: update temperature and unroll, Is this done?
@@ -163,7 +163,7 @@ class PermutedDKT(nn.Module):
 
         self.embed_input = nn.Linear(self.embed_dim, n_concepts)
 
-        self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False)
+        self.gru = PermutedGru(init_temp, init_unroll, n_concepts, batch_first=False, verbose=self.verbose)
         self.n_concepts = n_concepts
         self.output_layer = nn.Linear(self.embed_dim+1, 1) 
         self.ce_loss = nn.BCEWithLogitsLoss(reduction='none')
@@ -402,7 +402,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
         prev_val_loss = avg_val_loss
 
         # Wandb Log Metrics
-        if "wandb" in hyper_params:
+        if hyper_params.wandb is not None:
             wandb.log({"Epoch": epoch_i,
                     "Average training loss": avg_train_loss,
                     "Average validation loss":avg_val_loss,
@@ -414,7 +414,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
 
 
 def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_data', verbose=False):
-    if data_name is 'sample_student_data':
+    if data_name == 'sample_student_data':
         print("Sanity check, you're running on sample data")
     dataset_tensor = torch.load(file_path + data_name + '_tensor.pt')
     with open(file_path + data_name + '_construct_list.json', 'rb') as fp:
@@ -444,7 +444,7 @@ def main(hyper_params, file_path = 'serialized_torch/', data_name = 'student_dat
 
 
     # Log Hyperparameters
-    if "wandb" in hyper_params:
+    if hyper_params.wandb is not None:
         wandb.config = hyper_params
     # TODO: Check DataParallel, is this addressed?
     dkt_base_model = PermutedDKT(hyper_params.init_temp, hyper_params.init_unroll, len(tot_construct_list)+1, hyper_params.embed_dim, verbose=verbose).to(device)
@@ -478,18 +478,19 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--embed_dim', type=int, default=300, help='embedding dimension')
     parser.add_argument('-IT', '--init_temp', type=int, default=2, help='initial temperature')
     parser.add_argument('-IU', '--init_unroll', type=int, default=5, help='initial unroll')
-    parser.add_argument('-L', '--learning_rate', type=float, default=5e-4, help='learning_rate')
+    parser.add_argument('-L', '--lr', type=float, default=5e-4, help='learning_rate')
     parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
     parser.add_argument('-d', '--debug', action=argparse.BooleanOptionalAction, help='Writes additional debug files for debugging')
-    parser.add_argument('-WAB', '--wandb', type=str, default="ml4ed", help='Write to weights and biases, optionally provide a custom name')
+    parser.add_argument('-WAB', '--wandb', action=argparse.BooleanOptionalAction, help='Write to weights and biases, optionally provide a custom name')
+    parser.add_argument('-F', '--file_prefix', type=str, default="student_data", help='Write to weights and biases, optionally provide a custom name')
     hyper_params = parser.parse_args()
 
+    #print(f'Sanity checking: {hyper_params}')
 
-    hyper_params.file_name = f"batch_{hyper_params.batch_size}_epoch_{hyper_params.epochs}_embed_{hyper_params.embed_dim}"
-    if "wandb" in hyper_params:
-        if hyper_params.wand is not "ml4ed":
-            hyper_params.file_name = hyper_params.wandb
+    hyper_params.file_name = f"final_stretch_batch_{hyper_params.batch_size}_epoch_{hyper_params.epochs}_embed_{hyper_params.embed_dim}"
+    
+    if hyper_params.wandb is not None:
         # Start Wandb run
         wandb.init(project="predict-graph", entity="ml4ed", name=hyper_params.file_name)
 
-    main(hyper_params, verbose=hyper_params.verbose)
+    main(hyper_params, data_name=hyper_params.file_prefix, verbose=hyper_params.verbose)
