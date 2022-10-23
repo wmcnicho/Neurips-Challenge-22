@@ -116,8 +116,8 @@ def main():
         for j, col_cons in enumerate(test_constructs):
             col_pos = construct_order_lst.index(col_cons)
             if col_pos >= row_pos:
-                solution_adj_matrix[i][j] = 1 # construct j depends on construct i
-                solution_adj_matrix[i][j] = l_matrix[i][j]
+                # solution_adj_matrix[i][j] = 1 # construct j depends on construct i
+                solution_adj_matrix[i][j] = l_matrix[row_pos][col_pos]
 
     solution_adj_matrix_arr = np.array(solution_adj_matrix).astype(int)
     np.save(f'./submissions/adj_matrix_{options.file_name}.npy', solution_adj_matrix_arr)
