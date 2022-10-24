@@ -33,7 +33,7 @@ class PermutationMatrix(nn.Module):
 
         # NOTE: Trainable L.
         self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device))
-        self.l_matrix = None
+        self.l_mask = None
         self.verbose = verbose
 
     def forward(self, epoch):
@@ -52,7 +52,7 @@ class PermutationMatrix(nn.Module):
         matrix = torch.exp(temperature * (self.matrix - torch.matmul(max_row, ones)))
         # NOTE: Trainable L.
         lower = torch.empty(matrix_shape, matrix_shape, device = device)
-        if self.l_matrix is None:
+        if self.l_mask is None:
             self.l_mask = torch.tril(torch.ones(matrix_shape, matrix_shape, device = device)) 
             lower = torch.sigmoid(self.lower * 5) * self.l_mask
         else:
