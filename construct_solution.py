@@ -43,6 +43,7 @@ def main():
     parser = argparse.ArgumentParser(description='UMass 2022 casual ordering submission script')
     parser.add_argument('-f', '--file_name', type=str, default='final_10_22_20_25_44_batch_3_epoch_5_embed_3', help='Model file from training without file extension')
     parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
+    parser.add_argument('-D', '--debug', action=argparse.BooleanOptionalAction, help='Controls whether intermediate files are created during submission construction')
     parser.add_argument('-T', '--temperature', type=int, default=2, help='temperature of learned model')
     parser.add_argument('-U', '--unroll', type=int, default=5, help='unroll length of learned model')
     options = parser.parse_args()
@@ -58,8 +59,8 @@ def main():
 
     sinkhorn_output = get_sinkhorn_output(p_matrix, options.temperature, options.unroll)
     np_matrix = sinkhorn_output.cpu().detach().numpy()
-    # TODO Do we need this?
-    np.save(f'./submissions/byproducts/sinkhorn_matrix_{options.file_name}.npy', np_matrix)
+    if options.debug:
+        np.save(f'./submissions/byproducts/sinkhorn_matrix_{options.file_name}.npy', np_matrix)
 
     argmax_search = search_argmax(np_matrix)
     if options.verbose:
@@ -68,14 +69,15 @@ def main():
         print('P Matrix by row', len(set(argmax_list_row)))
         print('P Matrix by col', len(set(argmax_list_col)))
 
-    # TODO: change the p-matrix to be ideal (row-wise argmax until the index has not been encountered) 
+    # Change the p-matrix to be ideal (row-wise argmax until the index has not been encountered) 
     p_matrix = np.zeros(np_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
-    # TODO Do we need this?
-    np.save(f'./submissions/byproducts/p_matrix_{options.file_name}.npy', p_matrix)
-    p_matrix = np.load(f'./submissions/byproducts/p_matrix_{options.file_name}.npy') # NOTE: assuming perfect p-matrix
+    if options.debug:
+        np.save(f'./submissions/byproducts/p_matrix_{options.file_name}.npy', p_matrix)
     
+    
+    # NOTE: assuming perfect p-matrix
     # Read construct list
     with open("./serialized_torch/student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
@@ -90,7 +92,7 @@ def main():
     construct_order = np.dot(p_matrix, construct_arr)
     construct_order_lst = construct_order.tolist()
     if options.verbose:
-        print(construct_order_lst)
+        print(construct_order_lst)  
 
     # read test data
     test_constructs = pd.read_csv('./data/Task_3_dataset/constructs_input_test.csv')['ConstructId'].tolist()
