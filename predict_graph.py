@@ -23,7 +23,9 @@ torch.cuda.manual_seed_all(seed_val)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
-        
+
+init_mask = 0
+
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature, unroll, verbose=False):
         super().__init__()
@@ -32,8 +34,12 @@ class PermutationMatrix(nn.Module):
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
 
         # NOTE: Trainable L.
-        self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device))
-        self.l_mask = None
+        # self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device))
+        self.lower = nn.Parameter(torch.empty(input_size, input_size, device=device))
+        # nn.init.ones_(self.lower)
+        nn.init.kaiming_normal_(self.lower, a=math.sqrt(input_size))
+        # self.l_mask = None
+        # self.l_mask = torch.tril(torch.ones(input_size, input_size, device=device))
         self.verbose = verbose
 
     def forward(self, epoch):
@@ -52,12 +58,21 @@ class PermutationMatrix(nn.Module):
         matrix = torch.exp(temperature * (self.matrix - torch.matmul(max_row, ones)))
         # NOTE: Trainable L.
         lower = torch.empty(matrix_shape, matrix_shape, device = device)
-        if self.l_mask is None:
-            self.l_mask = torch.tril(torch.ones(matrix_shape, matrix_shape, device = device)) 
-            lower = torch.sigmoid(self.lower * 5) * self.l_mask
-        else:
-            lower = torch.sigmoid(self.lower) * self.l_mask
-        
+        global init_mask
+        l_mask = torch.tril(torch.ones(matrix_shape, matrix_shape, device=device))
+        # if init_mask < torch.cuda.device_count():
+        #     print("Init lower matrix with 5.x")
+        #     # init_l = torch.ones(matrix_shape, matrix_shape, device=device) * 5 + torch.rand(matrix_shape, matrix_shape, device=device)
+        #     init_l = torch.randn(matrix_shape, matrix_shape, device=device)
+        #     torch.set_printoptions(threshold=10_000)
+        #     print("init_l:\n", init_l)
+        #     lower = torch.sigmoid(self.lower * init_l) * l_mask
+        #     init_mask = init_mask + 1
+        # else:
+        #     print("Lower matrix through sigmoid")
+        #     lower = torch.sigmoid(self.lower) * l_mask
+        lower = torch.sigmoid(self.lower) * l_mask
+        print("lower:\n", lower)
         for _ in range(unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
