@@ -44,6 +44,7 @@ def main():
     parser = argparse.ArgumentParser(description='UMass 2022 casual ordering submission script')
     parser.add_argument('-f', '--file_name', type=str, default='final_10_22_20_25_44_batch_3_epoch_5_embed_3', help='Model file from training without file extension')
     parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
+    parser.add_argument('-D', '--debug', action=argparse.BooleanOptionalAction, help='Controls whether intermediate files are created during submission construction')
     parser.add_argument('-T', '--temperature', type=int, default=2, help='temperature of learned model')
     parser.add_argument('-U', '--unroll', type=int, default=5, help='unroll length of learned model')
     parser.add_argument('-L', '--tau', type=float, default=500, help='threshold for L matrix')
@@ -61,7 +62,6 @@ def main():
         l_matrix = model_load.module.gru.permuted_matrix.lower
 
     sinkhorn_output = get_sinkhorn_output(p_matrix, options.temperature, options.unroll)
-    # sigmoid_output = (torch.sigmoid(l_matrix) > options.tau).float()
     l_mask = torch.tril(torch.ones(l_matrix.shape[0], l_matrix.shape[1]))
     sigmoid_output = torch.sigmoid(l_matrix) * l_mask
 
@@ -73,9 +73,9 @@ def main():
     print("========="*10)
     print("l_matrix: ", np_l_matrix)
 
-    # TODO Do we need this?
-    np.save(f'./submissions/byproducts/sinkhorn_p_matrix_{options.file_name}.npy', np_p_matrix)
-    np.save(f'./submissions/byproducts/l_matrix_{options.file_name}.npy', np_l_matrix)
+    if options.debug:
+        np.save(f'./submissions/byproducts/sinkhorn_p_matrix_{options.file_name}.npy', np_p_matrix)
+        np.save(f'./submissions/byproducts/l_matrix_{options.file_name}.npy', np_l_matrix)
 
     argmax_search = search_argmax(np_p_matrix)
     if options.verbose:
@@ -84,7 +84,6 @@ def main():
         print('P Matrix by row', len(set(argmax_list_row)))
         print('P Matrix by col', len(set(argmax_list_col)))
 
-    # TODO: change the p-matrix to be ideal (row-wise argmax until the index has not been encountered) 
     p_matrix = np.zeros(np_p_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
@@ -109,10 +108,10 @@ def main():
     print("========="*10)
     print("after tau: ", l_matrix)
 
-    # TODO Do we need this?
-    np.save(f'./submissions/byproducts/p_matrix_{options.file_name}.npy', p_matrix)
-    p_matrix = np.load(f'./submissions/byproducts/p_matrix_{options.file_name}.npy') # NOTE: assuming perfect p-matrix
-    np.save(f'./submissions/byproducts/threshold_{options.tau}_l_matrix_{options.file_name}.npy', l_matrix) # NOTE: thresholded l-matrix
+    if options.debug:
+        np.save(f'./submissions/byproducts/threshold_{options.tau}_l_matrix_{options.file_name}.npy', l_matrix) # NOTE: thresholded l-matrix
+        np.save(f'./submissions/byproducts/p_matrix_{options.file_name}.npy', p_matrix)
+        p_matrix = np.load(f'./submissions/byproducts/p_matrix_{options.file_name}.npy') # NOTE: assuming perfect p-matrix
 
     # Read construct list
     with open("./serialized_torch/student_data_construct_list.json", 'rb') as fp:
@@ -128,7 +127,7 @@ def main():
     construct_order = np.dot(p_matrix, construct_arr)
     construct_order_lst = construct_order.tolist()
     if options.verbose:
-        print(construct_order_lst)
+        print(construct_order_lst)  
 
     # read test data
     test_constructs = pd.read_csv('./data/Task_3_dataset/constructs_input_test.csv')['ConstructId'].tolist()
