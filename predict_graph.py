@@ -448,7 +448,7 @@ if __name__ == "__main__":
     parser.add_argument('-L', '--lr', type=float, default=5e-4, help='learning_rate')
     parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
     parser.add_argument('-d', '--debug', action=argparse.BooleanOptionalAction, help='Writes additional debug files for debugging')
-    parser.add_argument('-WAB', '--wandb', action=argparse.BooleanOptionalAction, help='Write to weights and biases, optionally provide a custom name')
+    parser.add_argument('-WAB', '--wandb', action=argparse.BooleanOptionalAction, help='Write to weights and biases, note you will need to log in and modify config')
     parser.add_argument('-F', '--file_prefix', type=str, default="student_data", help='The prefix for the dataset tensor/construct list')
     parser.add_argument('-P', '--file_path', type=str, default="serialized_torch/", help='The directory containing the the constructs and dataset tensor')
 

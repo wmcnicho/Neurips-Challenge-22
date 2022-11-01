@@ -47,7 +47,7 @@ def main():
     parser.add_argument('-D', '--debug', action=argparse.BooleanOptionalAction, help='Controls whether intermediate files are created during submission construction')
     parser.add_argument('-T', '--temperature', type=int, default=2, help='temperature of learned model')
     parser.add_argument('-U', '--unroll', type=int, default=5, help='unroll length of learned model')
-    parser.add_argument('-L', '--tau', type=float, default=0.5, help='threshold for L matrix')
+    parser.add_argument('-L', '--tau', type=float, default=0.45, help='threshold for L matrix')
     options = parser.parse_args()
     
     if device == torch.device('cpu'):

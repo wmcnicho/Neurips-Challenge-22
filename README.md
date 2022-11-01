@@ -2,18 +2,20 @@
 NeurIPS 2022 CausalEdu Competition - Task 3
 
 ## Setups
-The requiring environment is as bellow:  
-- Linux 
+The required environment is as bellow:  
+- Unix-based system 
 - Python 3.9+
 - PyTorch 1.12.1 
 - Numpy 1.23.1
 - Wandb 0.13.4
+- Pandas 1.5.0
+- SciPy 1.9.1
 
 ## Repository Overview 
 
 ```/data/``` - Repository containing the dataset
 
-```/serialized_torch/``` - <TODO: Hunter, can you help me writing this?> 
+```/serialized_torch/``` - Intermediate data from the prepocessed dataset
 
 ```predict_graph.py``` - Training Causal KT
 
@@ -21,20 +23,34 @@ The requiring environment is as bellow:
 
 ```/submissions/final``` - Contains the model and the adjacency matrix for submission on the private leaderboard. 
 
-## Running CausalKT
-Here is an example how to train Causal KT. 
+## Running DCKT
+First install all dependecies of the projects below is the pip methodology. (Similiar approaches exist for conda or other package management systems).
+
 ```
-python3 predict_graph.py -WAB -L 1e-3
+pip3 install -r requirements.txt
 ```
 
-Here is an example how to create a submission file. We submitted L value of 0.45.
+
+Here is an example how to train Deep Causal Knowledge Tracing (DCKT) with a `learning_rate` of 0.01.
 ```
-python3 construct_solution.py -f ./submissions/final/final_10_27_20_25_29_final_stretch_batch_64_epoch_50_embed_300 -L 0.45
+python3 predict_graph.py -L 1e-3
 ```
+For a list of all possible hyperparameters see:
+```
+python3 predict_graph.py -h
+```
+The output of this is a model `.pt` file which contains a learned P and L matrix. By default, this is saved into the `saved_models` directory. 
+
+To construct the construct ordering adjacency matrix from this model we use `construct_solution.py`. Here is an example how to create a submission file.
+```
+python3 construct_solution.py -f <Your Model File>.pt
+```
+
+The output of this script is a zip file containing the `.npy` casual order adjency matrix.
 
 Contact: ml4ed @ UMass Amherst
-- Jaewook Lee (jaewooklee.jake@gmail.com)
-- Hunter McNichols (hmcnich@gmail.com)
-- Nischal Ashok Kumar (nischal.ashok09@gmail.com)
-- Wanyong Feng (wanyongfeng123@gmail.com)
-- Aritra Ghosh (aritraghosh.iem@gmail.com)
+- Jaewook Lee (jaewooklee@umass.edu)
+- Hunter McNichols (wmcnichols@umass.edu)
+- Nischal Ashok Kumar (nashokkumar@umass.edu)
+- Wanyong Feng (wanyongfeng@umass.edu)
+- Aritra Ghosh (arighosh@cs.umass.edu)
