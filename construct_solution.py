@@ -6,7 +6,8 @@ import torch
 import argparse
 import pandas as pd
 from predict_graph import PermutedDKT, PermutationMatrix, PermutedGru
-
+import os
+import shutil
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -46,6 +47,7 @@ def main():
     parser.add_argument('-D', '--debug', action=argparse.BooleanOptionalAction, help='Controls whether intermediate files are created during submission construction')
     parser.add_argument('-T', '--temperature', type=int, default=2, help='temperature of learned model')
     parser.add_argument('-U', '--unroll', type=int, default=5, help='unroll length of learned model')
+    parser.add_argument('-L', '--tau', type=float, default=0.45, help='threshold for L matrix')
     options = parser.parse_args()
     
     if device == torch.device('cpu'):
@@ -54,30 +56,65 @@ def main():
         model_load = torch.load(f'saved_models/{options.file_name}.pt')
     try:
         p_matrix = model_load.gru.permuted_matrix.matrix
+        l_matrix = model_load.gru.permuted_matrix.lower
     except:
         p_matrix = model_load.module.gru.permuted_matrix.matrix
+        l_matrix = model_load.module.gru.permuted_matrix.lower
 
     sinkhorn_output = get_sinkhorn_output(p_matrix, options.temperature, options.unroll)
-    np_matrix = sinkhorn_output.cpu().detach().numpy()
-    if options.debug:
-        np.save(f'./submissions/byproducts/sinkhorn_matrix_{options.file_name}.npy', np_matrix)
+    l_mask = torch.tril(torch.ones(l_matrix.shape[0], l_matrix.shape[1]))
+    sigmoid_output = torch.sigmoid(l_matrix) * l_mask
 
-    argmax_search = search_argmax(np_matrix)
+    np_p_matrix = sinkhorn_output.cpu().detach().numpy()
+    np_l_matrix = sigmoid_output.cpu().detach().numpy()
+
+    np.set_printoptions(threshold=np.inf)
     if options.verbose:
-        argmax_list_row = np.argmax(np_matrix, axis=1)
-        argmax_list_col = np.argmax(np_matrix, axis=0)
+        print("Trained L bar matrix: ", l_matrix)
+        print("========="*10)
+        print("L matrix: ", np_l_matrix)
+
+    if options.debug:
+        np.save(f'./submissions/byproducts/sinkhorn_p_matrix_{options.file_name}.npy', np_p_matrix)
+        np.save(f'./submissions/byproducts/l_matrix_{options.file_name}.npy', np_l_matrix)
+
+    argmax_search = search_argmax(np_p_matrix)
+    if options.verbose:
+        argmax_list_row = np.argmax(np_p_matrix, axis=1)
+        argmax_list_col = np.argmax(np_p_matrix, axis=0)
         print('P Matrix by row', len(set(argmax_list_row)))
         print('P Matrix by col', len(set(argmax_list_col)))
 
-    # Change the p-matrix to be ideal (row-wise argmax until the index has not been encountered) 
-    p_matrix = np.zeros(np_matrix.shape)
+    p_matrix = np.zeros(np_p_matrix.shape)
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
+    l_matrix = np.zeros(np_l_matrix.shape)
+
+    max_element = 0
+    min_element = 1
+    for i in range(np_l_matrix.shape[0]):
+        for j in range(np_l_matrix.shape[1]):
+            if i > j:
+                if np_l_matrix[i][j] > max_element:
+                    max_element = np_l_matrix[i][j]
+                elif np_l_matrix[i][j] < min_element:
+                    min_element = np_l_matrix[i][j]
+            elif i == j:
+                np_l_matrix[i][j] = 1
+    if options.verbose:
+        print("Max element of L bar matrix: ", max_element)
+        print("Min element of L bar matrix: ", min_element)
+    l_matrix = (np_l_matrix > float(options.tau)).astype(float)
+
+    if options.verbose:
+        print("========="*10)
+        print("Thresholded L matrix: ", l_matrix)
+
     if options.debug:
+        np.save(f'./submissions/byproducts/threshold_{options.tau}_l_matrix_{options.file_name}.npy', l_matrix) # NOTE: thresholded l-matrix
         np.save(f'./submissions/byproducts/p_matrix_{options.file_name}.npy', p_matrix)
-    
-    
-    # NOTE: assuming perfect p-matrix
+        p_matrix = np.load(f'./submissions/byproducts/p_matrix_{options.file_name}.npy') # NOTE: assuming perfect p-matrix
+
     # Read construct list
     with open("./serialized_torch/student_data_construct_list.json", 'rb') as fp:
         tot_construct_list = json.load(fp)
@@ -88,13 +125,13 @@ def main():
 
     construct_arr = np.array(tot_construct_list)
 
-    # get construct ordering
+    # Get construct ordering
     construct_order = np.dot(p_matrix, construct_arr)
     construct_order_lst = construct_order.tolist()
     if options.verbose:
         print(construct_order_lst)  
 
-    # read test data
+    # Read test data
     test_constructs = pd.read_csv('./data/Task_3_dataset/constructs_input_test.csv')['ConstructId'].tolist()
     solution_adj_matrix = np.zeros(shape=(len(test_constructs), len(test_constructs)))
 
@@ -102,11 +139,17 @@ def main():
         row_pos = construct_order_lst.index(row_cons)
         for j, col_cons in enumerate(test_constructs):
             col_pos = construct_order_lst.index(col_cons)
-            if col_pos >= row_pos:
-                solution_adj_matrix[i][j] = 1 # construct j depends on construct i
+            solution_adj_matrix[i][j] = l_matrix[row_pos][col_pos]
 
     solution_adj_matrix_arr = np.array(solution_adj_matrix).astype(int)
-    np.save(f'./submissions/adj_matrix_{options.file_name}.npy', solution_adj_matrix_arr)
+
+    directory = f"tau_{options.tau}"
+    parent_dir = "./submissions/"
+    path = os.path.join(parent_dir, directory)
+
+    os.mkdir(path, 0o755)
+    np.save(f'{path}/adj_matrix.npy', solution_adj_matrix_arr)
+    shutil.make_archive(f'tau_{options.tau}', format='zip', root_dir=path)
 
 if __name__ == "__main__":
     main()
