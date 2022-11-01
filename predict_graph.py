@@ -21,6 +21,7 @@ np.random.seed(seed_val)
 torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
+# setting the device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
@@ -42,7 +43,9 @@ class PermutationMatrix(nn.Module):
         temperature = ((epoch//10)+1)*self.temperature
         unroll = ((epoch//10)+1)*self.unroll
 
-        # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
+        # NOTE: Sinkhorn Operation
+        # For every element of the matrix subtract with the max value, 
+        # multiply by the temperature and make it exponential
         if self.verbose:
             print("Initial value of P bar matrix\n", self.matrix)
         
@@ -217,7 +220,8 @@ class PermutedDKT(nn.Module):
 
         init_state = torch.zeros(1, input.shape[1], input.shape[2]).to(device)
         shifted_hidden_states = torch.cat([init_state, hidden_states], dim=0)[:-1, :, :].to(device) 
-        # TODO: Add construct embeddings
+        
+        # NOTE: Adding construct embeddings
         relevant_hidden_states = torch.gather(shifted_hidden_states, 2, concept_input.unsqueeze(2)) # [num_questions, num_students, 1]
         preoutput = torch.cat((rawembed, relevant_hidden_states), dim=2)
 
@@ -243,21 +247,21 @@ def get_mapped_concept_input(initial_concept_input, tot_construct_list):
 def get_data_loader(batch_size, concept_input, labels):
     print('Using batch size:', batch_size)
     data = TensorDataset(concept_input, labels)
-    sampler = SequentialSampler(data) # change to randomsampler later
+    sampler = SequentialSampler(data)
     dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
     return dataloader
 
 def get_optimizer_scheduler(name, model, lr, train_dataloader_len, epochs):
     if name == "Adam":
         optimizer = AdamW(model.parameters(),
-                    lr = lr, # args.learning_rate - default is 5e-5, our notebook had 2e-5
-                    eps = 1e-8 # args.adam_epsilon  - default is 1e-8.
+                    lr = lr, # args.learning_rate 
+                    eps = 1e-8 # args.adam_epsilon
                 )
         total_steps = train_dataloader_len * epochs
 
         # Create the learning rate scheduler.
         scheduler = get_linear_schedule_with_warmup(optimizer, 
-                                                    num_warmup_steps = 0, # Default value in run_glue.py
+                                                    num_warmup_steps = 0,
                                                     num_training_steps = total_steps)
     return optimizer, scheduler
 
@@ -282,24 +286,12 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
         # Reset the total loss for this epoch.
         total_loss = 0
 
-        # Put the model into training mode. Don't be mislead--the call to 
-        # `train` just changes the *mode*, it doesn't *perform* the training.
-        # `dropout` and `batchnorm` layers behave differently during training
-        # vs. test (source: https://stackoverflow.com/questions/51433378/what-does-model-train-do-in-pytorch)
+        # Switch model to the train mode
         model.train()
 
         # For each batch of training data...
         for step, batch in enumerate(train_dataloader):
             print('Step:', step)
-            # Unpack this training batch from our dataloader. 
-            #
-            # As we unpack the batch, we'll also copy each tensor to the GPU using the 
-            # `to` method.
-            #
-            # `batch` contains three pytorch tensors:
-            #   [0]: input ids 
-            #   [1]: attention masks
-            #   [2]: labels 
 
             b_input_ids = batch[0].to(device)
             b_labels = batch[1].to(device)
@@ -309,17 +301,8 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
                 for id in range(torch.cuda.device_count()):
                     print(torch.cuda.memory_summary(device=id))
 
-            # Always clear any previously calculated gradients before performing a
-            # backward pass. PyTorch doesn't do this automatically because 
-            # accumulating the gradients is "convenient while training RNNs". 
-            # (source: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch)
+            # Clear previously accumulated gradients
             model.zero_grad()        
-
-            # Perform a forward pass (evaluate the model on this training batch).
-            # This will return the loss (rather than the model output) because we
-            # have provided the `labels`.
-            # The documentation for this `model` function is here: 
-            # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
 
             # NOTE: Forward pass
             loss = model(b_input_ids, b_labels, epoch_i+1)
@@ -330,11 +313,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
                 for id in range(torch.cuda.device_count()):
                     print(torch.cuda.memory_summary(device=id))
 
-            # Accumulate the training loss over all of the batches so that we can
-            # calculate the average loss at the end. `loss` is a Tensor containing a
-            # single value; the `.item()` function just returns the Python value 
-            # from the tensor.
-            
+           
             # Perform a backward pass to calculate the gradients.
             if(torch.cuda.device_count() > 1):
                 total_loss += loss.mean().item()
@@ -353,9 +332,7 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
             # This is to help prevent the "exploding gradients" problem.
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
-            # Update parameters and take a step using the computed gradient.
-            # The optimizer dictates the "update rule"--how the parameters are
-            # modified based on their gradients, the learning rate, etc.
+            # Update parameters
             optimizer.step()
 
             # Update the learning rate.
@@ -382,23 +359,10 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
                     tot_val_loss += valloss.mean().item()
                 else:
                     tot_val_loss += valloss.item()
-                # tot_val_acc += valacc
         avg_val_loss = tot_val_loss / len(val_dataloader)
-        # avg_acc = tot_val_acc/ len(val_dataloader)
         print("  Average validation loss: {0:.2f}".format(avg_val_loss))
-        # TODO fix our accuracy calculation
-        # print("  Average validation accuracy: {0:.2f}".format(avg_acc))
         epochwise_val_losses.append(avg_val_loss)
-        
-        # TODO put under feature flag
-        # # NOTE: Early stopping
-        # if abs(avg_val_loss-prev_val_loss) < early_stop_patience:
-        #     if early_stop_ctr < early_stop_threshold:
-        #         early_stop_ctr += 1
-        #     else:
-        #         print('Early Stopping. No improvement in validation loss')
-        #         break 
-        
+                
         if avg_val_loss < least_val_loss:
             cur_least_epoch = epoch_i
             model_copy = copy.deepcopy(model)
@@ -406,15 +370,12 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
             date = datetime.now().strftime('%m_%d_%H_%M_%S')
             torch.save(model_copy, os.path.join('saved_models', date + '_' + hyper_params.file_name +'.pt'))
 
-        prev_val_loss = avg_val_loss
-
         # Wandb Log Metrics
         if hyper_params.wandb is not None:
             wandb.log({"Epoch": epoch_i,
                     "Average training loss": avg_train_loss,
                     "Average validation loss":avg_val_loss,
-                    "cur_least_epoch":cur_least_epoch,
-                    "Validation Accuracy": 0})
+                    "cur_least_epoch":cur_least_epoch})
     
     print('Least Validation loss:', least_val_loss)
     return model_copy, epochswise_train_losses, epochwise_val_losses
