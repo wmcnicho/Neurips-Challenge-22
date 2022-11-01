@@ -6,6 +6,8 @@ import torch
 import argparse
 import pandas as pd
 from predict_graph import PermutedDKT, PermutationMatrix, PermutedGru
+import os
+import shutil
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -44,7 +46,7 @@ def main():
     parser.add_argument('-V', '--verbose', action=argparse.BooleanOptionalAction, help='Controls amount of printing')
     parser.add_argument('-T', '--temperature', type=int, default=2, help='temperature of learned model')
     parser.add_argument('-U', '--unroll', type=int, default=5, help='unroll length of learned model')
-    parser.add_argument('-L', '--tau', type=float, default=0.5, help='threshold for L matrix')
+    parser.add_argument('-L', '--tau', type=float, default=500, help='threshold for L matrix')
     options = parser.parse_args()
     
     if device == torch.device('cpu'):
@@ -67,6 +69,8 @@ def main():
     np_l_matrix = sigmoid_output.cpu().detach().numpy()
 
     np.set_printoptions(threshold=np.inf)
+    print("original: ", l_matrix)
+    print("========="*10)
     print("l_matrix: ", np_l_matrix)
 
     # TODO Do we need this?
@@ -85,7 +89,25 @@ def main():
     for row, col in enumerate(argmax_search):
         p_matrix[row][col] = 1
     l_matrix = np.zeros(np_l_matrix.shape)
-    l_matrix = (np_l_matrix > options.tau).astype(float)
+
+    max_element = 0
+    min_element = 1
+    for i in range(np_l_matrix.shape[0]):
+        for j in range(np_l_matrix.shape[1]):
+            if i > j:
+                if np_l_matrix[i][j] > max_element:
+                    max_element = np_l_matrix[i][j]
+                elif np_l_matrix[i][j] < min_element:
+                    min_element = np_l_matrix[i][j]
+            elif i == j:
+                np_l_matrix[i][j] = 1
+
+    print("Max element of L bar matrix: ", max_element)
+    print("Min element of L bar matrix: ", min_element)
+    l_matrix = (np_l_matrix > float(options.tau / 1000)).astype(float)
+
+    print("========="*10)
+    print("after tau: ", l_matrix)
 
     # TODO Do we need this?
     np.save(f'./submissions/byproducts/p_matrix_{options.file_name}.npy', p_matrix)
@@ -120,7 +142,14 @@ def main():
 
 
     solution_adj_matrix_arr = np.array(solution_adj_matrix).astype(int)
-    np.save(f'./submissions/adj_matrix_{options.file_name}.npy', solution_adj_matrix_arr)
+
+    directory = f"tau_{options.tau / 1000}"
+    parent_dir = "./submissions/"
+    path = os.path.join(parent_dir, directory)
+
+    os.mkdir(path, 0o755)
+    np.save(f'{path}/adj_matrix.npy', solution_adj_matrix_arr)
+    shutil.make_archive(f'tau_{options.tau / 1000}', format='zip', root_dir=path)
 
 if __name__ == "__main__":
     main()

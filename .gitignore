@@ -9,3 +9,6 @@ run_script.sh
 *epochwise_loss.json
 submissions/*.npy
 submissions/byproducts/*.npy
+submissions/tau_*/
+tau_*.log
+zip_files/

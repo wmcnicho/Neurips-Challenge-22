@@ -34,10 +34,16 @@ class PermutationMatrix(nn.Module):
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
 
         # NOTE: Trainable L.
-        # self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device))
-        self.lower = nn.Parameter(torch.empty(input_size, input_size, device=device))
+        # self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device) * 5 + torch.randn(input_size, input_size, device=device))
+        # self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device) * 5)
+        self.lower = nn.Parameter(0.1* torch.randn(input_size, input_size, device=device))
+        # self.lower = nn.Parameter(torch.empty(input_size, input_size, device=device))
+        
         # nn.init.ones_(self.lower)
-        nn.init.kaiming_normal_(self.lower, a=math.sqrt(input_size))
+        # nn.init.kaiming_normal_(self.lower, a=math.sqrt(input_size))
+        # nn.init.normal_(self.lower)
+        torch.set_printoptions(threshold=100_000)
+        print(">> Init lower:\n", self.lower)
         # self.l_mask = None
         # self.l_mask = torch.tril(torch.ones(input_size, input_size, device=device))
         self.verbose = verbose
@@ -58,7 +64,7 @@ class PermutationMatrix(nn.Module):
         matrix = torch.exp(temperature * (self.matrix - torch.matmul(max_row, ones)))
         # NOTE: Trainable L.
         lower = torch.empty(matrix_shape, matrix_shape, device = device)
-        global init_mask
+        # global init_mask
         l_mask = torch.tril(torch.ones(matrix_shape, matrix_shape, device=device))
         # if init_mask < torch.cuda.device_count():
         #     print("Init lower matrix with 5.x")
@@ -72,7 +78,9 @@ class PermutationMatrix(nn.Module):
         #     print("Lower matrix through sigmoid")
         #     lower = torch.sigmoid(self.lower) * l_mask
         lower = torch.sigmoid(self.lower) * l_mask
-        print("lower:\n", lower)
+        torch.set_printoptions(threshold=100_000)
+        print(">> self.lower:\n", self.lower)
+        print(">> lower:\n", lower)
         for _ in range(unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
@@ -470,8 +478,8 @@ def main(hyper_params, file_path='serialized_torch/', data_name='student_data', 
     if hyper_params.wandb is not None:
         wandb.config = hyper_params
 
-    dkt_base_model = PermutedDKT(hyper_params.init_temp, hyper_params.init_unroll, len(tot_construct_list)+1, hyper_params.embed_dim, verbose=verbose).to(device)
-    dkt_model = nn.DataParallel(dkt_base_model)
+    dkt_model = PermutedDKT(hyper_params.init_temp, hyper_params.init_unroll, len(tot_construct_list)+1, hyper_params.embed_dim, verbose=verbose).to(device)
+    dkt_model = nn.DataParallel(dkt_model)
     if verbose:
         print('After loading the model'.upper())
         for id in range(torch.cuda.device_count()):
