@@ -37,3 +37,4 @@ Contact: ml4ed @ UMass Amherst
 - Hunter McNichols (hmcnich@gmail.com)
 - Nischal Ashok Kumar (nischal.ashok09@gmail.com)
 - Wanyong Feng (wanyongfeng123@gmail.com)
+- Aritra Ghosh (aritraghosh.iem@gmail.com)
