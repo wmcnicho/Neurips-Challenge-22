@@ -47,7 +47,7 @@ def main():
     parser.add_argument('-D', '--debug', action=argparse.BooleanOptionalAction, help='Controls whether intermediate files are created during submission construction')
     parser.add_argument('-T', '--temperature', type=int, default=2, help='temperature of learned model')
     parser.add_argument('-U', '--unroll', type=int, default=5, help='unroll length of learned model')
-    parser.add_argument('-L', '--tau', type=float, default=500, help='threshold for L matrix')
+    parser.add_argument('-L', '--tau', type=float, default=0.5, help='threshold for L matrix')
     options = parser.parse_args()
     
     if device == torch.device('cpu'):
@@ -69,9 +69,10 @@ def main():
     np_l_matrix = sigmoid_output.cpu().detach().numpy()
 
     np.set_printoptions(threshold=np.inf)
-    print("original: ", l_matrix)
-    print("========="*10)
-    print("l_matrix: ", np_l_matrix)
+    if options.verbose:
+        print("Trained L bar matrix: ", l_matrix)
+        print("========="*10)
+        print("L matrix: ", np_l_matrix)
 
     if options.debug:
         np.save(f'./submissions/byproducts/sinkhorn_p_matrix_{options.file_name}.npy', np_p_matrix)
@@ -100,13 +101,14 @@ def main():
                     min_element = np_l_matrix[i][j]
             elif i == j:
                 np_l_matrix[i][j] = 1
+    if options.verbose:
+        print("Max element of L bar matrix: ", max_element)
+        print("Min element of L bar matrix: ", min_element)
+    l_matrix = (np_l_matrix > float(options.tau)).astype(float)
 
-    print("Max element of L bar matrix: ", max_element)
-    print("Min element of L bar matrix: ", min_element)
-    l_matrix = (np_l_matrix > float(options.tau / 1000)).astype(float)
-
-    print("========="*10)
-    print("after tau: ", l_matrix)
+    if options.verbose:
+        print("========="*10)
+        print("Thresholded L matrix: ", l_matrix)
 
     if options.debug:
         np.save(f'./submissions/byproducts/threshold_{options.tau}_l_matrix_{options.file_name}.npy', l_matrix) # NOTE: thresholded l-matrix
@@ -123,13 +125,13 @@ def main():
 
     construct_arr = np.array(tot_construct_list)
 
-    # get construct ordering
+    # Get construct ordering
     construct_order = np.dot(p_matrix, construct_arr)
     construct_order_lst = construct_order.tolist()
     if options.verbose:
         print(construct_order_lst)  
 
-    # read test data
+    # Read test data
     test_constructs = pd.read_csv('./data/Task_3_dataset/constructs_input_test.csv')['ConstructId'].tolist()
     solution_adj_matrix = np.zeros(shape=(len(test_constructs), len(test_constructs)))
 
@@ -139,16 +141,15 @@ def main():
             col_pos = construct_order_lst.index(col_cons)
             solution_adj_matrix[i][j] = l_matrix[row_pos][col_pos]
 
-
     solution_adj_matrix_arr = np.array(solution_adj_matrix).astype(int)
 
-    directory = f"tau_{options.tau / 1000}"
+    directory = f"tau_{options.tau}"
     parent_dir = "./submissions/"
     path = os.path.join(parent_dir, directory)
 
     os.mkdir(path, 0o755)
     np.save(f'{path}/adj_matrix.npy', solution_adj_matrix_arr)
-    shutil.make_archive(f'tau_{options.tau / 1000}', format='zip', root_dir=path)
+    shutil.make_archive(f'tau_{options.tau}', format='zip', root_dir=path)
 
 if __name__ == "__main__":
     main()

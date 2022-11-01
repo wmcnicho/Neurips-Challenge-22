@@ -24,8 +24,6 @@ torch.cuda.manual_seed_all(seed_val)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
-init_mask = 0
-
 class PermutationMatrix(nn.Module):
     def __init__(self, input_size, temperature, unroll, verbose=False):
         super().__init__()
@@ -34,27 +32,19 @@ class PermutationMatrix(nn.Module):
         nn.init.kaiming_uniform_(self.matrix, a=math.sqrt(input_size))
 
         # NOTE: Trainable L.
-        # self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device) * 5 + torch.randn(input_size, input_size, device=device))
-        # self.lower = nn.Parameter(torch.ones(input_size, input_size, device=device) * 5)
-        self.lower = nn.Parameter(0.1* torch.randn(input_size, input_size, device=device))
-        # self.lower = nn.Parameter(torch.empty(input_size, input_size, device=device))
-        
-        # nn.init.ones_(self.lower)
-        # nn.init.kaiming_normal_(self.lower, a=math.sqrt(input_size))
-        # nn.init.normal_(self.lower)
-        torch.set_printoptions(threshold=100_000)
-        print(">> Init lower:\n", self.lower)
-        # self.l_mask = None
-        # self.l_mask = torch.tril(torch.ones(input_size, input_size, device=device))
+        self.lower = nn.Parameter(0.1 * torch.randn(input_size, input_size, device=device))
+        if verbose:
+            torch.set_printoptions(threshold=100_000)
+            print("Initial value of L bar matrix\n", self.lower)
         self.verbose = verbose
 
     def forward(self, epoch):
-        # TODO: update temperature and unroll, Is this done?
         temperature = ((epoch//10)+1)*self.temperature
         unroll = ((epoch//10)+1)*self.unroll
 
         # NOTE: For every element of the matrix subtract with the max value, multiply by the temperature and make it exponential
-        print(self.matrix)
+        if self.verbose:
+            print("Initial value of P bar matrix\n", self.matrix)
         
         matrix_shape = self.matrix.shape[0]
 
@@ -64,23 +54,12 @@ class PermutationMatrix(nn.Module):
         matrix = torch.exp(temperature * (self.matrix - torch.matmul(max_row, ones)))
         # NOTE: Trainable L.
         lower = torch.empty(matrix_shape, matrix_shape, device = device)
-        # global init_mask
         l_mask = torch.tril(torch.ones(matrix_shape, matrix_shape, device=device))
-        # if init_mask < torch.cuda.device_count():
-        #     print("Init lower matrix with 5.x")
-        #     # init_l = torch.ones(matrix_shape, matrix_shape, device=device) * 5 + torch.rand(matrix_shape, matrix_shape, device=device)
-        #     init_l = torch.randn(matrix_shape, matrix_shape, device=device)
-        #     torch.set_printoptions(threshold=10_000)
-        #     print("init_l:\n", init_l)
-        #     lower = torch.sigmoid(self.lower * init_l) * l_mask
-        #     init_mask = init_mask + 1
-        # else:
-        #     print("Lower matrix through sigmoid")
-        #     lower = torch.sigmoid(self.lower) * l_mask
         lower = torch.sigmoid(self.lower) * l_mask
-        torch.set_printoptions(threshold=100_000)
-        print(">> self.lower:\n", self.lower)
-        print(">> lower:\n", lower)
+        if self.verbose:
+            torch.set_printoptions(threshold=100_000)
+            print("L bar matrix:\n", self.lower)
+            print("L matrix\n", lower)
         for _ in range(unroll):
             matrix = matrix / torch.sum(matrix, dim=1, keepdim=True)
             matrix = matrix / torch.sum(matrix, dim=0, keepdim=True)
@@ -150,8 +129,7 @@ class PermutedGru(nn.Module):
         nn.init.kaiming_normal_(self.W_hn, a=math.sqrt(hidden_size), mode='fan_out')
 
     def forward(self, input_, epoch, lengths=None, hidden=None):
-        # input_ is of dimensionalty (T, B, hidden_size, ...)
-        # lenghths is B,
+
         dim = 1 if self.batch_first else 0
         lower = self.permuted_matrix(epoch) # (PLP')'
         outputs = []
@@ -229,7 +207,6 @@ class PermutedDKT(nn.Module):
         rawdelta = torch.matmul(input, self.delta_matrix)
         preembed = rawembed + rawdelta
         input_embed = self.embed_input(preembed)
-
 
         # Create a mask (0 when the input is 0)
         mask_ones = nn.Parameter(torch.ones(T, B, device=device), requires_grad=False)
@@ -358,7 +335,6 @@ def train(epochs, model, train_dataloader, val_dataloader, optimizer, scheduler,
             # single value; the `.item()` function just returns the Python value 
             # from the tensor.
             
-
             # Perform a backward pass to calculate the gradients.
             if(torch.cuda.device_count() > 1):
                 total_loss += loss.mean().item()
@@ -472,7 +448,6 @@ def main(hyper_params, file_path='serialized_torch/', data_name='student_data', 
     epochs = hyper_params.epochs
     train_dataloader = get_data_loader(batch_size=batch_size, concept_input=train_input, labels=train_label)
     val_dataloader = get_data_loader(batch_size=batch_size, concept_input=valid_input, labels=valid_label)
-
 
     # Log Hyperparameters
     if hyper_params.wandb is not None:
